@@ -234,59 +234,45 @@ def sample_gnp_adjacency(n: int, p: float, rng: np.random.Generator) -> list[lis
 # --------------------------------------------------------------------------- #
 # Individual fear: truncated normal via rejection sampling
 # --------------------------------------------------------------------------- #
-def sample_individual_fears(n: int, mean_fear: float, fear_std: float, rng: np.random.Generator) -> list[float]:
-    """Generates one valid fear, f_i, per node in the graph. 
-
-    We ensure that the value is within the range [0,1]. When we sample, we do so from a normal distribution. 
-    If the value we sample is not within the range [0,1], then we will discard and resample. 
-
+def sample_individual_fears(n: int, mean_fear: float, concentration: float, rng: np.random.Generator) -> list[float]:
+    """Draw f_i ~ Beta(alpha, beta) with alpha = mean*kappa, beta = (1-mean)*kappa,
+    so E[f] = mean_fear exactly and var = mean_fear*(1-mean_fear)/(kappa+1).
+    
     Parameters
     ----------
     n : int
-        The number of nodes
-    
-    mean_fear : float
-        The average fear for each node
+        Number of nodes
 
-    fear_std : float
-        The standard deviation of the distribution of fear for the nodes
+    mean_fear :
+        Average fear for all nodes
     
+    concentration : float
+        How clustered the values are around the mean_fear
+
     rng : np.random.Generator
-        A random object to help us get random numbers
+        Random object to generate random numbers
 
     Returns
     -------
-    graph : list[float]
-        The fears of each node in the graph
-    
+    rng.beta(alpha, beta, size=n).tolist() : list[float]
+        A list of fears for all n nodes in the graph. 
+
     Raises
     ------
     ValueError
-        If the inputted mean_fear is less than 0 or if fear_std is not in the range [0,1]
-
-    Notes
-    -----
-    Draws f_i ~ TruncatedNormal(mean_fear, fear_std) clipped to [0,1] via
-    rejection sampling. See §3.3 (fear channel) and §3.5 (parameter table)
-    for the role of f_i in the dynamics. Note F3 fork: Beta(alpha, beta) is
-    the preferred alternative to avoid the truncation-mean confound.
+        If the mean_fear isn't in [0,1] or if the concentration is negative.
     """
-    if mean_fear > 1 or mean_fear < 0 or fear_std < 0 or fear_std > 1:
-        raise ValueError("Either the mean_fear is not within [0,1], the fear_std is not positive, or fear_std is greater than 1")
-    
-    if fear_std <= 0.0:
-        # Then there's no spread and each bank has the same fear. 
-        constant_fear = min(1.0, max(0.0, mean_fear))
-        return [constant_fear for _ in range(n)]
-    
-    fears = []
-    while len(fears) < n:
-        candidate = rng.normal(mean_fear, fear_std)
-        if 0.0 <= candidate <= 1.0:
-            fears.append(candidate)
-        # Else: we reject and draw again
-
-    return fears
+    if not 0.0 <= mean_fear <= 1.0:
+        raise ValueError("mean_fear must be in [0, 1]")
+    if concentration <= 0.0:
+        raise ValueError("concentration (kappa) must be positive")
+    if mean_fear == 0.0:
+        return [0.0] * n          # alpha = 0 -> point mass at 0 (Janson baseline)
+    if mean_fear == 1.0:
+        return [1.0] * n
+    alpha = mean_fear * concentration
+    beta = (1.0 - mean_fear) * concentration
+    return rng.beta(alpha, beta, size=n).tolist()
 
 # --------------------------------------------------------------------------- #
 # Seed selection and a small experiment driver
@@ -331,7 +317,7 @@ def make_nodes(individual_fears: list[float]) -> list[Node]:
     return [Node(index = i, individual_fear=fear) for i, fear in enumerate(individual_fears)]
     
 
-def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, fear_std: float, seed_size: int, 
+def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, concentration: float, seed_size: int, 
                                   theta: float, trials: int, rng: np.random.Generator, target_high_degree: bool) -> float:
     """Runs the graph multiple times for the given parameters to determine the average amount of percolation we see
 
@@ -346,8 +332,8 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, fe
     mean_fear : float
         The average fear for each node
 
-    fear_std : float
-        The standard deviation of the distribution of fear for the nodes
+    concentration : float
+        How concentrated around the mean_fear the individual fears will be 
     
     seed_size : int
         Number of nodes in the initial active set
@@ -367,7 +353,7 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, fe
     Returns
     -------
     probability : float
-        The number of trials that have counted as "almost percolated" or "percolated
+        The portion of trials that have counted as "almost percolated" or "percolated
 
     Raises
     ------
@@ -382,7 +368,7 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, fe
     systemic_count = 0
     for _ in range(trials):
         adjacency = sample_gnp_adjacency(n=n, p=p, rng=rng)
-        fears = sample_individual_fears(n=n, mean_fear=mean_fear, fear_std=fear_std, rng=rng)
+        fears = sample_individual_fears(n=n, mean_fear=mean_fear, concentration=concentration, rng=rng)
 
         nodes = make_nodes(individual_fears=fears)
         seed_indices = choose_seed(n=n, seed_size=seed_size, adjacency=adjacency, rng=rng, target_high_degree=target_high_degree)
@@ -397,7 +383,7 @@ if __name__ == "__main__":
     rng = np.random.default_rng(0)
     n = 500
     adjacency = sample_gnp_adjacency(n, p=0.02, rng=rng)
-    fears = sample_individual_fears(n, mean_fear=0.3, fear_std=0.1, rng=rng)
+    fears = sample_individual_fears(n, mean_fear=0.3, concentration=0.5, rng=rng)
     banks = make_nodes(fears)
     seed_indices = choose_seed(n, seed_size=5, adjacency=adjacency, rng=rng, target_high_degree=False)
     result = run_cascade(adjacency, banks, r=2, seed_indices=seed_indices,

@@ -1,3 +1,6 @@
+# To run:
+# python3 -m pytest tests/test_mu0_bootstrap_threshold.py -v  
+
 """
 Week-1 validation -- mu = 0 reduces to Janson bootstrap percolation on G(n,p).
 
@@ -65,12 +68,11 @@ def phi_subcritical(alpha: float, r: int) -> float:
 # >>> ADAPTER: wired to src/twocascade/reference.py. <<<
 # --------------------------------------------------------------------------- #
 def final_failed_fraction(
-    n: int, p: float, r: int, mu: float, a: int, rng: np.random.Generator
-) -> float:
+    n: int, p: float, r: int, mu: float, a: int, rng: np.random.Generator) -> float:
     """
     Run ONE cascade and return |A*| / n. At mu = 0 the fear channel is off.
 
-    Pipeline mirr   ors reference.estimate_systemic_probability for a single trial:
+    Pipeline mirrors reference.estimate_systemic_probability for a single trial:
     sample G(n,p) -> draw fears -> build nodes -> pick a RANDOM seed of size `a`
     (section 3.1 default; Janson's theorem is for random seeds) -> run one cascade.
     """
@@ -90,16 +92,26 @@ def final_failed_fraction(
 
 
 # --------------------------------------------------------------------------- #
-# Configuration. r = 2 is the cleanest threshold (closed-form phi). The (n, p)
-# pair sits well inside the window 1/n << p << 1/sqrt(n):
-#     1/n = 2.5e-4   <<   p = 2.5e-3   <<   1/sqrt(n) = 1.58e-2.
+# Configuration. r = 2 is the cleanest threshold (closed-form phi). With BETA
+# FROZEN (calibrated once at N_REF) and 1/r < ALPHA < 1, p = BETA * N**(-ALPHA)
+# sits strictly inside the window  1/n << p << 1/sqrt(n)  as N -> infinity,
+# because np = BETA * N**(1-ALPHA) grows. (Pinning BETA to the live N instead
+# would cancel ALPHA and collapse this to np = const, the lower edge.)
+# At N = 4000:  1/n = 2.5e-4  <  p = 2.5e-3  <  1/sqrt(n) = 1.58e-2   ('<', a finite-N
+# spacing of specific numbers -- not '<<', which is the asymptotic statement above).
 # One cascade is ~milliseconds (tracker section 5.2), so the suite stays fast.
 # Bump N and N_REALIZATIONS to tighten the empirical-threshold bracket.
 # --------------------------------------------------------------------------- #
 SEED = 20260603
 R = 2
 N = 4000
-P = 10.0 / N             # mean degree np = 10
+
+N_REF = 4000                                          # size at which mean degree is calibrated
+ALPHA = 0.7                                           # 1/r < ALPHA < 1  ->  p interior to the window
+TARGET_MEAN_DEGREE = 10.0
+BETA  = TARGET_MEAN_DEGREE / N_REF ** (1.0 - ALPHA)   # FROZEN -- calibrated once at N_REF
+P = BETA * N ** (-ALPHA)                              # np = BETA * N**(1-ALPHA): grows as N leaves N_REF
+
 N_REALIZATIONS = 200
 THETA = 0.5              # systemic-event threshold for locating the crossing
 

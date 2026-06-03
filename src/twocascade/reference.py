@@ -232,7 +232,7 @@ def sample_gnp_adjacency(n: int, p: float, rng: np.random.Generator) -> list[lis
     return adjacency
 
 # --------------------------------------------------------------------------- #
-# Individual fear: truncated normal via rejection sampling
+# Individual fear: Beta Distribution
 # --------------------------------------------------------------------------- #
 def sample_individual_fears(n: int, mean_fear: float, concentration: float, rng: np.random.Generator) -> list[float]:
     """Draw f_i ~ Beta(alpha, beta) with alpha = mean*kappa, beta = (1-mean)*kappa,
@@ -383,7 +383,7 @@ if __name__ == "__main__":
     rng = np.random.default_rng(0)
     n = 500
     adjacency = sample_gnp_adjacency(n, p=0.02, rng=rng)
-    fears = sample_individual_fears(n, mean_fear=0.3, concentration=0.5, rng=rng)
+    fears = sample_individual_fears(n, mean_fear=0.3, concentration=50, rng=rng)
     banks = make_nodes(fears)
     seed_indices = choose_seed(n, seed_size=5, adjacency=adjacency, rng=rng, target_high_degree=False)
     result = run_cascade(adjacency, banks, r=2, seed_indices=seed_indices,

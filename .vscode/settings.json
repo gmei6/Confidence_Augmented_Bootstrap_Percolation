@@ -4,5 +4,6 @@
         "Brandes",
         "Erdos",
         "Renyi"
-    ]
+    ],
+    "cmake.sourceDirectory": "/Users/garymei/Downloads/Summer 2026/Research/Code/Confidence_Augmented_Bootstrap_Percolation/cpp"
 }

@@ -110,8 +110,8 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
 
             # ---- Channel 2: fear (Bernoulli with prob f_i * g_t) ---------- #
             fear_failure_probability = node.individual_fear * global_fear
-            fear_draw_succeeds = rng.random() < fear_failure_probability
-            fails_by_fear = fear_draw_succeeds
+            # fear_draw_succeeds = rng.random() < fear_failure_probability
+            fails_by_fear = (fear_failure_probability > 0.0 and rng.random() < fear_failure_probability) # fear_draw_succeeds
 
             if fails_by_solvency or fails_by_fear:
                 newly_failing_nodes.append(node)

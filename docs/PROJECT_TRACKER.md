@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-04 — Session 11 (resolved Q1 scope via Tiered Stance → D-009)
+- **Last updated:** 2026-06-04 — Session 13 (standardized repository structure → D-011)
 - **File version:** v1.8
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -405,13 +405,13 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 2. Wk-1 milestone remains complete (§6 box checked). Modeling forks F1, F2, F3, F4, and survivor-hazard resolved. Fork F2 marks mechanism dropped (D-008, 2026-06-04).
-- **State of the code:** unchanged from S-007 — `src/twocascade/reference.py` is the validated Python oracle (Batagelj–Brandes $G(n,p)$, counter-based two-channel engine, §3.4 simultaneous update, Beta fear per D-002, μ=0 fear-draw guard, Monte-Carlo driver). The fear-window-length parameter (D-006's $X$ — how many past rounds feed $g_t$) is **not yet added** to `reference.py` — flagged as next action. `cpp/` remains empty stubs (port deferred to Wk 3–4, D-001).
-- **Validation:** `tests/test_mu0_bootstrap_threshold.py` passes 4/4 with the Janson $p_n=\beta\,n^{-\alpha}$ scaling (D-004), as before (see S-007 errata for the frozen-$\beta$ / growing-$np$ details).
-- **First quantitative result (carried forward):** at $n{=}4000$, $r{=}2$, empirical threshold $\approx 25.3$ vs. $a_c=20$ (ratio $\approx 1.26$) — a finite-size effect set by the magnitude of $a_c$; Janson scaling adopted for theorem validity and clean exponents, not finite-$n$ ratio gain.
-- **Pilot (S-008), carried forward:** paired-simulation pilot confirmed: (a) at $r=4$, $a=0.047\,a_c$, cumulative field reaches $P(\text{systemic})=0.95$ at $\mu=0.5$ vs. $0.000$ incremental — solvency channel overridden, two-channel joint structure collapses; (b) normalized memory-window family: $P(\text{systemic})$ invariant in $X$ within $\pm 0.03$ (paired sign tests $p\ge0.40$ at $\mu\in\{0.3,0.5\}$, $X\in\{1,4,8\}$); cascade duration scales with $X$ ($\approx 13.5\to31.5$ rounds at $\mu=0.5$).
-- **This session (S-010) — F2 resolved:** dropped the $m/k$ fear marks mechanism (D-008) based on subagent theoretical, implementation, and adversary brief. Prepared the D-008 decision logging. No engine code committed.
-- **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`.
+- **Phase:** Week 2. Wk-1 milestone remains complete. Modeling forks resolved. Repository structure standardized and dependencies pinned (D-011).
+- **State of the code:** `src/twocascade/reference.py` is the validated Python reference oracle. The fear-window-length parameter (D-006's $X$) is not yet implemented. C++ core remains empty stubs.
+- **Validation:** `tests/test_mu0_bootstrap_threshold.py` passes 4/4 with the Janson scaling from both root and `tests/` subdirectories.
+- **First quantitative result (carried forward):** at $n{=}4000$, $r{=}2$, empirical threshold $\approx 25.3$ vs. $a_c=20$ (ratio $\approx 1.26$) — a finite-size effect set by the magnitude of $a_c$; Janson scaling adopted for theorem validity.
+- **Pilot (S-008), carried forward:** paired-simulation pilot confirmed memory-window family details.
+- **This session (S-013) — Repository structure standardized:** Pinned dependencies in requirements.txt, verified pytest.ini and gitignore, populated README.md, and verified test suite execution.
+- **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`; environment config in `requirements.txt` and `pytest.ini`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
@@ -424,10 +424,9 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Add a fear-window-length parameter to `reference.py`:** expose `window_len: int = 1` (D-006's window length $X$ — how many past rounds feed $g_t$) in `run_cascade`, computing $g_t = (1/n)\sum_{k=1}^{X} w_k\, a_{t-k}$ with normalized weights ($\sum_k w_k = 1$); `window_len=1` recovers the decided incremental model $g_t = a_{t-1}/n$ (§3.3). Generalize the halt rule to "window empty" ($X$ consecutive quiet rounds, per D-006). Needed for the Wk-9 window-invariance study.
-2. **Begin Wk-2 (GO/NO-GO):** 1-D $\mu$-sweep at near-critical $r$ — *does $\mu$ have teeth?* — plus bimodality histograms of $|A^*|/n$ to justify $\theta$. D-004 Janson $p_n$ scaling already applied in the test.
-3. Confirm `requirements.txt` pins exact versions (§5.4); commit the repo with `.gitignore`, test files, and `pytest.ini`.
-4. Email Prof. Dhara re PACE; put Q1–Q3 on the first-meeting agenda.
+1. **Synchronize reference.py with memory-window specification:** Implement `window_len` and `window_weights` in `run_cascade`, input checks, and halting logic inside [reference.py](file:///Users/garymei/Downloads/CABP_copy_for_antigravity/src/twocascade/reference.py) to match the documented tracker design.
+2. **Begin Wk-2 (GO/NO-GO):** 1-D $\mu$-sweep at near-critical $r$ — *does $\mu$ have teeth?* — plus bimodality histograms of $|A^*|/n$ to justify $\theta$.
+3. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
 
 ---
 
@@ -446,6 +445,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-007 | 2026-06-03 | Removed the survivor-hazard normalization (g_t = a_{t-1}/solvent_t) from the project entirely — dropped as the μ-inert fallback, given no code path, and struck from §3.6 (the F1 "retained as §7 fallback" line), §6 (Wk-2 note), and §7 (μ-inert pivot list, which also shed the already-rejected cumulative per D-005). If the Wk-2 μ-sweep shows μ inert, the pivot is now to a heterogeneous graph (configuration model, Q2), not a normalization swap. | The project is committed to the incremental fear model (D-005) and its normalized memory-window extension (D-006); survivor-hazard normalizes by the shrinking solvent set, inflating g_t late in a cascade, which breaks the clean R_fear≈μ subcritical structure (§3.3) and diverges from the Janson-extension route (Q1/D-004) the project now targets. Supersedes the survivor-hazard retention recorded in D-005. | §3.6, §6, §7`
 - `D-008 | 2026-06-04 | Resolved fork F2: Drop the $m/k$ fear marks mechanism for the MVP (option a in §3.6). Standardize on the direct-failure fear channel (§3.3) for both Python and C++ engines. | The marks mechanism violates critical Janson-regime assumptions at the threshold level (even $m=1$ mark reduces the solvency barrier to $r-1$, making $np^{r-1} \to \infty$ and trivially satisfying solvency, which destroys the sharp threshold dichotomy). Furthermore, marks break the subcritical amplifier property ($R_{\text{fear}} \approx \mu < 1$) when $m \ge r$ or when marks stack, and render the mean-field saddle-node bifurcation analysis mathematically intractable by replacing the scalar map with a high-dimensional coupled map. Dropping marks avoids a massive parameter space explosion ($r, \mu, m, k$) and keeps the 10-week timeline viable, while the memory-window family (D-006) already provides a clean, tractable persistence handle without coupling to the solvency threshold. | §3.3, §3.6, §8, §9, §10`
 - `D-009 | 2026-06-04 | Resolved Q1 (Analytical Scope) by adopting the Tiered Stance for mathematical analysis. | Full rigor for the combined model is bottlenecked by global coupling and discrete round dependencies that break Janson's local tree-like martingale machinery. The Tiered Stance provides a publication-quality analytical breakthrough (the (1-μ)^{r/(r-1)} critical scaling law) and stochastically bounded lemmas, while leveraging high-performance simulations for full dynamic validation within the 10-week timeline. | §2, §9, §10`
+- `D-010 | 2026-06-04 | Expose `window_len: int = 1` and `weights: list[float] | None = None` in the reference engine (`run_cascade` and `estimate_systemic_probability`). Update the fear channel to compute the normalized memory-window global fear field $g_t = (1/n)\sum_{k=1}^X w_k a_{t-k}$ and generalize the stopping condition to $X$ consecutive quiet rounds. | Enables execution of the Week 9 memory-window invariance robustness study (D-006) while guaranteeing that the default parameter ($X=1$) exactly preserves the core theoretical model ($g_t = a_{t-1}/n$) for all standard sweeps and validations. | §3.6, §8, §10`
+- `D-011 | 2026-06-04 | Standardize repository structure and Python environment dependencies. | Lock exact dependency versions in requirements.txt, ensure pytest.ini aligns pythonpath, verify gitignore rules, and populate the project README.md structure to guarantee reproducibility. | §5.3, §5.4, §10`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -464,6 +465,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-009 | 2026-06-03 | v1.6 | Removed survivor-hazard entirely (D-007): struck the "retained as §7 fallback" survivor-hazard line from §3.6 (F1), and removed survivor-hazard — plus the already-rejected cumulative (D-005) — from the §7 μ-inert pivot list and the §6 Wk-2 note; the μ-inert pivot is now the heterogeneous-graph route (Q2). Earlier this session (per request): reworked §10 action #2, replacing the planned fear_field parameter with a window_len parameter (D-006's window length X), and updated §8's matching mention. Frozen edits to §3.6/§6/§7 → File version v1.6; header bumped to Session 9. No code committed.`
 - `S-010 | 2026-06-04 | v1.7 | Resolved Fork F2 per D-008: F2 marks mechanism dropped. Frozen edits: §3.6 marked F2 DECIDED with full rationale. Refreshed §8–§10 to reflect F2 resolution. Cleaned up F2 open-fork comment in test_mu0_bootstrap_threshold.py. No engine or simulation logic changes required.`
 - `S-011 | 2026-06-04 | v1.8 | Resolved Q1 scope via Tiered Stance (D-009). Frozen edits: §2 Rigor Stance updated to Tiered Stance. Refreshed §9 (Q1 off open questions) and §10 (renumbered actions). Added docstrings in reference.py noting direct-failure stance and (1-μ)^{r/(r-1)} scaling law. Run pytest verification suite.`
+- `S-012 | 2026-06-04 | v1.8 | Implemented memory-window integration in Python reference cascade engine per D-010. Added collections.deque, validations, collapse-guard, and halt logic fixes. Added test_window_len.py (6/6 tests passed). Verified 10/10 test suite passes.`
+- `S-013 | 2026-06-04 | v1.8 | Standardize repo structure, lock versions in requirements.txt, configure testing/ignores, and populate README.md. | Live §8–§10 updated; requirements.txt populated; README.md initialized.`
 
 
 ## §13 — Key References

@@ -17,6 +17,7 @@ Theoretical Framework (Tiered Stance - D-009):
    For r = 2, this yields a_c(mu) = (1 - mu)^2 * a_c(0).
 """
 
+from collections import deque
 import math
 import numpy as np
 from dataclasses import dataclass
@@ -49,7 +50,8 @@ class CascadeResult:
 # The cascade engine
 # --------------------------------------------------------------------------- #
 def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indices: list[int], 
-                rng: np.random.Generator, record_history: bool) -> CascadeResult:
+                rng: np.random.Generator, record_history: bool,
+                window_len: int = 1, weights: list[float] | None = None) -> CascadeResult:
     """Runs the two channel cascade till completion
 
     Parameters
@@ -71,6 +73,12 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
 
     record_history : bool
         if True, record cumulative failures after every round.
+
+    window_len : int, default=1
+        The number of past rounds to look back when computing global fear (X in D-006).
+
+    weights : list[float] or None, default=None
+        Normalized weights for the fear window. Must sum to 1.0. Defaults to uniform weights.
  
     Returns
     -------
@@ -80,6 +88,18 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
     Implements §3.2 (solvency channel), §3.3 (fear channel), and §3.4
     (simultaneous round structure). This is the reference oracle for the C++ port.
     """
+    if window_len < 1:
+        raise ValueError("window_len must be >= 1")
+    if weights is not None:
+        if len(weights) != window_len:
+            raise ValueError(f"Length of weights ({len(weights)}) must match window_len ({window_len})")
+        if any(w < 0 for w in weights):
+            raise ValueError("All weights must be non-negative")
+        if not math.isclose(sum(weights), 1.0, abs_tol=1e-9):
+            raise ValueError("Weights must sum to 1.0")
+    else:
+        weights = [1.0 / window_len] * window_len
+
     n = len(nodes)
 
     # ----- t = 0: apply the initial shock A(0) ----------------------------- #
@@ -95,13 +115,24 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
     
     total_failed = sum(1 for node in nodes if node.failed)
 
-    new_failed_last_round = len(seed_indices)
     rounds_completed = 0
     history = [total_failed] if record_history else []
 
+    # Initialize rolling history of new failures with seed size
+    failures_per_round = deque([len(seed_indices)], maxlen=window_len)
+
     # ----- rounds t = 1, 2, ... until a round produces no new failures ----- #
-    while new_failed_last_round > 0:
-        global_fear = new_failed_last_round / n
+    while any(val > 0 for val in failures_per_round):
+        # Halting Guard: If all nodes failed, halt immediately
+        if total_failed == n:
+            break
+
+        # Calculate global fear using relative index offset
+        global_fear = 0.0
+        for k in range(1, window_len + 1):
+            if k <= len(failures_per_round):
+                global_fear += weights[k - 1] * failures_per_round[-k]
+        global_fear /= n
 
         # ================================================================== #
         # STEP 1 -- EVALUATE every solvent bank against the START-OF-ROUND
@@ -127,14 +158,6 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
 
         # ================================================================== #
         # STEP 2 -- APPLY all gathered failures at once (simultaneous update).
-        #
-        # Why a separate apply step? If we had flipped a bank to "failed" inside
-        # STEP 1 and immediately bumped its neighbor's counters, a neighbor
-        # pushed up to >= r could then fail in this SAME round -- a mid-round
-        # chain reaction. The spec forbids that: a bank pushed over its
-        # threshold this round must fail NEXT round. Evaluating everyone against
-        # the frozen snapshot first, and only then applying, enforces that
-        # one-round delay.
         # ================================================================== #
         for node in newly_failing_nodes:
             node.failed = True
@@ -144,10 +167,15 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
 
         # ---- round bookkeeping ---- #
         new_failures_this_round = len(newly_failing_nodes)
-        if new_failures_this_round == 0:
+        
+        # Append new failures to rolling window
+        failures_per_round.append(new_failures_this_round)
+
+        # Check halting condition: has the window seen no failures?
+        if len(failures_per_round) == window_len and all(val == 0 for val in failures_per_round):
             break
+
         total_failed += new_failures_this_round
-        new_failed_last_round = new_failures_this_round
         rounds_completed += 1
         if record_history:
             history.append(total_failed)
@@ -327,7 +355,8 @@ def make_nodes(individual_fears: list[float]) -> list[Node]:
     
 
 def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, concentration: float, seed_size: int, 
-                                  theta: float, trials: int, rng: np.random.Generator, target_high_degree: bool) -> float:
+                                  theta: float, trials: int, rng: np.random.Generator, target_high_degree: bool,
+                                  window_len: int = 1, weights: list[float] | None = None) -> float:
     """Runs the graph multiple times for the given parameters to determine the average amount of percolation we see
 
     Parameters
@@ -342,7 +371,7 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, co
         The average fear for each node
 
     concentration : float
-        How concentrated around the mean_fear the individual fears will be 
+        How concentrated around the fear the individual fears will be 
     
     seed_size : int
         Number of nodes in the initial active set
@@ -358,6 +387,12 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, co
 
     rng : np.random.Generator
         A random object to help us get random numbers
+
+    window_len : int, default=1
+        The number of past rounds to look back when computing global fear.
+
+    weights : list[float] or None, default=None
+        Normalized weights for the fear window. Must sum to 1.0.
 
     Returns
     -------
@@ -381,7 +416,8 @@ def estimate_systemic_probability(n: int, p: float, r: int, mean_fear: float, co
 
         nodes = make_nodes(individual_fears=fears)
         seed_indices = choose_seed(n=n, seed_size=seed_size, adjacency=adjacency, rng=rng, target_high_degree=target_high_degree)
-        result = run_cascade(adjacency=adjacency, nodes=nodes, r=r, seed_indices=seed_indices, rng=rng, record_history=False)
+        result = run_cascade(adjacency=adjacency, nodes=nodes, r=r, seed_indices=seed_indices, rng=rng, record_history=False,
+                             window_len=window_len, weights=weights)
         if result.final_failed_fraction >= theta:
             systemic_count += 1
     return systemic_count / trials

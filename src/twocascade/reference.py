@@ -6,6 +6,15 @@ This file prioritizes readability over speed. We use:
 - Plain data structures
 - Explicit loops
 - Descriptive names
+
+Theoretical Framework (Tiered Stance - D-009):
+1. Solvency Channel (Janson local rule): Fails nodes with >= r failed neighbors.
+2. Fear Channel (Global field): Fails solvent node i in round t with probability f_i * g_t,
+   where g_t = a_{t-1}/n is the incremental fear field, and f_i ~ Beta(alpha, beta).
+3. The m/k fear marks mechanism is dropped (D-008) to preserve mathematical tractability.
+4. Analytical scaling law: The combined critical seed size a_c(mu) is conjectured to scale as:
+   a_c(mu) = (1 - mu)^{r/(r-1)} * a_c(0).
+   For r = 2, this yields a_c(mu) = (1 - mu)^2 * a_c(0).
 """
 
 import math

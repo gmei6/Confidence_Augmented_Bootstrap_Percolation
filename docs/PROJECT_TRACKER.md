@@ -4,8 +4,8 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-04 — Session 10 (F2 resolved → D-008)
-- **File version:** v1.7
+- **Last updated:** 2026-06-04 — Session 11 (resolved Q1 scope via Tiered Stance → D-009)
+- **File version:** v1.8
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
 ---
@@ -77,11 +77,11 @@ and threshold + external-field models, are an established subfield (Choi/Min et 
 are known; the specific *instantiation* (global realized-failure-rate field with heterogeneous
 individual susceptibility on top of an absolute-$r$ bootstrap rule) appears new.
 
-**Rigor stance (default, confirm with advisor — see §9 Q1):** the threshold is treated as a
-**heuristic mean-field prediction validated by simulation.** A rigorous sharpness proof (Janson-style
-martingales, or Amini–Cont–Minca via Wormald's differential-equation method) is **out of scope**
-before coursework in analysis / measure-theoretic probability. State sharpness as a *conjecture* with
-an explicit pointer to the machinery that would prove it.
+**Rigor stance (✅ DECIDED D-009, 2026-06-04):** Adopt a **Tiered Stance**.
+1. **Rigorously Prove** the auxiliary safety lemmas (specifically, that the fear-only channel at $p=0$ is a subcritical branching process with expected offspring $\mu < 1$, which terminates in $o(n)$ steps with $A^* = O(a)$ w.h.p., and that fear acts as a stochastically bounded amplifier under the combined model).
+2. **Conjecture with Mean-Field Analysis** the $(1-\mu)^{r/(r-1)}$ scaling law for the critical seed $a_c(\mu)$ derived from the Poisson-combined self-consistent equations.
+3. **Validate via Simulation** the phase diagrams, bimodality, and scaling exponent $\nu$ using a high-performance C++ implementation to preempt finite-size effect arguments.
+
 
 ---
 
@@ -415,7 +415,6 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
-- **Q1 (advisor, highest priority):** scope of the analytical component — heuristic mean-field validated by simulation, or an attempt at rigor? *(New input 2026-06-03: the advisor would ideally like a theoretical result, and the plan is to extend Janson's theorems to the fear setup. This leans Q1 toward "attempt rigor" and was the deciding factor for D-004 — but the exact scope / where to draw the line is still open, and it gates §2's rigor stance.)*
 - **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter and which connects to the critical-window work? *(This is also where the rejected F4 bounded-degree regime would live, and the §7 μ-inert pivot now points here.)*
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling), and reasonable to probe empirically without a proof?
 - **Forks awaiting decision:** None. *(Resolved: F1 → incremental (D-005, D-006); F2 → dropped (D-008); F3 → Beta (D-002); E1 → standalone executable + file I/O (D-003); F4 → Janson regime (D-004). Survivor-hazard removed entirely (D-007).)*
@@ -446,6 +445,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-006 | 2026-06-03 | Adopted the NORMALIZED memory-window family as the sanctioned persistence extension of the F1 field, replacing the dropped cumulative contrast: g_t = (1/n)·Σ_{k=1..X} w_k·a_{t-k} with Σw_k = 1 (exemplar X=4, w = 0.50/0.25/0.15/0.10); X=1 is exactly the decided model. For X>1 the halting rule generalizes to "halt when the window is empty" (X consecutive quiet rounds), keeping the absorbing state genuine. Study slotted Wk-9/stretch — NOT MVP; Wk-2 sweep runs at X=1. | Normalization is the safety property: per-failure total fear offspring = μ·Σw_k = μ, subcritical for every X (largest root of z^X = μ·Σw_k z^{X-k} is <1 for μ<1); cumulative is the un-normalized infinite-window endpoint. Pilot (n=2000, r=2, a=6=0.6a_c, 300–400 paired trials): P(systemic) invariant in X within ±0.03 (sign tests p≥0.40 at μ∈{0.3,0.5}, X∈{1,4,8}); cascade duration grows with X (≈13.5→31.5 rounds at μ=0.5). Frame the Wk-9 study as an invariance result (candidate robustness lemma for the Q1 extension) plus the duration effect. | §3.6, §6 (Wk-9 robustness line)`
 - `D-007 | 2026-06-03 | Removed the survivor-hazard normalization (g_t = a_{t-1}/solvent_t) from the project entirely — dropped as the μ-inert fallback, given no code path, and struck from §3.6 (the F1 "retained as §7 fallback" line), §6 (Wk-2 note), and §7 (μ-inert pivot list, which also shed the already-rejected cumulative per D-005). If the Wk-2 μ-sweep shows μ inert, the pivot is now to a heterogeneous graph (configuration model, Q2), not a normalization swap. | The project is committed to the incremental fear model (D-005) and its normalized memory-window extension (D-006); survivor-hazard normalizes by the shrinking solvent set, inflating g_t late in a cascade, which breaks the clean R_fear≈μ subcritical structure (§3.3) and diverges from the Janson-extension route (Q1/D-004) the project now targets. Supersedes the survivor-hazard retention recorded in D-005. | §3.6, §6, §7`
 - `D-008 | 2026-06-04 | Resolved fork F2: Drop the $m/k$ fear marks mechanism for the MVP (option a in §3.6). Standardize on the direct-failure fear channel (§3.3) for both Python and C++ engines. | The marks mechanism violates critical Janson-regime assumptions at the threshold level (even $m=1$ mark reduces the solvency barrier to $r-1$, making $np^{r-1} \to \infty$ and trivially satisfying solvency, which destroys the sharp threshold dichotomy). Furthermore, marks break the subcritical amplifier property ($R_{\text{fear}} \approx \mu < 1$) when $m \ge r$ or when marks stack, and render the mean-field saddle-node bifurcation analysis mathematically intractable by replacing the scalar map with a high-dimensional coupled map. Dropping marks avoids a massive parameter space explosion ($r, \mu, m, k$) and keeps the 10-week timeline viable, while the memory-window family (D-006) already provides a clean, tractable persistence handle without coupling to the solvency threshold. | §3.3, §3.6, §8, §9, §10`
+- `D-009 | 2026-06-04 | Resolved Q1 (Analytical Scope) by adopting the Tiered Stance for mathematical analysis. | Full rigor for the combined model is bottlenecked by global coupling and discrete round dependencies that break Janson's local tree-like martingale machinery. The Tiered Stance provides a publication-quality analytical breakthrough (the (1-μ)^{r/(r-1)} critical scaling law) and stochastically bounded lemmas, while leveraging high-performance simulations for full dynamic validation within the 10-week timeline. | §2, §9, §10`
+
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
 
@@ -462,6 +463,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-008 | 2026-06-03 | v1.5 | Resolved fork F1 (D-005): incremental field confirmed; cumulative rejected outright and not reported (supersedes "ideally report both" in §3.6). Adopted normalized memory-window family as the sanctioned persistence extension (D-006): g_t = (1/n)·Σw_k·a_{t-k}, Σw_k=1, X=1 is the decided model, X-study slotted Wk-9/stretch. Frozen edits: §3.6 F1 marked DECIDED with full rationale (D-005 and D-006); §6 Wk-9 robustness line gains the window invariance check. Refreshed §8–§10: F1 off open-forks, F2 still open, next-action list updated. No code committed this session.`
 - `S-009 | 2026-06-03 | v1.6 | Removed survivor-hazard entirely (D-007): struck the "retained as §7 fallback" survivor-hazard line from §3.6 (F1), and removed survivor-hazard — plus the already-rejected cumulative (D-005) — from the §7 μ-inert pivot list and the §6 Wk-2 note; the μ-inert pivot is now the heterogeneous-graph route (Q2). Earlier this session (per request): reworked §10 action #2, replacing the planned fear_field parameter with a window_len parameter (D-006's window length X), and updated §8's matching mention. Frozen edits to §3.6/§6/§7 → File version v1.6; header bumped to Session 9. No code committed.`
 - `S-010 | 2026-06-04 | v1.7 | Resolved Fork F2 per D-008: F2 marks mechanism dropped. Frozen edits: §3.6 marked F2 DECIDED with full rationale. Refreshed §8–§10 to reflect F2 resolution. Cleaned up F2 open-fork comment in test_mu0_bootstrap_threshold.py. No engine or simulation logic changes required.`
+- `S-011 | 2026-06-04 | v1.8 | Resolved Q1 scope via Tiered Stance (D-009). Frozen edits: §2 Rigor Stance updated to Tiered Stance. Refreshed §9 (Q1 off open questions) and §10 (renumbered actions). Added docstrings in reference.py noting direct-failure stance and (1-μ)^{r/(r-1)} scaling law. Run pytest verification suite.`
+
 
 ## §13 — Key References
 

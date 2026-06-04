@@ -9,8 +9,8 @@ engine's EMPIRICAL seed threshold matches the ANALYTICAL a_c of Janson, Luczak,
 Turova & Vallier (2012) (tracker section 4). At mu = 0 every individual fear
 f_i = 0, the fear channel never fires, and the dynamics are exactly the
 absolute-threshold rule "fail if >= r neighbors have failed." This is the one
-milestone that depends on NO open modeling fork (F1/F2/F4 are all fear-channel
-choices), which is why it is the right first thing to lock down.
+milestone that depends on NO open modeling fork (F1 and F4 were open modeling forks,
+while F2 was dropped), which is why it is the right first thing to lock down.
 
 Janson's sharp threshold (r >= 2, density window  1/n << p << n^{-1/r}):
     a < a_c  ->  subcritical:   final failed set is o(n), in fact A* < r/(r-1) * a

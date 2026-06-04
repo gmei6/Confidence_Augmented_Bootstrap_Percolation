@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-04 — Session 13 (standardized repository structure → D-011)
+- **Last updated:** 2026-06-04 — Session 14 (reference.py synchronization verified)
 - **File version:** v1.8
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -406,11 +406,11 @@ heuristic mean-field threshold** showing qualitative agreement.
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
 - **Phase:** Week 2. Wk-1 milestone remains complete. Modeling forks resolved. Repository structure standardized and dependencies pinned (D-011).
-- **State of the code:** `src/twocascade/reference.py` is the validated Python reference oracle. The fear-window-length parameter (D-006's $X$) is not yet implemented. C++ core remains empty stubs.
-- **Validation:** `tests/test_mu0_bootstrap_threshold.py` passes 4/4 with the Janson scaling from both root and `tests/` subdirectories.
+- **State of the code:** `src/twocascade/reference.py` is the validated Python reference oracle (with the normalized memory-window specification fully implemented and verified). The C++ core remains empty stubs.
+- **Validation:** `tests/test_mu0_bootstrap_threshold.py` and `tests/test_window_len.py` both pass (10/10 tests total) under pytest.
 - **First quantitative result (carried forward):** at $n{=}4000$, $r{=}2$, empirical threshold $\approx 25.3$ vs. $a_c=20$ (ratio $\approx 1.26$) — a finite-size effect set by the magnitude of $a_c$; Janson scaling adopted for theorem validity.
 - **Pilot (S-008), carried forward:** paired-simulation pilot confirmed memory-window family details.
-- **This session (S-013) — Repository structure standardized:** Pinned dependencies in requirements.txt, verified pytest.ini and gitignore, populated README.md, and verified test suite execution.
+- **This session (S-014) — Verified reference.py memory-window implementation:** Verified the implementation of `window_len` and `weights` in `run_cascade` (and their passthrough in `estimate_systemic_probability`), ran pytest suite, and confirmed that all 10 tests passed successfully.
 - **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`; environment config in `requirements.txt` and `pytest.ini`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
@@ -424,9 +424,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Synchronize reference.py with memory-window specification:** Implement `window_len` and `window_weights` in `run_cascade`, input checks, and halting logic inside [reference.py](file:///Users/garymei/Downloads/CABP_copy_for_antigravity/src/twocascade/reference.py) to match the documented tracker design.
-2. **Begin Wk-2 (GO/NO-GO):** 1-D $\mu$-sweep at near-critical $r$ — *does $\mu$ have teeth?* — plus bimodality histograms of $|A^*|/n$ to justify $\theta$.
-3. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
+1. **Begin Wk-2 (GO/NO-GO):** 1-D $\mu$-sweep at near-critical $r$ — *does $\mu$ have teeth?* — plus bimodality histograms of $|A^*|/n$ to justify $\theta$.
+2. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
 
 ---
 
@@ -467,6 +466,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-011 | 2026-06-04 | v1.8 | Resolved Q1 scope via Tiered Stance (D-009). Frozen edits: §2 Rigor Stance updated to Tiered Stance. Refreshed §9 (Q1 off open questions) and §10 (renumbered actions). Added docstrings in reference.py noting direct-failure stance and (1-μ)^{r/(r-1)} scaling law. Run pytest verification suite.`
 - `S-012 | 2026-06-04 | v1.8 | Implemented memory-window integration in Python reference cascade engine per D-010. Added collections.deque, validations, collapse-guard, and halt logic fixes. Added test_window_len.py (6/6 tests passed). Verified 10/10 test suite passes.`
 - `S-013 | 2026-06-04 | v1.8 | Standardize repo structure, lock versions in requirements.txt, configure testing/ignores, and populate README.md. | Live §8–§10 updated; requirements.txt populated; README.md initialized.`
+- `S-014 | 2026-06-04 | v1.8 | Verified Python reference engine memory-window synchronization and updated Next Actions. | Live §8, §10 updated; S-014 appended.`
 
 
 ## §13 — Key References

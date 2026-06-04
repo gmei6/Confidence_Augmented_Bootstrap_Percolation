@@ -44,10 +44,15 @@ two-channel-cascade/
 │   ├── analysis.py               # Post-processing analytics
 │   ├── meanfield.py              # Theoretical saddle-node tangency curves
 │   └── plotting.py               # Figure generation
-├── tests/                        # Python test suites
+├── tests/                        # Python test suites and scratch scripts
+│   ├── test_mu0_bootstrap_threshold.py  # Validation check at mu=0
+│   ├── test_window_len.py        # Memory-window validation
+│   └── scratch_check.py          # Scaling exponent verification script
+├── pyproject.toml                # Project metadata and package configuration
 ├── pytest.ini                    # Pytest configuration
 ├── requirements.txt              # Pinned Python dependencies
 └── README.md                     # This documentation file
+
 ```
 
 ---

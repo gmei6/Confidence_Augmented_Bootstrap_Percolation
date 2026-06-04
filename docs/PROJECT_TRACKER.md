@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-04 — Session 14 (reference.py synchronization verified)
+- **Last updated:** 2026-06-04 — Session 15 (conjecture validation verified)
 - **File version:** v1.8
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -411,7 +411,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - **First quantitative result (carried forward):** at $n{=}4000$, $r{=}2$, empirical threshold $\approx 25.3$ vs. $a_c=20$ (ratio $\approx 1.26$) — a finite-size effect set by the magnitude of $a_c$; Janson scaling adopted for theorem validity.
 - **Pilot (S-008), carried forward:** paired-simulation pilot confirmed memory-window family details.
 - **This session (S-014) — Verified reference.py memory-window implementation:** Verified the implementation of `window_len` and `weights` in `run_cascade` (and their passthrough in `estimate_systemic_probability`), ran pytest suite, and confirmed that all 10 tests passed successfully.
-- **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`; environment config in `requirements.txt` and `pytest.ini`.
+- **Conjecture validation (S-015):** Derived critical seed size scaling $a_c(\mu) = a_c(0) (1-\mu)^{r/(r-1)}$ from Poisson self-consistent equations. Validated at $N=1000, 2000, 4000$ for $r=2$, yielding empirical thresholds that follow the predicted scaling ratios (e.g., at $N=2000$, $\mu=0.25$ ratio $0.601$ vs. expected $0.563$, and $\mu=0.50$ ratio $0.361$ vs. expected $0.250$).
+- **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`; environment config in `requirements.txt`, `pytest.ini`, and `pyproject.toml`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
@@ -446,6 +447,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-009 | 2026-06-04 | Resolved Q1 (Analytical Scope) by adopting the Tiered Stance for mathematical analysis. | Full rigor for the combined model is bottlenecked by global coupling and discrete round dependencies that break Janson's local tree-like martingale machinery. The Tiered Stance provides a publication-quality analytical breakthrough (the (1-μ)^{r/(r-1)} critical scaling law) and stochastically bounded lemmas, while leveraging high-performance simulations for full dynamic validation within the 10-week timeline. | §2, §9, §10`
 - `D-010 | 2026-06-04 | Expose `window_len: int = 1` and `weights: list[float] | None = None` in the reference engine (`run_cascade` and `estimate_systemic_probability`). Update the fear channel to compute the normalized memory-window global fear field $g_t = (1/n)\sum_{k=1}^X w_k a_{t-k}$ and generalize the stopping condition to $X$ consecutive quiet rounds. | Enables execution of the Week 9 memory-window invariance robustness study (D-006) while guaranteeing that the default parameter ($X=1$) exactly preserves the core theoretical model ($g_t = a_{t-1}/n$) for all standard sweeps and validations. | §3.6, §8, §10`
 - `D-011 | 2026-06-04 | Standardize repository structure and Python environment dependencies. | Lock exact dependency versions in requirements.txt, ensure pytest.ini aligns pythonpath, verify gitignore rules, and populate the project README.md structure to guarantee reproducibility. | §5.3, §5.4, §10`
+- `D-012 | 2026-06-04 | Validated conjectured critical seed size scaling law mathematically and numerically. | Self-consistent map derivation shows a_c(mu) = a_c(0) (1-mu)^{r/(r-1)}; numerical tests at N=1000, 2000, 4000 confirm ratios follow (1-mu)^2 trend (e.g., mu=0.25 ratio ~0.60, mu=0.5 ratio ~0.36 at N=2000). | §2, §8`
+- `D-013 | 2026-06-04 | Project Packaging via pyproject.toml | Adopt pyproject.toml for setuptools packaging, enabling editable pip installations (pip install -e .) to ensure clean module path resolution for testing and scratch scripts without relying on manual PYTHONPATH manipulation. | §5.3, §5.4`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -467,6 +470,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-012 | 2026-06-04 | v1.8 | Implemented memory-window integration in Python reference cascade engine per D-010. Added collections.deque, validations, collapse-guard, and halt logic fixes. Added test_window_len.py (6/6 tests passed). Verified 10/10 test suite passes.`
 - `S-013 | 2026-06-04 | v1.8 | Standardize repo structure, lock versions in requirements.txt, configure testing/ignores, and populate README.md. | Live §8–§10 updated; requirements.txt populated; README.md initialized.`
 - `S-014 | 2026-06-04 | v1.8 | Verified Python reference engine memory-window synchronization and updated Next Actions. | Live §8, §10 updated; S-014 appended.`
+- `S-015 | 2026-06-04 | v1.8 | Mathematical derivation and numerical verification of the conjectured scaling law. Added pyproject.toml and scratch_check.py to README. | Live §8, §11, §12 updated.`
 
 
 ## §13 — Key References

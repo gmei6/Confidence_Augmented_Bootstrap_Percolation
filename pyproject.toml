@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twocascade"
+version = "0.1.0"
+description = "A Two-Channel Cascade Model of Bank Failure"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.3.4",
+    "scipy>=1.16.3",
+    "matplotlib>=3.10.6",
+    "pandas>=2.3.3"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pyrefly]
+search-path = ["src"]

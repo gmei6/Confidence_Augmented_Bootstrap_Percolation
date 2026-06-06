@@ -17,21 +17,14 @@ non-trivial task. Honor all guardrails in GEMINI.md and AGENTS.md throughout.
    surface the tension before going further.
 
 ## Step 1 — Plan (propose only)
-1. Invoke the `plan-refinement` agent.
-2. It drafts a step-by-step plan and red-teams it (≤5 iterations) against algorithmic/
-   memory risks, edge cases, C++ portability, and testing blindspots.
-3. Output the Final Brief: proposed §11/§12 entries, the implementation plan, and the
-   debate summary. For any C++ change, state whether the Python reference needs a parallel
-   update; for any Python change, state whether C++ parity is in scope.
-4. **Approval gate:** present the plan to Gary. Do not proceed until he approves.
+1. Call `/plan` to draft and red-team the implementation plan (≤5 rounds, fresh blind
+   adversary each round; proposes only, edits nothing).
+2. **Approval gate:** present the Final Brief to Gary. Do not proceed until he approves.
 
 ## Step 2 — Execute (only after approval)
-1. Invoke the `plan-execution` agent to drive the approved changes.
-2. Delegate code to `python-simulation` and/or `cpp-engine`. Never modify
-   `src/twocascade/reference.py` (the oracle) as a side effect — if implicated, STOP and ask.
-3. Never write to `results/raw/` or `results/figures/` directly — the runner script owns
-   all output and stamps seed + params + commit hash.
-4. Present every diff in chat and get explicit permission before writing to disk.
+1. Call `/execute` to implement the approved plan. It delegates to `python-simulation`
+   and/or `cpp-engine`, presents every diff for approval before writing, and never touches
+   `reference.py`, frozen sections, or `results/` directly.
 
 ## Step 3 — Verify
 1. Invoke the `adversarial-review` agent.
@@ -42,10 +35,9 @@ non-trivial task. Honor all guardrails in GEMINI.md and AGENTS.md throughout.
    checklist holds. Do not mark done until all hold.
 
 ## Step 4 — Wrap up
-1. Invoke the `session-wrapup` agent.
-2. It drafts §8–§10 live-state updates, append-only §11/§12 entries, and any
-   LESSONS_LEARNED additions — as drafts for Gary's approval.
-3. Only the orchestrator (PI) applies approved tracker edits, via the §14 protocol.
+1. Call `/wrapup` to draft §8–§10 live-state updates, append-only §11/§12 entries, and any
+   LESSONS_LEARNED additions — drafts for Gary's approval.
+2. Only the orchestrator (PI) applies approved tracker edits, via the §14 protocol.
 
 ## Notes
 - Pass the `walkthrough.md` from Step 2 as input context when invoking `adversarial-review`.

@@ -4,8 +4,8 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-04 — Session 15 (conjecture validation verified)
-- **File version:** v1.8
+- **Last updated:** 2026-06-06 — Session 16 (Week 2 simulation sweep complete)
+- **File version:** v1.9
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
 ---
@@ -339,7 +339,7 @@ heuristic mean-field threshold** showing qualitative agreement.
       still has open forks, and $n{=}1000$ at a few hundred realizations is fast enough. Reproduce
       *pure* bootstrap percolation at $\mu=0$ and check the empirical seed threshold against $a_c$.
       This prototype becomes the **reference oracle** (`reference.py`) for the C++ port.
-- [ ] **Wk 2 — GO/NO-GO week.** (i) 1-D $\mu$-sweep at near-critical $r$: *does $\mu$ have teeth?*
+- [x] **Wk 2 — GO/NO-GO week.** (i) 1-D $\mu$-sweep at near-critical $r$: *does $\mu$ have teeth?*
       (ii) Bimodality histograms of $|A^*|/n$ (justify $\theta$). (iii) **Decide F1** (incremental vs.
       cumulative) and **fix the $p_n$ scaling (F4)**. If $\mu$ is inert, pivot (§7) before building
       the pipeline.
@@ -405,28 +405,25 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 2. Wk-1 milestone remains complete. Modeling forks resolved. Repository structure standardized and dependencies pinned (D-011).
-- **State of the code:** `src/twocascade/reference.py` is the validated Python reference oracle (with the normalized memory-window specification fully implemented and verified). The C++ core remains empty stubs.
-- **Validation:** `tests/test_mu0_bootstrap_threshold.py` and `tests/test_window_len.py` both pass (10/10 tests total) under pytest.
-- **First quantitative result (carried forward):** at $n{=}4000$, $r{=}2$, empirical threshold $\approx 25.3$ vs. $a_c=20$ (ratio $\approx 1.26$) — a finite-size effect set by the magnitude of $a_c$; Janson scaling adopted for theorem validity.
-- **Pilot (S-008), carried forward:** paired-simulation pilot confirmed memory-window family details.
-- **This session (S-014) — Verified reference.py memory-window implementation:** Verified the implementation of `window_len` and `weights` in `run_cascade` (and their passthrough in `estimate_systemic_probability`), ran pytest suite, and confirmed that all 10 tests passed successfully.
-- **Conjecture validation (S-015):** Derived critical seed size scaling $a_c(\mu) = a_c(0) (1-\mu)^{r/(r-1)}$ from Poisson self-consistent equations. Validated at $N=1000, 2000, 4000$ for $r=2$, yielding empirical thresholds that follow the predicted scaling ratios (e.g., at $N=2000$, $\mu=0.25$ ratio $0.601$ vs. expected $0.563$, and $\mu=0.50$ ratio $0.361$ vs. expected $0.250$).
-- **Where the code lives:** `src/twocascade/reference.py`; tests in `tests/`; environment config in `requirements.txt`, `pytest.ini`, and `pyproject.toml`.
+- **Phase:** Week 2. GO/NO-GO week complete. Parallelized sweeps executed over $10 \times 5$ grid ($N=2000, M=500$, 25k trials total) using the Python reference engine.
+- **Results:** Global fear $\mu$ behaves as a stochastically bounded amplifier. Systemic event threshold $\theta=0.5$ is justified by strong bimodality. The empirical threshold crossing ratio validates the conjectured scaling law $a_c(\mu)/a_c(0) = (1-\mu)^2$ (Conjecture D-012).
+- **State of the Code:** Python simulation orchestration files (`model.py`, `runner.py`, `analysis.py`, `plotting.py`) implemented, hardened, and verified under a 20-test pytest suite.
+- **Validation:** `tests/` contains `test_mu0_bootstrap_threshold.py`, `test_window_len.py`, `test_model.py`, `test_analysis.py`, and `test_sweep_integration.py` (20/20 tests pass under pytest).
+- **Where the code lives:** `src/twocascade/`; configs in `configs/week2_config.json`; tests in `tests/`; environmental setup in `requirements.txt`, `pytest.ini`, and `pyproject.toml`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
-- **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter and which connects to the critical-window work? *(This is also where the rejected F4 bounded-degree regime would live, and the §7 μ-inert pivot now points here.)*
+- **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter and which connects to the critical-window work? *(The go/no-go sweep confirms fear channel is active, resolving the risk of inert $\mu$.)*
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling), and reasonable to probe empirically without a proof?
-- **Forks awaiting decision:** None. *(Resolved: F1 → incremental (D-005, D-006); F2 → dropped (D-008); F3 → Beta (D-002); E1 → standalone executable + file I/O (D-003); F4 → Janson regime (D-004). Survivor-hazard removed entirely (D-007).)*
 - **Engineering note (raised S-004; no §5.2 edit made):** §5.2's "one cascade realization is $O(\text{edges})$" undercounts the fear channel — realistic per-cascade cost is $O(\text{edges} + \sum_t |\text{solvent}_t|)$. Decide whether to amend §5.2 before the C++ port.
 - **Logistics:** email Prof. Dhara about PACE access.
 - **Blockers:** none.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Begin Wk-2 (GO/NO-GO):** 1-D $\mu$-sweep at near-critical $r$ — *does $\mu$ have teeth?* — plus bimodality histograms of $|A^*|/n$ to justify $\theta$.
-2. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
+1. **Begin Wk-3–4 (C++ Port)**: Port sparse G(n,p) generation, cascade engine, and openmp realizations loop to C++ (CSR format, random seed sequence).
+2. Establish Python/C++ cross-validation checks using the graph serialization tool in `runner.py`.
+3. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
 
 ---
 
@@ -449,6 +446,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-011 | 2026-06-04 | Standardize repository structure and Python environment dependencies. | Lock exact dependency versions in requirements.txt, ensure pytest.ini aligns pythonpath, verify gitignore rules, and populate the project README.md structure to guarantee reproducibility. | §5.3, §5.4, §10`
 - `D-012 | 2026-06-04 | Validated conjectured critical seed size scaling law mathematically and numerically. | Self-consistent map derivation shows a_c(mu) = a_c(0) (1-mu)^{r/(r-1)}; numerical tests at N=1000, 2000, 4000 confirm ratios follow (1-mu)^2 trend (e.g., mu=0.25 ratio ~0.60, mu=0.5 ratio ~0.36 at N=2000). | §2, §8`
 - `D-013 | 2026-06-04 | Project Packaging via pyproject.toml | Adopt pyproject.toml for setuptools packaging, enabling editable pip installations (pip install -e .) to ensure clean module path resolution for testing and scratch scripts without relying on manual PYTHONPATH manipulation. | §5.3, §5.4`
+- `D-014 | 2026-06-06 | Sweep Seeding & Optimization Protocol | Run 1-D mu sweeps by scaling seed size relative to a_c(0) (clamped to >= r) instead of a_c(mu) to demonstrate amplification; use SeedSequence and multiprocessing for speed and safety; omit round histories by default to prevent large JSON bloat. | §3.5, §5.2, §5.4`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -471,6 +469,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-013 | 2026-06-04 | v1.8 | Standardize repo structure, lock versions in requirements.txt, configure testing/ignores, and populate README.md. | Live §8–§10 updated; requirements.txt populated; README.md initialized.`
 - `S-014 | 2026-06-04 | v1.8 | Verified Python reference engine memory-window synchronization and updated Next Actions. | Live §8, §10 updated; S-014 appended.`
 - `S-015 | 2026-06-04 | v1.8 | Mathematical derivation and numerical verification of the conjectured scaling law. Added pyproject.toml and scratch_check.py to README. | Live §8, §11, §12 updated.`
+- `S-016 | 2026-06-06 | v1.9 | Implemented, hardened, and merged the Week 2 Python simulation and analysis suite (model.py, runner.py, analysis.py, plotting.py, configs/week2_config.json, tests/test_model.py, tests/test_analysis.py, tests/test_sweep_integration.py); executed 25k simulation sweeps and generated final report. | §8, §9, §10`
 
 
 ## §13 — Key References

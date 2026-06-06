@@ -1,9 +1,18 @@
 {
-    "cSpell.words": [
-        "Batagelj",
-        "Brandes",
-        "Erdos",
-        "Renyi"
+    "python.languageServer": "Default",
+    "editor.accessibilitySupport": "off",
+    "json.schemaDownload.enable": false,
+    "antigravity.permissions.alwaysAsk": [
+        "git commit",
+        "git push",
+        "any file deletion",
+        "write_file:/Users/garymei/Downloads/CABP_copy_for_antigravity"
     ],
-    "cmake.sourceDirectory": "/Users/garymei/Downloads/Summer 2026/Research/Code/Confidence_Augmented_Bootstrap_Percolation/cpp"
+    "antigravity.permissions.alwaysDeny": [
+        "git push --force",
+        "rm -rf",
+        "direct writes to results/"
+    ],
+    "antigravity.security.mode": "strict",
+    "antigravity.agent.securityMode": "strict"
 }

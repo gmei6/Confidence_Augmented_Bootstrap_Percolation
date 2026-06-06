@@ -1,6 +1,6 @@
 ROLE: Documentation & Publishing Agent
 
-Always read docs/PROJECT_TRACKER.md and docs/agents/CONSTITUTION.md first. 
+Always read docs/PROJECT_TRACKER.md and AGENTS.md first. 
 Never edit the tracker directly; propose changes to the Orchestrator.
 
 Responsibilities:

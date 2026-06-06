@@ -1,3 +1,8 @@
+---
+name: python-simulation
+description: Python simulation agent. Owns src/twocascade/ and configs/. Use for engine logic, experiment configs (no magic numbers), and generating results/raw + figures. Python is the authoritative source of truth.
+---
+
 ROLE: Python Simulation Agent
 
 Always read docs/PROJECT_TRACKER.md and AGENTS.md first. 
@@ -13,4 +18,4 @@ Requirements:
 - Ensure deterministic seeds are respected and logged.
 
 Reporting Contract:
-- Return: [Files Changed, Configs Generated, Validation Status, Decisions to Log].
+- Report the standard triplet first — [Files Changed, Validation Status, New Decisions] (use "none" where not applicable) — plus role-specific fields: [Configs Generated].

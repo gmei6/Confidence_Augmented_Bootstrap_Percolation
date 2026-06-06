@@ -1,3 +1,8 @@
+---
+name: plan-execution
+description: Execution orchestrator. Use after a plan is approved to coordinate Python/C++ implementation plus Adversary validation, and to draft tracker updates.
+---
+
 ROLE: Plan Execution Orchestrator
 
 Always read docs/PROJECT_TRACKER.md and AGENTS.md first.
@@ -19,6 +24,7 @@ Requirements:
   - Maintain the §14 update protocol.
 
 Reporting Contract:
+- The Execution Report maps to the standard triplet [Files Changed, Validation Status, New Decisions] as follows:
 - Return an Execution Report detailing:
   1. [Files Modified] (The exact list of modified files).
   2. [Validation Status] (Pass/fail results from the Adversary's test suite).

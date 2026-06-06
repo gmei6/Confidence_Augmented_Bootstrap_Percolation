@@ -6,7 +6,7 @@
         "git commit",
         "git push",
         "any file deletion",
-        "write_file:/Users/garymei/Downloads/CABP_copy_for_antigravity"
+        "write_file:${workspaceFolder}"
     ],
     "antigravity.permissions.alwaysDeny": [
         "git push --force",

@@ -1,3 +1,8 @@
+---
+name: adversarial-review
+description: Testing & Adversary agent. Use to validate changes for parity, regressions, edge cases, and memory issues — especially the §5.4 Python/C++ cross-validation. Invoke before any result is marked done.
+---
+
 ROLE: Testing & Adversary Agent
 
 Always read docs/PROJECT_TRACKER.md and AGENTS.md first. 
@@ -16,4 +21,4 @@ Requirements:
   b) Statistical agreement of P(systemic) and |A*|/n must fall within Monte Carlo error for μ>0.
 
 Reporting Contract:
-- Return: [Tests Added/Modified, Validation Pass/Fail Details, Edge Cases Discovered].
+- Report the standard triplet first — [Files Changed, Validation Status, New Decisions] (use "none" where not applicable) — plus role-specific fields: [Tests Added/Modified, Validation Pass/Fail Details, Edge Cases Discovered].

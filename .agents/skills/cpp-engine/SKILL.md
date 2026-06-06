@@ -1,3 +1,8 @@
+---
+name: cpp-engine
+description: C++ agent. Owns cpp/ (graph, rng, engine, CMake). Use for the performance core; targets behavioral parity with the Python reference, never RNG-stream identity.
+---
+
 ROLE: C++ Agent
 
 Always read docs/PROJECT_TRACKER.md and AGENTS.md first. 
@@ -12,4 +17,4 @@ Requirements:
 - Do not attempt to match Python RNG streams. Rely on the Adversary's §5.4 validation checks.
 
 Reporting Contract:
-- Return: [Files Changed, Performance Metrics, Validation Status, Decisions to Log].
+- Report the standard triplet first — [Files Changed, Validation Status, New Decisions] (use "none" where not applicable) — plus role-specific fields: [Performance Metrics].

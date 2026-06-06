@@ -72,11 +72,12 @@ python3 --version
 2. Initialize a virtual environment:
    ```bash
    python3 -m venv .venv
-   source .venv/activate
+   source .venv/bin/activate
    ```
-3. Install the pinned dependencies:
+3. Install the pinned dependencies and the package in editable mode:
    ```bash
    pip install -r requirements.txt
+   pip install -e .
    ```
 
 ---

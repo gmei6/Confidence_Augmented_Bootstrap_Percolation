@@ -27,12 +27,11 @@ non-trivial task. Honor all guardrails in GEMINI.md and AGENTS.md throughout.
    `reference.py`, frozen sections, or `results/` directly.
 
 ## Step 3 — Verify
-1. Invoke the `adversarial-review` agent.
-2. If the C++ engine was touched, load the `cross-validation` skill and run its two
-   prongs: identical failed set at μ=0, plus statistical agreement of P(systemic) and
-   |A*|/n within Monte Carlo error for μ>0.
-3. Load the `reproducible-run` skill and confirm every item of its §5.6 Definition-of-Done
-   checklist holds. Do not mark done until all hold.
+1. Call `/verify`, which runs the three-agent gate: `reviewer` (design & contracts) →
+   `critic` (adversarial tests, and the `cross-validation` skill's two prongs if C++ was
+   touched) → `auditor` (the mandatory §5.6 / §5.4 integrity gate).
+2. The Auditor verdict is binary. Do not mark done until it returns AUDIT PASS; on FAIL,
+   route its required-to-pass list back to the owning agents and re-run.
 
 ## Step 4 — Wrap up
 1. Call `/wrapup` to draft §8–§10 live-state updates, append-only §11/§12 entries, and any
@@ -40,5 +39,7 @@ non-trivial task. Honor all guardrails in GEMINI.md and AGENTS.md throughout.
 2. Only the orchestrator (PI) applies approved tracker edits, via the §14 protocol.
 
 ## Notes
-- Pass the `walkthrough.md` from Step 2 as input context when invoking `adversarial-review`.
+- Pass the `walkthrough.md` from Step 2 as input context when calling `/verify`.
 - Prefer New Worktree Mode for any change to `src/` or `cpp/src/`.
+- For long multi-step runs, invoke `/self-succession` at the budget threshold so context
+  limits don't degrade the orchestration.

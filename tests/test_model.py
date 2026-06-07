@@ -9,9 +9,9 @@ from twocascade.model import (
     calculate_beta,
     calculate_p_n,
     janson_t_c,
-    janson_a_c,
-    combined_a_c
+    janson_a_c
 )
+from twocascade.meanfield import critical_seed_scaling
 
 def test_cascade_params_validation():
     """Verify CascadeParams validations raise error on invalid configurations."""
@@ -52,5 +52,5 @@ def test_janson_formulas():
     ac = janson_a_c(n, p, r)
     assert math.isclose(ac, 10.0, rel_tol=1e-9)
     
-    ac_mu = combined_a_c(n, p, r, mean_fear=0.5)
+    ac_mu = critical_seed_scaling(n, p, r, mean_fear=0.5)
     assert math.isclose(ac_mu, 2.5, rel_tol=1e-9)

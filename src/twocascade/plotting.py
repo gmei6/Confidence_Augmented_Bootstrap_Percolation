@@ -6,6 +6,7 @@ import os
 from typing import Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
+from twocascade.meanfield import scaling_ratio
 
 def apply_plot_style() -> None:
     """Set professional design standards for matplotlib."""
@@ -65,6 +66,15 @@ def plot_bimodality_histograms(analyzed_data: Dict[str, Any], selected_mu: float
     apply_plot_style()
     os.makedirs(output_dir, exist_ok=True)
     
+    available_mus = sorted(list(set(c["mean_fear"] for c in analyzed_data["processed_cells"])))
+    if not any(abs(mu - selected_mu) < 1e-9 for mu in available_mus):
+        if available_mus:
+            original_mu = selected_mu
+            selected_mu = min(available_mus, key=lambda mu: abs(mu - selected_mu))
+            print(f"Warning: Selected mu={original_mu} not found in data. Dynamically resolved to closest mu={selected_mu}")
+        else:
+            raise ValueError("No simulation data found in processed_cells.")
+            
     cells = [c for c in analyzed_data["processed_cells"] if abs(c["mean_fear"] - selected_mu) < 1e-9]
     if not cells:
         raise ValueError(f"No simulation data found for mu = {selected_mu}")
@@ -125,13 +135,19 @@ def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: 
     emp_thresholds = analyzed_data["empirical_thresholds"]
     r = analyzed_data["metadata"]["r"]
     
+    grid_floor = r
+    min_seed_size = min(cell["seed_size"] for cell in analyzed_data["processed_cells"]) if "processed_cells" in analyzed_data else 0
+    
     mu_vals = []
     a_emp_vals = []
     
     for mu_str, a_emp in emp_thresholds.items():
         if a_emp is not None and not np.isnan(a_emp):
-            mu_vals.append(float(mu_str))
-            a_emp_vals.append(float(a_emp))
+            a_val = float(a_emp)
+            # Filter out clamped crossing points
+            if a_val > grid_floor and a_val > min_seed_size:
+                mu_vals.append(float(mu_str))
+                a_emp_vals.append(a_val)
             
     sort_idx = np.argsort(mu_vals)
     mu_sorted = np.array(mu_vals)[sort_idx]
@@ -150,9 +166,8 @@ def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: 
          
     ratio_emp = a_emp_sorted / a_emp_0
     
-    exponent = r / (r - 1)
     mu_dense = np.linspace(0.0, 0.9, 100)
-    ratio_theory = (1.0 - mu_dense) ** exponent
+    ratio_theory = scaling_ratio(mu_dense, r)
     
     fig, ax = plt.subplots(figsize=(7, 5))
     
@@ -169,3 +184,31 @@ def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: 
     filepath = os.path.join(output_dir, "scaling_validation.png")
     plt.savefig(filepath, dpi=300)
     plt.close()
+
+if __name__ == "__main__":
+    import json
+    from twocascade.analysis import analyze_sweep, load_raw_results
+    
+    # Path setup
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    raw_path = os.path.join(base_dir, "results", "raw", "sweep_week2.json")
+    figures_dir = os.path.join(base_dir, "results", "figures")
+    
+    print(f"Loading raw results from: {raw_path}")
+    raw_data = load_raw_results(raw_path)
+    
+    print("Running sweep analysis...")
+    analyzed = analyze_sweep(raw_data)
+    
+    print("Generating mu sweep plot...")
+    plot_mu_sweep(analyzed, figures_dir)
+    
+    # Default selected_mu to 0.3
+    selected_mu = 0.3
+    print("Generating bimodality histograms...")
+    plot_bimodality_histograms(analyzed, selected_mu, figures_dir)
+    
+    print("Generating critical scaling validation plot...")
+    plot_critical_scaling_validation(analyzed, figures_dir)
+    
+    print("All plots generated successfully.")

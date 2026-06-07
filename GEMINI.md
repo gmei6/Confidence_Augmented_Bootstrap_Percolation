@@ -51,4 +51,4 @@ Set the following in **Agent Manager → Additional Options → Customizations �
 
 * **Primary entry point:** `/research-cycle`
 * **Definition at:** `.agents/workflows/research-cycle.md`
-* **Adversarial Review:** When spawning the adversarial-review skill, the `walkthrough.md` artifact from the preceding implementation session should be passed as input context.
+* **Verification:** Verification is the `/verify` workflow — `reviewer` → `critic` → `auditor`, each spawned blind. Pass the `walkthrough.md` artifact from the preceding implementation session as input context. The `auditor` returns a binary AUDIT PASS/FAIL and is the mandatory gate before any result is marked done.

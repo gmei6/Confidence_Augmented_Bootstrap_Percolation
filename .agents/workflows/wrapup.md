@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: End-of-session wrap-up workflow. Use to audit the session and draft live-state (§8–§10) updates, append-only §11/§12 entries, and LESSONS_LEARNED additions, plus next steps. Drafts only — the PI applies tracker edits via §14. Called by /research-cycle Step 4.
+description: End-of-session wrap-up. Audits the session and drafts live-state (§8–§10) updates, append-only §11/§12 entries, and LESSONS_LEARNED additions plus next steps — drafts only; the PI applies via §14. Called by /research-cycle Step 4.
 ---
 
 # Wrap-up

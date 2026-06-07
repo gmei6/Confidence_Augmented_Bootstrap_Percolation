@@ -79,8 +79,3 @@ def janson_a_c(n: int, p: float, r: int) -> float:
     return (1.0 - 1.0 / r) * janson_t_c(n, p, r)
 
 
-def combined_a_c(n: int, p: float, r: int, mean_fear: float) -> float:
-    """Conjectured combined critical seed size scaling law: a_c(mu) = a_c(0) * (1-mu)^{r/(r-1)}."""
-    ac0 = janson_a_c(n, p, r)
-    exponent = r / (r - 1)
-    return ac0 * ((1.0 - mean_fear) ** exponent)

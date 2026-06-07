@@ -1,6 +1,6 @@
 ---
 name: new-experiment
-description: Scaffold and run a new simulation experiment reproducibly. Use when starting a new sweep or parameter study — creates a config, runs via the runner with a logged seed, saves raw outputs, and regenerates the figure, satisfying the §5.6 Definition of Done.
+description: Scaffold and run a new simulation experiment reproducibly: create a config, run the runner with a logged seed, save raw outputs, and regenerate the figure, satisfying the §5.6 Definition of Done. Use for any new sweep or parameter study.
 ---
 
 # New Experiment

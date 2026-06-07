@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-06 — Session 16 (Week 2 simulation sweep complete)
+- **Last updated:** 2026-06-06 — Session 18 (agent harness: adversarial-review split into reviewer/critic/auditor; /verify, /self-succession, /watchdog added)
 - **File version:** v1.9
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -405,9 +405,9 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 2. GO/NO-GO week complete. Parallelized sweeps executed over $10 \times 5$ grid ($N=2000, M=500$, 25k trials total) using the Python reference engine.
-- **Results:** Global fear $\mu$ behaves as a stochastically bounded amplifier. Systemic event threshold $\theta=0.5$ is justified by strong bimodality. The empirical threshold crossing ratio validates the conjectured scaling law $a_c(\mu)/a_c(0) = (1-\mu)^2$ (Conjecture D-012).
-- **State of the Code:** Python simulation orchestration files (`model.py`, `runner.py`, `analysis.py`, `plotting.py`) implemented, hardened, and verified under a 20-test pytest suite.
+- **Phase:** Week 3-4 (C++ Port) / Transitioning from Week 2 simulation sweep.
+- **Results:** Week 2 sweep report issues resolved: corrected analytical baseline $a_c(0) \approx 15.16$ at $N=2000$; reframed empirical gap ($20.65$ vs $15.16$) as a known finite-size offset; excluded clamped crossings ($\mu \ge 0.5$) from the critical threshold scaling validation plot.
+- **State of the Code:** Python orchestration files (`model.py`, `meanfield.py`, `runner.py`, `analysis.py`, `plotting.py`) implemented, hardened, and verified under a 20-test pytest suite. Added CLI runnable entry point in `plotting.py`.
 - **Validation:** `tests/` contains `test_mu0_bootstrap_threshold.py`, `test_window_len.py`, `test_model.py`, `test_analysis.py`, and `test_sweep_integration.py` (20/20 tests pass under pytest).
 - **Where the code lives:** `src/twocascade/`; configs in `configs/week2_config.json`; tests in `tests/`; environmental setup in `requirements.txt`, `pytest.ini`, and `pyproject.toml`.
 
@@ -447,6 +447,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-012 | 2026-06-04 | Validated conjectured critical seed size scaling law mathematically and numerically. | Self-consistent map derivation shows a_c(mu) = a_c(0) (1-mu)^{r/(r-1)}; numerical tests at N=1000, 2000, 4000 confirm ratios follow (1-mu)^2 trend (e.g., mu=0.25 ratio ~0.60, mu=0.5 ratio ~0.36 at N=2000). | §2, §8`
 - `D-013 | 2026-06-04 | Project Packaging via pyproject.toml | Adopt pyproject.toml for setuptools packaging, enabling editable pip installations (pip install -e .) to ensure clean module path resolution for testing and scratch scripts without relying on manual PYTHONPATH manipulation. | §5.3, §5.4`
 - `D-014 | 2026-06-06 | Sweep Seeding & Optimization Protocol | Run 1-D mu sweeps by scaling seed size relative to a_c(0) (clamped to >= r) instead of a_c(mu) to demonstrate amplification; use SeedSequence and multiprocessing for speed and safety; omit round histories by default to prevent large JSON bloat. | §3.5, §5.2, §5.4`
+- `D-015 | 2026-06-06 | Move combined seed scaling formula from model.py to meanfield.py and decouple plotting.py. | Resolves structural drift and code duplication between model.py and meanfield.py; plotting.py now imports scaling_ratio directly from meanfield.py. | §5.3`
+- `D-016 | 2026-06-06 | Split the single adversarial-review agent into three blind, single-purpose agents — reviewer (design & interface-contract correctness), critic (adversarial tests, boundary/memory, and the §5.4 cross-validation run), auditor (independent §5.6/§5.4 integrity gate, binary PASS/FAIL) — and added a /verify workflow running reviewer→critic→auditor. Also added /self-succession (context-handoff protocol) and /watchdog (subagent-liveness cron, notify-don't-kill). Deleted the old adversarial-review skill and rewired call-sites in /research-cycle (Step 3 → /verify), /plan (red-team → critic), /harden (reviewer+critic per round, auditor gate at convergence), and GEMINI.md. | Ports the high-value primitives from Google Antigravity's teamwork-preview into the human-in-the-loop harness while preserving the propose-don't-write and approval-gate guardrails. Separating review/critique/audit raises code quality and makes "done" gated by an independent check tied to the §5.6 Definition of Done and §5.4 cross-validation (not generic anti-cheating); the auditor must not flag expected C++/Python RNG-stream divergence (§5.4). Self-succession lifts the single-context-window cap on long runs; the watchdog catches stalls (e.g. the Week-2 explorer's pytest-permission timeout) without fighting approval gates. | Agent harness (AGENTS.md/GEMINI.md, .agents/skills, .agents/workflows); verification process for §5.4/§5.6 — no frozen tracker text changed.`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -470,6 +472,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-014 | 2026-06-04 | v1.8 | Verified Python reference engine memory-window synchronization and updated Next Actions. | Live §8, §10 updated; S-014 appended.`
 - `S-015 | 2026-06-04 | v1.8 | Mathematical derivation and numerical verification of the conjectured scaling law. Added pyproject.toml and scratch_check.py to README. | Live §8, §11, §12 updated.`
 - `S-016 | 2026-06-06 | v1.9 | Implemented, hardened, and merged the Week 2 Python simulation and analysis suite (model.py, runner.py, analysis.py, plotting.py, configs/week2_config.json, tests/test_model.py, tests/test_analysis.py, tests/test_sweep_integration.py); executed 25k simulation sweeps and generated final report. | §8, §9, §10`
+- `S-017 | 2026-06-06 | v1.9 | Resolved Week 2 report and plotting issues: corrected baseline ac(0)=15.16, reframed finite-size offset, softened executive summary, repointed figure links, filtered clamped crossings in plotting, populated meanfield.py, and added plotting CLI. | §8, §10`
+- `S-018 | 2026-06-06 | v1.9 | Agent-harness change only, no tracker §-text edits (D-016): split adversarial-review into reviewer/critic/auditor skills; added /verify, /self-succession, /watchdog workflows; deleted the old skill; rewired /research-cycle, /plan, /harden, and GEMINI.md. Live §8–§10 unchanged — research state unaffected.`
 
 
 ## §13 — Key References

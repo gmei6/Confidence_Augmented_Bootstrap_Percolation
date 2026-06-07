@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Iterative plan-refinement loop. Use to draft and red-team an implementation plan before any code is written — up to 5 rounds with a fresh, blind adversary each round. Proposes only; never edits files. Called by /research-cycle Step 1, or run standalone to harden a plan.
+description: Iterative plan-refinement loop. Draft and red-team an implementation plan before any code is written: up to 5 rounds, a fresh blind critic each round. Proposes only; never edits files. Called by /research-cycle Step 1, or run standalone.
 ---
 
 # Plan
@@ -17,9 +17,10 @@ tracker or source files.
 ## Step 1 — Loop (max 5 rounds; stop on sign-off)
 1. **Draft** step-by-step implementation changes with the owning agents
    (`python-simulation`, `cpp-engine`, ...).
-2. **Red-team:** spawn a NEW, blind `adversarial-review` agent to criticize the draft for
+2. **Red-team:** spawn a NEW, blind `critic` agent to attack the draft for
    algorithmic/memory risk, edge cases & initialization, C++ portability, and testing
-   blindspots.
+   blindspots. (Optionally also spawn a blind `reviewer` for design/contract sanity.) The
+   `auditor` is NOT used here — it gates finished work, not plans.
 3. **Revise** to address material critiques. Repeat until sign-off or 5 rounds.
 4. For any C++ change, state whether the Python reference needs a parallel update; for any
    Python change, state whether C++ parity is in scope. Never leave this implicit.

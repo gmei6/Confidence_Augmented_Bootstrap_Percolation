@@ -23,3 +23,8 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 
 *   **Oracle Protection:** `src/twocascade/reference.py` is the unassailable oracle. Do not edit it as a side-effect of C++ work; any changes require a dedicated and approved plan.
 *   **Running Results:** Never write simulation outputs directly to `results/raw/` or `results/figures/`. They must always be written by a runner script that logs the seed, parameters, and commit hash.
+
+## 4. Multi-agent Orchestration & CLI Tooling
+
+*   **Avoid Float Crossing Clamping**: When interpolating empirical thresholds, crossings that are stuck at the minimum sweep seed size are clamped floor points (lower bounds, not resolved crossings) under high fear. Check `a_emp > grid_floor` (inequality) rather than checking float equality to filter them out in validation plots.
+*   **Runnable Plotting Entry Point**: Keep plotting modules executable as standalone CLI scripts (e.g. via `if __name__ == "__main__":`) so that figures can be automatically regenerated from raw results on disk, ensuring complete reproducibility.

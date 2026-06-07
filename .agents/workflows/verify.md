@@ -1,12 +1,10 @@
 ---
-name: verify
 description: Three-agent verification gate: Reviewer (design), Critic (adversarial tests + §5.4), then a blind Auditor (binary §5.6 integrity gate, must pass before done). Replaces the old adversarial-review step in /research-cycle and /harden.
 ---
 
 # Verify
 
-The three-agent verification gate for the TwoCascade project. Replaces the old single
-`adversarial-review` invocation with a separation of concerns: **design** (reviewer),
+The three-agent verification gate for the TwoCascade project. Includes **design** (reviewer),
 **robustness** (critic), and **integrity** (auditor). Honor all guardrails in GEMINI.md
 and AGENTS.md throughout. This workflow proposes and validates; it does not apply
 tracker edits (that is the PI via §14).

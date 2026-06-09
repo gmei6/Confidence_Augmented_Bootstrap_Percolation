@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+type: software
+
+title: >-
+  TwoCascade: Simulation of Bootstrap Percolation and Confidence-Threshold
+  Cascades on Erdős–Rényi Random Graphs
+
+authors:
+  - family-names: Mei
+    given-names: Gary
+    affiliation: "Georgia Institute of Technology, School of Mathematics"
+    # orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX"   # add when you have one
+
+repository-code: "https://github.com/<username>/<repo>"   # fill in before publishing
+
+abstract: >
+  A simulation framework for a two-channel cascade model on the Erdős–Rényi
+  random graph G(n,p). The model couples a bootstrap percolation mechanism
+  (following Janson et al. 2012) with a global confidence-threshold process
+  (following Acemoglu et al.) to study cascade onset, critical thresholds, and
+  contagion dynamics motivated by systemic financial risk. Implemented in both
+  Python (reference) and C++ (production), with cross-validated outputs.
+
+keywords:
+  - bootstrap percolation
+  - random graphs
+  - Erdos-Renyi
+  - financial contagion
+  - systemic risk
+  - cascade dynamics
+  - Monte Carlo simulation
+  - two-channel model
+
+license: MIT
+version: "0.1.0"
+date-released: "2026-06-06"
+
+# Uncomment and populate if a companion paper is published:
+# preferred-citation:
+#   type: article
+#   title: ""
+#   authors:
+#     - family-names: Mei
+#       given-names: Gary
+#   journal: ""
+#   year:
+#   doi: ""

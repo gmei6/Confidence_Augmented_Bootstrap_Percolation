@@ -1,0 +1,43 @@
+{
+  "pinned_params": {
+    "n": 2000,
+    "r": 2,
+    "concentration": 50.0,
+    "theta": 0.5,
+    "window_len": 1,
+    "weights": null,
+    "target_high_degree": false
+  },
+  "scaling": {
+    "n_ref": 4000,
+    "target_mean_degree": 10.0,
+    "alpha": 0.7
+  },
+  "sweep": {
+    "mean_fear_grid": [
+      0.0,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "seed_multiples": [
+      0.5,
+      0.8,
+      1.0,
+      1.2,
+      1.5
+    ],
+    "trials_per_cell": 500,
+    "base_seed": 20260606
+  },
+  "output": {
+    "raw_filepath": "results/raw/sweep_week2_cpp.json"
+  },
+  "engine": "cpp"
+}

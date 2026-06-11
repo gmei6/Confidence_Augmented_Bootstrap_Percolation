@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-11 — Session 21 (C++ engine cross-validated against Python oracle: §5.4 Prong A + Prong B PASS; 25/25 tests)
+- **Last updated:** 2026-06-11 — Session 22 (C++ engine integrated into sweeps; milestone r ∈ {2, 3, 4} complete; 25/25 tests pass)
 - **File version:** v1.10
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -346,7 +346,7 @@ heuristic mean-field threshold** showing qualitative agreement.
       (ii) Bimodality histograms of $|A^*|/n$ (justify $\theta$). (iii) **Decide F1** (incremental vs.
       cumulative) and **fix the $p_n$ scaling (F4)**. If $\mu$ is inert, pivot (§7) before building
       the pipeline.
-- [ ] **Wk 3–4 — Port the (now-locked) hot path to C++ + full $(r,\mu)$ diagram at one moderate $n$
+- [x] **Wk 3–4 — Port the (now-locked) hot path to C++ + full $(r,\mu)$ diagram at one moderate $n$
       (e.g. 1000).** With the model decided (forks closed in Wk 2), port $G(n,p)$ generation + the
       cascade engine + the realization loop to C++ (CSR, `<random>`), wire it to Python via E1, and
       **validate it against the Python reference (§5.4)**. Then run the full diagram and solidify the
@@ -408,11 +408,11 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 3–4 (C++ Port) — **engine port complete and cross-validated (§5.4 PASS)**; the full $(r,\mu)$ diagram via the C++ engine and the `runner.py` integration are the remaining Wk 3–4 items.
-- **Results:** §5.4 cross-language validation passed both prongs. **Prong A** (deterministic logic, $\mu=0$, same graph + seeds): C++ final failed sets identical to the Python oracle on 2 automated parametrized cases (supercritical $r{=}2$ $n{=}1000$; subcritical $r{=}4$ $n{=}5000$, stalled at 113/5000 — the discriminating case) plus 3 manual instances. **Prong B** (statistical parity, $\mu>0$, 1000 trials/engine at $n{=}1000, p{=}0.01, r{=}2, \mu{=}0.5, \kappa{=}50, a{=}2$ — interior cell, $P(\text{systemic}) = 0.22$): two-proportion z-test pass (zero-variance guard unused), KS distance $< 0.05$. Full suite: **25/25 tests pass** (21 prior + 4 new cross-validation).
-- **State of the Code:** C++ engine builds clean natively for arm64 (`-DCMAKE_OSX_ARCHITECTURES=arm64`) in both Release and Debug; 4/4 C++ unit suites pass in both configs (RNG seeding incl. collision regression, G(n,p) generator invariants, Beta sampler incl. underflow fallback, cascade engine incl. window/halting quirks). Fixed this session: CMakeLists OpenMP hint ordering (hints must precede `find_package`; removed dead duplicate block), per-arch native-flag dispatch, `.gitignore` now covers `build*/`.
+- **Phase:** Week 5 (Overlay & Analysis) — C++ engine fully integrated into Python sweeps; Wk 3-4 milestone complete.
+- **Results:** C++ sweeps integrated with cell-level spawning. Full $(r, \mu)$ diagram for $n=1000, r \in \{2, 3, 4\}$ successfully sweep-simulated with 190 cells each (285,000 trials total) using C++ in < 15 seconds; raw results saved to `results/raw/sweep_wk3_4_r*.json` and committed configs to `configs/`. Plots generated at `results/figures/wk3_4_*`. End-to-end validation of C++ runner integration against independent Week 2 Python sweep results at $r=2, n=2000$ (with config `configs/week2_config_cpp.json` and raw outputs `results/raw/sweep_week2_cpp.json`) shows statistical agreement (max deviation: 0.0560, mean deviation: 0.0096, well within 2 standard errors for 500 trials/cell). 25/25 tests pass.
+- **State of the Code:** C++ engine integrated into `runner.py` sweeps with error handling, OMP pinning, timeouts, and engine resolution. Parameterized `test_sweep_integration.py` to cover both Python and C++ sweep execution. Removed obsolete JSON graph serialization helpers. Test validation helper `tests/test_cpp_validation.py` updated with `OMP_NUM_THREADS=1` env pin.
 - **Validation caveats / platform findings:** Apple Clang 17 ASan deadlocks pre-main on macOS 26.5 (re-entrant malloc in `InitializeShadowMemory`; diagnosed via `/usr/bin/sample`; `MallocNanoZone=0` ineffective) → macOS Debug is UBSan-only per D-018. `check_cxx_compiler_flag(-mcpu=native)` unexpectedly fails on AppleClang 17, so local builds currently carry no native CPU tuning flag (perf nicety, not correctness — see §9).
-- **Where the code lives:** C++ engine in `cpp/` (library core `twocascade_core` + thin CLI `twocascade_run` per D-003); cross-validation in `tests/test_cpp_validation.py` (Prong A automation + z-test/KS Prong B); oracle dump script in `.agents/skills/cross-validation/scripts/dump_reference_run.py`; Python reference in `src/twocascade/`.
+- **Where the code lives:** C++ engine in `cpp/` (library core `twocascade_core` + thin CLI `twocascade_run` per D-003); runner integration in `src/twocascade/runner.py` (`run_single_cell_cpp`, `run_sweep`); tests in `tests/test_sweep_integration.py` and `tests/test_cpp_validation.py`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
@@ -424,9 +424,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Integrate the C++ binary into `runner.py` sweeps** (subprocess invocation, C++ forced single-threaded under Python's multiprocessing pool, outputs wrapped with full config + seeds + git commit + timestamp metadata into `results/raw/` per §5.4).
-2. **Run the full $(r,\mu)$ diagram at $n=1000$ with the C++ engine** — this completes the Wk 3–4 milestone (check the §6 box only then).
-3. Email Prof. Dhara re PACE access; put Q2–Q3 on the first-meeting agenda.
+1. Analyze the completed $r \in \{2, 3, 4\}$ sweeps and write up findings in a research note (e.g. comparing critical seed size curves to theoretical mean-field scaling laws).
+2. Email Prof. Dhara re PACE access; put Q2–Q3 on the first-meeting agenda.
 
 ---
 
@@ -454,6 +453,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-016 | 2026-06-06 | Split the single adversarial-review agent into three blind, single-purpose agents — reviewer (design & interface-contract correctness), critic (adversarial tests, boundary/memory, and the §5.4 cross-validation run), auditor (independent §5.6/§5.4 integrity gate, binary PASS/FAIL) — and added a /verify workflow running reviewer→critic→auditor. Also added /self-succession (context-handoff protocol) and /watchdog (subagent-liveness cron, notify-don't-kill). Deleted the old adversarial-review skill and rewired call-sites in /research-cycle (Step 3 → /verify), /plan (red-team → critic), /harden (reviewer+critic per round, auditor gate at convergence), and GEMINI.md. | Ports the high-value primitives from Google Antigravity's teamwork-preview into the human-in-the-loop harness while preserving the propose-don't-write and approval-gate guardrails. Separating review/critique/audit raises code quality and makes "done" gated by an independent check tied to the §5.6 Definition of Done and §5.4 cross-validation (not generic anti-cheating); the auditor must not flag expected C++/Python RNG-stream divergence (§5.4). Self-succession lifts the single-context-window cap on long runs; the watchdog catches stalls (e.g. the Week-2 explorer's pytest-permission timeout) without fighting approval gates. | Agent harness (AGENTS.md/GEMINI.md, .agents/skills, .agents/workflows); verification process for §5.4/§5.6 — no frozen tracker text changed.`
 - `D-017 | 2026-06-11 | Hardened C++ Port design details including double-precision typing, z-test zero-variance bypass, circular-buffer deque emulation, seed parameter precedence, and native ARM64 -mcpu=native option dispatch. | Parity requirements with reference.py and avoiding Rosetta compiler issues on Apple Silicon. | §5`
 - `D-018 | 2026-06-11 | macOS Debug builds use UBSan only (-fsanitize=undefined); ASan dropped on macOS and deferred to Linux/PACE/CI. CMakeLists dispatches sanitizer flags on APPLE. Minimal edit made to the §5.5 debug-flags line. | Apple Clang 17's ASan runtime deadlocks before main() on macOS 26.5: re-entrant malloc inside InitializeShadowMemory during dyld shared-cache iteration spins forever on ASan's own init mutex (diagnosed via /usr/bin/sample stack capture; MallocNanoZone=0 ineffective) — every ASan-linked binary hangs at launch, making ASan unusable on this toolchain/OS. UBSan is unaffected and retained. | §5.5`
+- `D-019 | 2026-06-11 | Integrate C++ engine into runner.py sweeps at grid-cell level. | Grouping trials per cell reduces subprocess spawning overhead from O(N_trials) (~25,000+) to O(N_cells) (<100), allowing C++ to handle multi-trial loops natively. Enforcing OMP_NUM_THREADS=1 per worker prevents thrashing, while keeping run_single_trial preserves backwards compatibility. | §5.1, §5.4`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -475,6 +475,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-019 | 2026-06-08 | v1.9 | Completed the mathematical Janson Section 2 reformulation (FIFO pathwise equivalence proof, decoupling conjecture, and geometric clock collapse) in docs/research/janson_reformulation_with_fear.md and verified it via the new numerical test tests/test_decoupling_conjecture.py. Verified 21/21 tests pass. Spawned reviewer, critic, and auditor subagents; all signed off with PASS. | §8, §12`
 - `S-020 | 2026-06-11 | v1.10 | Wrote core C++ engine files (graph, rng, engine, main, tests, CMakeLists), hardened C++ Port implementation plan, and verified native target compilation. | §8, §11, §12`
 - `S-021 | 2026-06-11 | v1.10 | Completed §5.4 cross-language validation: built arm64 Debug+Release, 4/4 C++ unit suites pass both configs; wrote tests/test_cpp_validation.py — Prong A PASS (2 automated cases incl. subcritical r=4 stall + 3 manual instances; failed sets identical to oracle) and Prong B PASS (1000 trials/engine at interior cell P(systemic)=0.22: z-test + KS<0.05); full suite 25/25. Repairs: CMakeLists OpenMP hints moved before find_package (dead appended block removed), per-arch native-flag dispatch kept, .gitignore now build*/. Frozen edit: §5.5 debug-flags line amended per D-018 (macOS Debug = UBSan only; ASan deadlocks pre-main on macOS 26.5/AppleClang 17). Correction of record: S-020 labeled itself v1.10 though no frozen section changed that session (header then still v1.9); the version is properly bumped to v1.10 NOW with this session's §5.5 edit, so the on-disk label sequence stays consistent. | §5.5, §8, §9, §10, §11, §12`
+- `S-022 | 2026-06-11 | v1.10 | Integrated C++ engine into runner.py sweeps with cell-level spawning. Run full n=1000 milestone sweeps for r ∈ {2, 3, 4} and generated figures. Validated C++ sweep results against Week 2 Python results. | §6, §8, §10, §11, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

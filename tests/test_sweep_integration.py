@@ -7,13 +7,21 @@ import json
 import pytest
 import numpy as np
 
-from twocascade.runner import run_sweep, serialize_graph_to_json
+from twocascade.runner import run_sweep, REPO_ROOT
 from twocascade.analysis import analyze_sweep, load_raw_results
 from twocascade.reference import sample_individual_fears, choose_seed, sample_gnp_adjacency
 
-def test_sweep_and_analysis_integration(tmp_path):
-    """Run a micro-sweep and verify that runner and analysis integrate correctly."""
+CPP_BIN = REPO_ROOT / "cpp" / "build" / "twocascade_run"
+has_cpp_bin = CPP_BIN.exists()
+
+@pytest.mark.parametrize("engine", [
+    "python",
+    pytest.param("cpp", marks=pytest.mark.skipif(not has_cpp_bin, reason="C++ engine binary not built"))
+])
+def test_sweep_and_analysis_integration(tmp_path, engine):
+    """Run a micro-sweep and verify that runner and analysis integrate correctly for the selected engine."""
     config_data = {
+      "engine": engine,
       "pinned_params": {
         "n": 50,
         "r": 2,
@@ -52,6 +60,7 @@ def test_sweep_and_analysis_integration(tmp_path):
     # Load and check JSON structure
     raw_results = load_raw_results(config_data["output"]["raw_filepath"])
     assert "metadata" in raw_results
+    assert raw_results["metadata"]["engine"] == engine
     assert "results" in raw_results
     assert len(raw_results["results"]) == 4 # 2 mus * 2 multiples
     
@@ -110,16 +119,7 @@ def test_targeted_seeding():
     assert targeted_degrees == sorted_degrees[:3]
 
 
-def test_graph_serialization(tmp_path):
-    """Verify graph serialization outputs valid JSON list of lists."""
-    adj = [[1, 2], [0], [0]]
-    out_path = str(tmp_path / "graph.json")
-    serialize_graph_to_json(adj, out_path)
-    
-    assert os.path.exists(out_path)
-    with open(out_path, "r") as f:
-        loaded = json.load(f)
-    assert loaded == adj
+
 
 
 def test_fear_only_channel_terminates():

@@ -67,6 +67,7 @@ def _subprocess_env() -> dict:
     env = dict(os.environ)
     src = str(REPO_ROOT / "src")
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
+    env["OMP_NUM_THREADS"] = "1"
     return env
 
 
@@ -77,6 +78,7 @@ def _run_cpp(args: list[str]) -> str:
         capture_output=True,
         text=True,
         timeout=SUBPROCESS_TIMEOUT,
+        env=_subprocess_env(),
     )
     assert result.returncode == 0, (
         f"C++ engine exited with {result.returncode}.\n"

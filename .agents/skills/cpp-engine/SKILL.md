@@ -15,6 +15,8 @@ Requirements:
 - Match Python theoretical behavior. The goal is parity, not divergence.
 - Optimize for speed and memory only AFTER behavioral validation is complete.
 - Do not attempt to match Python RNG streams. Rely on the Adversary's §5.4 validation checks.
+- For Apple Silicon macOS compilations, configure CMake natively using `-DCMAKE_OSX_ARCHITECTURES=arm64` and dispatch compiler optimization flags appropriately (`-mcpu=native` for Apple Clang, `-march=native` for others) to avoid Rosetta translation performance bottlenecks.
+- Never propose shell command sequences containing `cd` commands. Use CMake directory arguments instead (e.g. `cmake -S . -B build_dir` to configure, `cmake --build build_dir` to build, and execute built binaries using relative paths).
 
 Reporting Contract:
 - Report the standard triplet first — [Files Changed, Validation Status, New Decisions] (use "none" where not applicable) — plus role-specific fields: [Performance Metrics].

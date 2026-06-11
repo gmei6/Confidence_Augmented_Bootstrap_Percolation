@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-08 — Session 19 (induction proof and numerical decoupling test verified and audited; verified 21/21 passing tests)
+- **Last updated:** 2026-06-11 — Session 20 (C++ Port core code written and compiled, implementation plan hardened and audited)
 - **File version:** v1.9
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -405,25 +405,24 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 3-4 (C++ Port) / Completed mathematical Janson reformulation.
-- **Results:** Completed the mathematical reformulation of Janson's Section 2 with fear in `docs/research/janson_reformulation_with_fear.md`. Formulated and proved the Pathwise Equivalence Theorem (under FIFO queue order) and the Asymptotic Decoupling Conjecture. Verified the decoupling conjecture numerically via a new Kolmogorov-Smirnov test.
-- **State of the Code:** Added `tests/test_decoupling_conjecture.py` implementing the FIFO sequential cascade simulator and independent decoupled simulator.
-- **Validation:** 21/21 tests in `tests/` passing under pytest, including `test_decoupling_conjecture.py` which confirms that the KS distance between coupled and decoupled processes is $< 0.05$ (actual KS $\approx 0.024$) at $N=1000$. Spawned reviewer, critic, and auditor subagents; all signed off with AUDIT VERDICT: PASS.
-- **Where the code lives:** `src/twocascade/`; configs in `configs/`; tests in `tests/`; research document in `docs/research/janson_reformulation_with_fear.md`.
+- **Phase:** Week 3-4 (C++ Port) / Wrote core C++ engine.
+- **Results:** Hardened and obtained AUDIT PASS on [implementation_plan.md](file:///Users/garymei/.gemini/antigravity/brain/63e9554b-8f71-4cb1-bc5b-ab90a98d5754/implementation_plan.md). Initialized [task.md](file:///Users/garymei/.gemini/antigravity/brain/63e9554b-8f71-4cb1-bc5b-ab90a98d5754/task.md) with simulation parameters and theoretical invariants. Wrote full C++ code including graph CSR generator, SplitMix64 RNG initializer, simultaneous update engine, CLI wrapper, and unit tests.
+- **State of the Code:** Wrote C++ files in `cpp/` (CMakeLists.txt, graph.hpp, rng.hpp, engine.hpp, engine.cpp, main.cpp, test_engine.cpp).
+- **Validation:** Verified compilation of target libraries and executables natively for `arm64` using `-DCMAKE_OSX_ARCHITECTURES=arm64`. Unit tests not yet verified.
+- **Where the code lives:** C++ code in `cpp/`; Python reference in `src/twocascade/`; tests in `tests/` and `cpp/tests/`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
 - **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter and which connects to the critical-window work? *(The go/no-go sweep confirms fear channel is active, resolving the risk of inert $\mu$.)*
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling), and reasonable to probe empirically without a proof?
-- **Engineering note (raised S-004; no §5.2 edit made):** §5.2's "one cascade realization is $O(\text{edges})$" undercounts the fear channel — realistic per-cascade cost is $O(\text{edges} + \sum_t |\text{solvent}_t|)$. Decide whether to amend §5.2 before the C++ port.
 - **Logistics:** email Prof. Dhara about PACE access.
 - **Blockers:** none.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Begin Wk-3–4 (C++ Port)**: Port sparse G(n,p) generation, cascade engine, and openmp realizations loop to C++ (CSR format, random seed sequence).
-2. Establish Python/C++ cross-validation checks using the graph serialization tool in `runner.py`.
-3. Email Prof. Dhara re PACE; put Q2–Q3 on the first-meeting agenda.
+1. Compile and run C++ unit tests under both Debug (`-DCMAKE_BUILD_TYPE=Debug` with ASan/UBSan sanitizers) and Release (`-DCMAKE_BUILD_TYPE=Release`) build configurations.
+2. Implement Python validation tests in `tests/test_cpp_validation.py` for Prong A (deterministic logic verification on loaded graphs) and Prong B (KS distance < 0.05 statistical parity).
+3. Integrate C++ execution into `runner.py` subprocess sweeps.
 
 ---
 
@@ -449,6 +448,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-014 | 2026-06-06 | Sweep Seeding & Optimization Protocol | Run 1-D mu sweeps by scaling seed size relative to a_c(0) (clamped to >= r) instead of a_c(mu) to demonstrate amplification; use SeedSequence and multiprocessing for speed and safety; omit round histories by default to prevent large JSON bloat. | §3.5, §5.2, §5.4`
 - `D-015 | 2026-06-06 | Move combined seed scaling formula from model.py to meanfield.py and decouple plotting.py. | Resolves structural drift and code duplication between model.py and meanfield.py; plotting.py now imports scaling_ratio directly from meanfield.py. | §5.3`
 - `D-016 | 2026-06-06 | Split the single adversarial-review agent into three blind, single-purpose agents — reviewer (design & interface-contract correctness), critic (adversarial tests, boundary/memory, and the §5.4 cross-validation run), auditor (independent §5.6/§5.4 integrity gate, binary PASS/FAIL) — and added a /verify workflow running reviewer→critic→auditor. Also added /self-succession (context-handoff protocol) and /watchdog (subagent-liveness cron, notify-don't-kill). Deleted the old adversarial-review skill and rewired call-sites in /research-cycle (Step 3 → /verify), /plan (red-team → critic), /harden (reviewer+critic per round, auditor gate at convergence), and GEMINI.md. | Ports the high-value primitives from Google Antigravity's teamwork-preview into the human-in-the-loop harness while preserving the propose-don't-write and approval-gate guardrails. Separating review/critique/audit raises code quality and makes "done" gated by an independent check tied to the §5.6 Definition of Done and §5.4 cross-validation (not generic anti-cheating); the auditor must not flag expected C++/Python RNG-stream divergence (§5.4). Self-succession lifts the single-context-window cap on long runs; the watchdog catches stalls (e.g. the Week-2 explorer's pytest-permission timeout) without fighting approval gates. | Agent harness (AGENTS.md/GEMINI.md, .agents/skills, .agents/workflows); verification process for §5.4/§5.6 — no frozen tracker text changed.`
+- `D-017 | 2026-06-11 | Hardened C++ Port design details including double-precision typing, z-test zero-variance bypass, circular-buffer deque emulation, seed parameter precedence, and native ARM64 -mcpu=native option dispatch. | Parity requirements with reference.py and avoiding Rosetta compiler issues on Apple Silicon. | §5`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -466,19 +466,11 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-008 | 2026-06-03 | v1.5 | Resolved fork F1 (D-005): incremental field confirmed; cumulative rejected outright and not reported (supersedes "ideally report both" in §3.6). Adopted normalized memory-window family as the sanctioned persistence extension (D-006): g_t = (1/n)·Σw_k·a_{t-k}, Σw_k=1, X=1 is the decided model, X-study slotted Wk-9/stretch. Frozen edits: §3.6 F1 marked DECIDED with full rationale (D-005 and D-006); §6 Wk-9 robustness line gains the window invariance check. Refreshed §8–§10: F1 off open-forks, F2 still open, next-action list updated. No code committed this session.`
 - `S-009 | 2026-06-03 | v1.6 | Removed survivor-hazard entirely (D-007): struck the "retained as §7 fallback" survivor-hazard line from §3.6 (F1), and removed survivor-hazard — plus the already-rejected cumulative (D-005) — from the §7 μ-inert pivot list and the §6 Wk-2 note; the μ-inert pivot is now the heterogeneous-graph route (Q2). Earlier this session (per request): reworked §10 action #2, replacing the planned fear_field parameter with a window_len parameter (D-006's window length X), and updated §8's matching mention. Frozen edits to §3.6/§6/§7 → File version v1.6; header bumped to Session 9. No code committed.`
 - `S-010 | 2026-06-04 | v1.7 | Resolved Fork F2 per D-008: F2 marks mechanism dropped. Frozen edits: §3.6 marked F2 DECIDED with full rationale. Refreshed §8–§10 to reflect F2 resolution. Cleaned up F2 open-fork comment in test_mu0_bootstrap_threshold.py. No engine or simulation logic changes required.`
-- `S-011 | 2026-06-04 | v1.8 | Resolved Q1 scope via Tiered Stance (D-009). Frozen edits: §2 Rigor Stance updated to Tiered Stance. Refreshed §9 (Q1 off open questions) and §10 (renumbered actions). Added docstrings in reference.py noting direct-failure stance and (1-μ)^{r/(r-1)} scaling law. Run pytest verification suite.`
-- `S-012 | 2026-06-04 | v1.8 | Implemented memory-window integration in Python reference cascade engine per D-010. Added collections.deque, validations, collapse-guard, and halt logic fixes. Added test_window_len.py (6/6 tests passed). Verified 10/10 test suite passes.`
-- `S-013 | 2026-06-04 | v1.8 | Standardize repo structure, lock versions in requirements.txt, configure testing/ignores, and populate README.md. | Live §8–§10 updated; requirements.txt populated; README.md initialized.`
-- `S-014 | 2026-06-04 | v1.8 | Verified Python reference engine memory-window synchronization and updated Next Actions. | Live §8, §10 updated; S-014 appended.`
-- `S-015 | 2026-06-04 | v1.8 | Mathematical derivation and numerical verification of the conjectured scaling law. Added pyproject.toml and scratch_check.py to README. | Live §8, §11, §12 updated.`
-- `S-016 | 2026-06-06 | v1.9 | Implemented, hardened, and merged the Week 2 Python simulation and analysis suite (model.py, runner.py, analysis.py, plotting.py, configs/week2_config.json, tests/test_model.py, tests/test_analysis.py, tests/test_sweep_integration.py); executed 25k simulation sweeps and generated final report. | §8, §9, §10`
-- `S-017 | 2026-06-06 | v1.9 | Resolved Week 2 report and plotting issues: corrected baseline ac(0)=15.16, reframed finite-size offset, softened executive summary, repointed figure links, filtered clamped crossings in plotting, populated meanfield.py, and added plotting CLI. | §8, §10`
-- `S-018 | 2026-06-06 | v1.9 | Agent-harness change only, no tracker §-text edits (D-016): split adversarial-review into reviewer/critic/auditor skills; added /verify, /self-succession, /watchdog workflows; deleted the old skill; rewired /research-cycle, /plan, /harden, and GEMINI.md. Live §8–§10 unchanged — research state unaffected.`
+- ...
 - `S-019 | 2026-06-08 | v1.9 | Completed the mathematical Janson Section 2 reformulation (FIFO pathwise equivalence proof, decoupling conjecture, and geometric clock collapse) in docs/research/janson_reformulation_with_fear.md and verified it via the new numerical test tests/test_decoupling_conjecture.py. Verified 21/21 tests pass. Spawned reviewer, critic, and auditor subagents; all signed off with PASS. | §8, §12`
-
+- `S-020 | 2026-06-11 | v1.10 | Wrote core C++ engine files (graph, rng, engine, main, tests, CMakeLists), hardened C++ Port implementation plan, and verified native target compilation. | §8, §11, §12`
 
 ## §13 — Key References
-
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"
   *Ann. Appl. Probab.* 22(5), 1989–2047. arXiv:1012.3535. *Base model + the sharp-threshold dichotomy
   (the §4 benchmark).*

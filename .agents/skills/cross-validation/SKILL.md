@@ -19,7 +19,7 @@ logic from RNG.
 1. Run `scripts/dump_reference_run.py` to generate a `G(n,p)` graph from the
    reference, run the μ=0 cascade, and write three artifacts to `results/raw/xval/`:
    the adjacency (edge list), the seed indices, and the sorted final failed set.
-2. Load **the same graph and seed set** in the C++ engine, run it at `r` with no fear.
+2. Load **the same graph and seed set** in the C++ engine, running it with `--mu 0` and the same `--r` used by `dump_reference_run.py` (explicitly thread these parameters from the reference run, as the graph dump does not embed them).
 3. Assert the C++ final failed set is **identical** (same indices) to the reference's.
    Any difference is a logic bug in the C++ port — not an RNG artifact.
 

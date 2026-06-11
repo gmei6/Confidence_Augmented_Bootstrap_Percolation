@@ -11,6 +11,7 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 *   **Janson Scaling Regime:** Connectivity $p$ must scale as $p_n = \beta n^{-\alpha}$ where $\alpha \in (1/r, 1)$. Never hold $p$ constant when changing $n$ in finite-size sweeps, as it destroys the threshold scaling invariants.
 *   **RNG Seeding in Multiprocessing:** When parallelizing sweeps, use `numpy.random.SeedSequence.spawn` rather than simple increments or thread-shared generators to avoid correlated random streams across worker processes.
 *   **Avoid Float Dictionary Keys:** In numerical sweeps, avoid indexing dictionaries directly via float parameter keys (e.g. `0.3`), which are vulnerable to representation variance. Instead, stamp results with their grid coordinate integer indexes (`mean_fear_idx`) in the sweep runner.
+*   **RNG Seeding Chain:** Avoid using simple `base_seed + trial_index` additions for thread seeding to prevent RNG stream correlation across cells in grid sweeps. Mix the base seed first using a hash (like `SplitMix64`) before adding the trial index.
 
 ## 2. C++ & Performance Pitfalls
 
@@ -18,6 +19,8 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 *   **Random Number Generation:** Cross-validation between Python and C++ must not rely on bitwise RNG stream agreement. Instead, validate via same-graph static runs at $\mu=0$ (exact parity of failed sets) and statistical distributions for $\mu>0$.
 *   **Dynamic Multiprocessing Chunksize:** Grouping tasks using a static `chunksize` can leave workers idle on small sweeps. Dynamically compute the chunksize as `max(1, len(tasks) // (n_workers * 4))`.
 *   **C++ Beta Distribution:** `<random>` lacks a native `std::beta_distribution`. Implement manually using Gamma variables ($Z = Y_1 / (Y_1 + Y_2)$) and write guards to prevent undefined C++ behavior if Gamma shape parameters are zero (e.g., at $\mu=0.0$ and $\mu=1.0$).
+*   **C++ Compiler Flag Rosetta Conflict:** On Apple Silicon M-series Macs, compiling with an x86_64 target toolchain (e.g. `cmake` installed via x86_64 Homebrew) causes `-march=native` to fail during code generation since the host CPU is detected as `apple-m1`. Use CMake feature-testing dispatch targeting the specific architecture (e.g. check for `-mcpu=native` on Apple, and fallback to `-march=native` elsewhere) and compile with `-DCMAKE_OSX_ARCHITECTURES=arm64` to target ARM64 natively.
+*   **Simultaneous Update Parity:** To maintain parity with simultaneous updates, separate evaluation scans from state mutations (flags and neighbor counters must remain frozen until the end of the round). Active lists can be updated in-place at the end of the round using `std::remove_if`.
 
 ## 3. Workflow & Tooling Pitfalls
 

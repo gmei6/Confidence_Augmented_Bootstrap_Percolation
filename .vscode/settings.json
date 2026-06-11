@@ -14,5 +14,6 @@
         "direct writes to results/"
     ],
     "antigravity.security.mode": "strict",
-    "antigravity.agent.securityMode": "strict"
+    "antigravity.agent.securityMode": "strict",
+    "cmake.sourceDirectory": "/Users/garymei/Downloads/CABP_copy_for_antigravity/cpp"
 }

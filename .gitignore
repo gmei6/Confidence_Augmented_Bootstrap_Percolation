@@ -17,8 +17,8 @@ dist/
 # Antigravity
 .antigravity/
 
-# C++ / CMake
-build/
+# C++ / CMake (covers build/, build_debug/, build_debug_native/, etc.)
+build*/
 *.o
 *.so
 *.a

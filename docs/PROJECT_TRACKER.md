@@ -4,8 +4,8 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-11 — Session 20 (C++ Port core code written and compiled, implementation plan hardened and audited)
-- **File version:** v1.9
+- **Last updated:** 2026-06-11 — Session 21 (C++ engine cross-validated against Python oracle: §5.4 Prong A + Prong B PASS; 25/25 tests)
+- **File version:** v1.10
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
 ---
@@ -313,7 +313,10 @@ two-channel-cascade/
   adjacency for cache locality (a `vector<vector<int>>` is an acceptable first cut, CSR is the
   optimization); `reserve()` buffers to avoid per-round reallocation; const-correctness; **no shared
   mutable state in the parallel realization loop** (each thread owns its RNG and buffers). Build
-  `-O3 -march=native` for runs, `-O0 -g -fsanitize=address,undefined` for debugging.
+  `-O3 -march=native` for runs (dispatched per-arch: `-mcpu=native` on arm64), `-O0 -g
+  -fsanitize=address,undefined` for debugging — **except on macOS, where Debug uses UBSan only
+  (`-fsanitize=undefined`); ASan deadlocks pre-main on macOS 26.5 / Apple Clang 17 (D-018), so
+  full ASan coverage is obtained on Linux (PACE / CI).**
 - Optimize only where it aids speed *and* clarity, and **profile before optimizing** — the reason the
   core is C++ is that the cascade loop is the measured hot path, not faith.
 
@@ -405,24 +408,25 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 3-4 (C++ Port) / Wrote core C++ engine.
-- **Results:** Hardened and obtained AUDIT PASS on [implementation_plan.md](file:///Users/garymei/.gemini/antigravity/brain/63e9554b-8f71-4cb1-bc5b-ab90a98d5754/implementation_plan.md). Initialized [task.md](file:///Users/garymei/.gemini/antigravity/brain/63e9554b-8f71-4cb1-bc5b-ab90a98d5754/task.md) with simulation parameters and theoretical invariants. Wrote full C++ code including graph CSR generator, SplitMix64 RNG initializer, simultaneous update engine, CLI wrapper, and unit tests.
-- **State of the Code:** Wrote C++ files in `cpp/` (CMakeLists.txt, graph.hpp, rng.hpp, engine.hpp, engine.cpp, main.cpp, test_engine.cpp).
-- **Validation:** Verified compilation of target libraries and executables natively for `arm64` using `-DCMAKE_OSX_ARCHITECTURES=arm64`. Unit tests not yet verified.
-- **Where the code lives:** C++ code in `cpp/`; Python reference in `src/twocascade/`; tests in `tests/` and `cpp/tests/`.
+- **Phase:** Week 3–4 (C++ Port) — **engine port complete and cross-validated (§5.4 PASS)**; the full $(r,\mu)$ diagram via the C++ engine and the `runner.py` integration are the remaining Wk 3–4 items.
+- **Results:** §5.4 cross-language validation passed both prongs. **Prong A** (deterministic logic, $\mu=0$, same graph + seeds): C++ final failed sets identical to the Python oracle on 2 automated parametrized cases (supercritical $r{=}2$ $n{=}1000$; subcritical $r{=}4$ $n{=}5000$, stalled at 113/5000 — the discriminating case) plus 3 manual instances. **Prong B** (statistical parity, $\mu>0$, 1000 trials/engine at $n{=}1000, p{=}0.01, r{=}2, \mu{=}0.5, \kappa{=}50, a{=}2$ — interior cell, $P(\text{systemic}) = 0.22$): two-proportion z-test pass (zero-variance guard unused), KS distance $< 0.05$. Full suite: **25/25 tests pass** (21 prior + 4 new cross-validation).
+- **State of the Code:** C++ engine builds clean natively for arm64 (`-DCMAKE_OSX_ARCHITECTURES=arm64`) in both Release and Debug; 4/4 C++ unit suites pass in both configs (RNG seeding incl. collision regression, G(n,p) generator invariants, Beta sampler incl. underflow fallback, cascade engine incl. window/halting quirks). Fixed this session: CMakeLists OpenMP hint ordering (hints must precede `find_package`; removed dead duplicate block), per-arch native-flag dispatch, `.gitignore` now covers `build*/`.
+- **Validation caveats / platform findings:** Apple Clang 17 ASan deadlocks pre-main on macOS 26.5 (re-entrant malloc in `InitializeShadowMemory`; diagnosed via `/usr/bin/sample`; `MallocNanoZone=0` ineffective) → macOS Debug is UBSan-only per D-018. `check_cxx_compiler_flag(-mcpu=native)` unexpectedly fails on AppleClang 17, so local builds currently carry no native CPU tuning flag (perf nicety, not correctness — see §9).
+- **Where the code lives:** C++ engine in `cpp/` (library core `twocascade_core` + thin CLI `twocascade_run` per D-003); cross-validation in `tests/test_cpp_validation.py` (Prong A automation + z-test/KS Prong B); oracle dump script in `.agents/skills/cross-validation/scripts/dump_reference_run.py`; Python reference in `src/twocascade/`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
 - **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter and which connects to the critical-window work? *(The go/no-go sweep confirms fear channel is active, resolving the risk of inert $\mu$.)*
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling), and reasonable to probe empirically without a proof?
+- **Engineering (minor):** `check_cxx_compiler_flag("-mcpu=native")` fails on AppleClang 17 for unknown reasons, so local binaries build without native CPU tuning. Investigate before the big local sweeps (a manual compile test of `-mcpu=native` takes one minute); not a correctness issue.
 - **Logistics:** email Prof. Dhara about PACE access.
 - **Blockers:** none.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. Compile and run C++ unit tests under both Debug (`-DCMAKE_BUILD_TYPE=Debug` with ASan/UBSan sanitizers) and Release (`-DCMAKE_BUILD_TYPE=Release`) build configurations.
-2. Implement Python validation tests in `tests/test_cpp_validation.py` for Prong A (deterministic logic verification on loaded graphs) and Prong B (KS distance < 0.05 statistical parity).
-3. Integrate C++ execution into `runner.py` subprocess sweeps.
+1. **Integrate the C++ binary into `runner.py` sweeps** (subprocess invocation, C++ forced single-threaded under Python's multiprocessing pool, outputs wrapped with full config + seeds + git commit + timestamp metadata into `results/raw/` per §5.4).
+2. **Run the full $(r,\mu)$ diagram at $n=1000$ with the C++ engine** — this completes the Wk 3–4 milestone (check the §6 box only then).
+3. Email Prof. Dhara re PACE access; put Q2–Q3 on the first-meeting agenda.
 
 ---
 
@@ -449,6 +453,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-015 | 2026-06-06 | Move combined seed scaling formula from model.py to meanfield.py and decouple plotting.py. | Resolves structural drift and code duplication between model.py and meanfield.py; plotting.py now imports scaling_ratio directly from meanfield.py. | §5.3`
 - `D-016 | 2026-06-06 | Split the single adversarial-review agent into three blind, single-purpose agents — reviewer (design & interface-contract correctness), critic (adversarial tests, boundary/memory, and the §5.4 cross-validation run), auditor (independent §5.6/§5.4 integrity gate, binary PASS/FAIL) — and added a /verify workflow running reviewer→critic→auditor. Also added /self-succession (context-handoff protocol) and /watchdog (subagent-liveness cron, notify-don't-kill). Deleted the old adversarial-review skill and rewired call-sites in /research-cycle (Step 3 → /verify), /plan (red-team → critic), /harden (reviewer+critic per round, auditor gate at convergence), and GEMINI.md. | Ports the high-value primitives from Google Antigravity's teamwork-preview into the human-in-the-loop harness while preserving the propose-don't-write and approval-gate guardrails. Separating review/critique/audit raises code quality and makes "done" gated by an independent check tied to the §5.6 Definition of Done and §5.4 cross-validation (not generic anti-cheating); the auditor must not flag expected C++/Python RNG-stream divergence (§5.4). Self-succession lifts the single-context-window cap on long runs; the watchdog catches stalls (e.g. the Week-2 explorer's pytest-permission timeout) without fighting approval gates. | Agent harness (AGENTS.md/GEMINI.md, .agents/skills, .agents/workflows); verification process for §5.4/§5.6 — no frozen tracker text changed.`
 - `D-017 | 2026-06-11 | Hardened C++ Port design details including double-precision typing, z-test zero-variance bypass, circular-buffer deque emulation, seed parameter precedence, and native ARM64 -mcpu=native option dispatch. | Parity requirements with reference.py and avoiding Rosetta compiler issues on Apple Silicon. | §5`
+- `D-018 | 2026-06-11 | macOS Debug builds use UBSan only (-fsanitize=undefined); ASan dropped on macOS and deferred to Linux/PACE/CI. CMakeLists dispatches sanitizer flags on APPLE. Minimal edit made to the §5.5 debug-flags line. | Apple Clang 17's ASan runtime deadlocks before main() on macOS 26.5: re-entrant malloc inside InitializeShadowMemory during dyld shared-cache iteration spins forever on ASan's own init mutex (diagnosed via /usr/bin/sample stack capture; MallocNanoZone=0 ineffective) — every ASan-linked binary hangs at launch, making ASan unusable on this toolchain/OS. UBSan is unaffected and retained. | §5.5`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -469,6 +474,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - ...
 - `S-019 | 2026-06-08 | v1.9 | Completed the mathematical Janson Section 2 reformulation (FIFO pathwise equivalence proof, decoupling conjecture, and geometric clock collapse) in docs/research/janson_reformulation_with_fear.md and verified it via the new numerical test tests/test_decoupling_conjecture.py. Verified 21/21 tests pass. Spawned reviewer, critic, and auditor subagents; all signed off with PASS. | §8, §12`
 - `S-020 | 2026-06-11 | v1.10 | Wrote core C++ engine files (graph, rng, engine, main, tests, CMakeLists), hardened C++ Port implementation plan, and verified native target compilation. | §8, §11, §12`
+- `S-021 | 2026-06-11 | v1.10 | Completed §5.4 cross-language validation: built arm64 Debug+Release, 4/4 C++ unit suites pass both configs; wrote tests/test_cpp_validation.py — Prong A PASS (2 automated cases incl. subcritical r=4 stall + 3 manual instances; failed sets identical to oracle) and Prong B PASS (1000 trials/engine at interior cell P(systemic)=0.22: z-test + KS<0.05); full suite 25/25. Repairs: CMakeLists OpenMP hints moved before find_package (dead appended block removed), per-arch native-flag dispatch kept, .gitignore now build*/. Frozen edit: §5.5 debug-flags line amended per D-018 (macOS Debug = UBSan only; ASan deadlocks pre-main on macOS 26.5/AppleClang 17). Correction of record: S-020 labeled itself v1.10 though no frozen section changed that session (header then still v1.9); the version is properly bumped to v1.10 NOW with this session's §5.5 edit, so the on-disk label sequence stays consistent. | §5.5, §8, §9, §10, §11, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

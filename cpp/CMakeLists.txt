@@ -10,9 +10,19 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-# Set specific flags for Debug (with sanitizers per §5.5)
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fsanitize=address,undefined")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address,undefined")
+# Set specific flags for Debug (with sanitizers per §5.5).
+# NOTE: ASan is disabled on macOS — Apple Clang 17's ASan runtime deadlocks in
+# its own initializer (re-entrant malloc during shadow-memory setup) on
+# macOS 26.5, hanging every binary before main(). Verified 2026-06-11 via
+# /usr/bin/sample; MallocNanoZone=0 does not help. UBSan still works.
+# Full ASan coverage should be obtained on Linux (PACE / CI).
+if(APPLE)
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fsanitize=undefined")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=undefined")
+else()
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fsanitize=address,undefined")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address,undefined")
+endif()
 
 # Option for native CPU architecture optimizations (disable on PACE)
 option(USE_NATIVE_MARCH "Enable native CPU optimization" ON)

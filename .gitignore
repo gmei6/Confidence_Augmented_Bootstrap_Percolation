@@ -22,6 +22,7 @@ build*/
 *.o
 *.so
 *.a
+.cache/
 
 # Results — raw per-realization outcomes are large and regenerable
 # from (config, seed, commit). Keep the dir, ignore its contents.

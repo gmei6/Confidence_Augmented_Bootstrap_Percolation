@@ -4,7 +4,7 @@ Unit tests for twocascade.analysis metrics and interpolation.
 
 import pytest
 import numpy as np
-from twocascade.analysis import _interp_crossing, analyze_sweep
+from twocascade.analysis import _interp_crossing, analyze_sweep, evaluate_scaling_adherence
 
 def test_interp_crossing():
     """Verify linear interpolation crossing logic."""
@@ -52,6 +52,99 @@ def test_analyze_sweep_index_reconstruction():
     
     res = analyze_sweep(raw_data)
     assert len(res["processed_cells"]) == 2
-    # Verify that it matched mean_fear 0.300000000001 to grid index 1 (corresponding to 0.3)
-    # and matched seed_multiple 1.0 to grid index 1 (corresponding to 1.0)
-    # If float matching failed, it would have raised ValueError.
+    # Verify that it matched mean_fear 0.300000000001 to canonical grid key "0.3"
+    assert "0.3" in res["empirical_thresholds"]
+    assert "0.300000000001" not in res["empirical_thresholds"]
+
+def test_evaluate_scaling_adherence_missing_baseline():
+    """Verify that evaluate_scaling_adherence raises ValueError when mu=0 baseline is missing or invalid."""
+    # Scenario 1: mu=0 baseline is missing entirely
+    analyzed_data_missing = {
+        "metadata": {"r": 2, "n": 1000, "p": 0.01, "theta": 0.5},
+        "empirical_thresholds": {
+            "0.1": 8.0,
+            "0.2": 6.0
+        },
+        "processed_cells": [{"seed_size": 3}]
+    }
+    with pytest.raises(ValueError, match="CRITICAL: mu=0 baseline is missing or invalid"):
+        evaluate_scaling_adherence(analyzed_data_missing)
+
+    # Scenario 2: mu=0 baseline is invalid (closest is 0.05, which is > 1e-9)
+    analyzed_data_invalid = {
+        "metadata": {"r": 2, "n": 1000, "p": 0.01, "theta": 0.5},
+        "empirical_thresholds": {
+            "0.05": 9.0,
+            "0.1": 8.0
+        },
+        "processed_cells": [{"seed_size": 3}]
+    }
+    with pytest.raises(ValueError, match="CRITICAL: mu=0 baseline is missing or invalid"):
+        evaluate_scaling_adherence(analyzed_data_invalid)
+
+def test_evaluate_scaling_adherence_clamping_mask():
+    """Verify that rows satisfying a_emp <= min_seed_size are masked."""
+    # N=1000, p=0.01, r=2 -> a_c(0) = 5.0.
+    # We set min_seed_size = 3.
+    analyzed_data = {
+        "metadata": {"r": 2, "n": 1000, "p": 0.01, "theta": 0.5},
+        "empirical_thresholds": {
+            "0.0": 10.0,   # Valid (a_emp = 10 > 3)
+            "0.2": 6.0,    # Valid (a_emp = 6 > 3)
+            "0.4": 2.0,    # Clamped (a_emp = 2 <= 3)
+            "0.5": 4.0     # Valid (a_emp = 4 > 3, no longer masked by predicted_ac = 1.25 < 3)
+        },
+        "processed_cells": [
+            {"seed_size": 3},
+            {"seed_size": 5}
+        ]
+    }
+    res = evaluate_scaling_adherence(analyzed_data)
+    results = {row["mu"]: row for row in res["results_table"]}
+    
+    assert not results[0.0]["is_clamped"]
+    assert results[0.0]["ratio_emp"] is not None
+    assert results[0.0]["diff"] is not None
+    
+    assert not results[0.2]["is_clamped"]
+    assert results[0.2]["ratio_emp"] is not None
+    assert results[0.2]["diff"] is not None
+
+    assert results[0.4]["is_clamped"]
+    assert results[0.4]["ratio_emp"] is None
+    assert results[0.4]["diff"] is None
+
+    assert not results[0.5]["is_clamped"]
+    assert results[0.5]["ratio_emp"] is not None
+    assert results[0.5]["diff"] is not None
+
+def test_evaluate_scaling_adherence_stats_exclusion():
+    """Verify that summary statistics run exclusively across valid, unconstrained data points, and return None if empty."""
+    # Case 1: Some valid, some clamped
+    analyzed_data_mixed = {
+        "metadata": {"r": 2, "n": 1000, "p": 0.01, "theta": 0.5},
+        "empirical_thresholds": {
+            "0.0": 10.0,  # Valid (ratio_emp = 1.0, ratio_theory = 1.0, diff = 0.0)
+            "0.2": 8.0,   # Valid (ratio_emp = 0.8, ratio_theory = 0.64, diff = 0.16)
+            "0.5": 2.0    # Clamped
+        },
+        "processed_cells": [{"seed_size": 3}]
+    }
+    res_mixed = evaluate_scaling_adherence(analyzed_data_mixed)
+    # Diffs for valid rows are [0.0, 0.16]. Max(|diff|) = 0.16, Mean(|diff|) = 0.08.
+    assert np.isclose(res_mixed["max_diff"], 0.16)
+    assert np.isclose(res_mixed["mean_diff"], 0.08)
+
+    # Case 2: All clamped
+    # If min_seed_size = 12, then both mu=0 and mu=0.2 are clamped because their a_emp <= 12.
+    analyzed_data_all_clamped = {
+        "metadata": {"r": 2, "n": 1000, "p": 0.01, "theta": 0.5},
+        "empirical_thresholds": {
+            "0.0": 10.0,
+            "0.2": 8.0
+        },
+        "processed_cells": [{"seed_size": 12}]
+    }
+    res_all_clamped = evaluate_scaling_adherence(analyzed_data_all_clamped)
+    assert res_all_clamped["max_diff"] is None
+    assert res_all_clamped["mean_diff"] is None

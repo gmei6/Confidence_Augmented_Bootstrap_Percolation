@@ -28,8 +28,10 @@ build*/
 # from (config, seed, commit). Keep the dir, ignore its contents.
 results/raw/*
 results/figures/*
+results/analysis/*
 !results/raw/.gitkeep
 !results/figures/.gitkeep
+!results/analysis/.gitkeep
 
 # Editor — optional; keep if you want shared settings, remove if not
 # .vscode/

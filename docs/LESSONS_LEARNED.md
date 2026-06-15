@@ -12,6 +12,7 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 *   **RNG Seeding in Multiprocessing:** When parallelizing sweeps, use `numpy.random.SeedSequence.spawn` rather than simple increments or thread-shared generators to avoid correlated random streams across worker processes.
 *   **Avoid Float Dictionary Keys:** In numerical sweeps, avoid indexing dictionaries directly via float parameter keys (e.g. `0.3`), which are vulnerable to representation variance. Instead, stamp results with their grid coordinate integer indexes (`mean_fear_idx`) in the sweep runner.
 *   **RNG Seeding Chain:** Avoid using simple `base_seed + trial_index` additions for thread seeding to prevent RNG stream correlation across cells in grid sweeps. Mix the base seed first using a hash (like `SplitMix64`) before adding the trial index.
+*   **Near-Floor Quantization Error:** When empirical thresholds (`a_emp`) approach within 1–2 discrete grid points of the absolute floor (`min_seed_size`), statistical deviation metrics skew upwards. These are artifacts of grid spacing constraints rather than scaling law violations. Future validation tracks should incorporate variance-weighted aggregates or assign explicit low-confidence flags to high-mu rows approaching boundary thresholds.
 
 ## 2. C++ & Performance Pitfalls
 

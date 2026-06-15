@@ -3,10 +3,11 @@ Plotting module to generate professional figures for reporting.
 """
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from twocascade.meanfield import scaling_ratio
+from twocascade.analysis import evaluate_scaling_adherence
 
 def apply_plot_style() -> None:
     """Set professional design standards for matplotlib."""
@@ -23,7 +24,7 @@ def apply_plot_style() -> None:
         "figure.constrained_layout.use": True
     })
 
-def plot_mu_sweep(analyzed_data: Dict[str, Any], output_dir: str) -> None:
+def plot_mu_sweep(analyzed_data: Dict[str, Any], output_dir: str, filename: str = "mu_sweep_1d.png", title: Optional[str] = None) -> None:
     """Plot P(systemic) vs. mean fear mu for curves of seed size multiples."""
     apply_plot_style()
     os.makedirs(output_dir, exist_ok=True)
@@ -52,12 +53,19 @@ def plot_mu_sweep(analyzed_data: Dict[str, Any], output_dir: str) -> None:
     ax.axhline(0.5, color="gray", linestyle=":", alpha=0.7)
     ax.set_xlabel("Mean Global Fear ($\\mu$)")
     ax.set_ylabel("Probability of Systemic Cascade ($P(\\text{systemic})$)")
-    ax.set_title("1-D $\\mu$-Sweep ($N=2000, r=2$)")
+    
+    if title is None:
+        r = analyzed_data["metadata"]["r"]
+        n = analyzed_data["metadata"]["n"]
+        ax.set_title(f"1-D $\\mu$-Sweep ($N={n}, r={r}$)")
+    else:
+        ax.set_title(title)
+        
     ax.set_xlim(-0.02, 0.92)
     ax.set_ylim(-0.05, 1.05)
     ax.legend(title="Initial Seed Size")
     
-    filepath = os.path.join(output_dir, "mu_sweep_1d.png")
+    filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()
 
@@ -127,52 +135,39 @@ def plot_bimodality_histograms(analyzed_data: Dict[str, Any], selected_mu: float
     plt.savefig(filepath, dpi=300)
     plt.close()
 
-def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: str) -> None:
-    """Plot empirical threshold ratio vs mu and overlay theoretical scaling law (1-mu)^2."""
+def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: str, filename: str = "scaling_validation.png", adherence: Optional[Dict[str, Any]] = None) -> None:
+    """
+    Plot empirical threshold ratio vs mu and overlay theoretical scaling law (1-mu)**(r/(r-1)).
+    
+    Raises:
+        ValueError: If the mu=0 baseline threshold is missing or corrupted.
+    """
     apply_plot_style()
     os.makedirs(output_dir, exist_ok=True)
     
-    emp_thresholds = analyzed_data["empirical_thresholds"]
+    if adherence is None:
+        adherence = evaluate_scaling_adherence(analyzed_data)
+        
     r = analyzed_data["metadata"]["r"]
     
-    grid_floor = r
-    min_seed_size = min(cell["seed_size"] for cell in analyzed_data["processed_cells"]) if "processed_cells" in analyzed_data else 0
-    
     mu_vals = []
-    a_emp_vals = []
+    ratio_emp_vals = []
     
-    for mu_str, a_emp in emp_thresholds.items():
-        if a_emp is not None and not np.isnan(a_emp):
-            a_val = float(a_emp)
-            # Filter out clamped crossing points
-            if a_val > grid_floor and a_val > min_seed_size:
-                mu_vals.append(float(mu_str))
-                a_emp_vals.append(a_val)
+    for row in adherence["results_table"]:
+        if not row["is_clamped"] and row["ratio_emp"] is not None:
+            mu_vals.append(row["mu"])
+            ratio_emp_vals.append(row["ratio_emp"])
             
-    sort_idx = np.argsort(mu_vals)
-    mu_sorted = np.array(mu_vals)[sort_idx]
-    a_emp_sorted = np.array(a_emp_vals)[sort_idx]
-    
-    if len(a_emp_sorted) == 0:
-        print("Warning: No valid empirical crossing points found for Plot 3.")
+    if len(mu_vals) == 0:
+        print(f"Warning: No valid empirical crossing points found for scaling validation plot (r={r}).")
         return
         
-    mu0_idx = np.argmin(np.abs(mu_sorted))
-    a_emp_0 = a_emp_sorted[mu0_idx]
-    
-    if a_emp_0 == 0.0 or np.isnan(a_emp_0) or a_emp_0 is None:
-         print("Warning: Empirical threshold at mu=0 is invalid (0, NaN, or None). Skipping scaling validation plot.")
-         return
-         
-    ratio_emp = a_emp_sorted / a_emp_0
-    
     mu_dense = np.linspace(0.0, 0.9, 100)
     ratio_theory = scaling_ratio(mu_dense, r)
     
     fig, ax = plt.subplots(figsize=(7, 5))
-    
     ax.plot(mu_dense, ratio_theory, "-", color="#1f77b4", label=f"Theoretical $(1-\\mu)^{{{r}/({r}-1)}}$", linewidth=2.5)
-    ax.plot(mu_sorted, ratio_emp, "o", color="#d62728", label="Empirical Crossings $a_{\\text{emp}}(\\mu)/a_{\\text{emp}}(0)$", markersize=8)
+    ax.plot(mu_vals, ratio_emp_vals, "o", color="#d62728", label="Empirical Crossings", markersize=8)
     
     ax.set_xlabel("Mean Global Fear ($\\mu$)")
     ax.set_ylabel("Empirical Crossing Threshold Ratio")
@@ -181,34 +176,6 @@ def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: 
     ax.set_xlim(-0.02, 0.92)
     ax.set_ylim(-0.05, 1.05)
     
-    filepath = os.path.join(output_dir, "scaling_validation.png")
+    filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()
-
-if __name__ == "__main__":
-    import json
-    from twocascade.analysis import analyze_sweep, load_raw_results
-    
-    # Path setup
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    raw_path = os.path.join(base_dir, "results", "raw", "sweep_week2.json")
-    figures_dir = os.path.join(base_dir, "results", "figures")
-    
-    print(f"Loading raw results from: {raw_path}")
-    raw_data = load_raw_results(raw_path)
-    
-    print("Running sweep analysis...")
-    analyzed = analyze_sweep(raw_data)
-    
-    print("Generating mu sweep plot...")
-    plot_mu_sweep(analyzed, figures_dir)
-    
-    # Default selected_mu to 0.3
-    selected_mu = 0.3
-    print("Generating bimodality histograms...")
-    plot_bimodality_histograms(analyzed, selected_mu, figures_dir)
-    
-    print("Generating critical scaling validation plot...")
-    plot_critical_scaling_validation(analyzed, figures_dir)
-    
-    print("All plots generated successfully.")

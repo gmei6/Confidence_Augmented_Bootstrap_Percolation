@@ -10,7 +10,7 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(base_dir, "src"))
 
 from twocascade.analysis import analyze_sweep, load_raw_results, evaluate_scaling_adherence
-from twocascade.plotting import plot_bimodality_histograms, apply_plot_style, plot_critical_scaling_validation, plot_mu_sweep
+from twocascade.plotting import plot_bimodality_histograms, apply_plot_style, plot_critical_scaling_validation, plot_mu_sweep, plot_phase_diagram_overlay
 
 def generate_plots_for_r(r_val):
     raw_path = os.path.join(base_dir, "results", "raw", f"sweep_wk3_4_r{r_val}.json")
@@ -119,6 +119,13 @@ def generate_plots_for_r(r_val):
         print(f"Saved wk3_4_scaling_validation_r{r_val}.png")
     except Exception as e:
         print(f"Failed to generate scaling validation plot: {e}")
+
+    # 6. Call Centralized Phase Diagram Overlay Plot
+    try:
+        plot_phase_diagram_overlay(analyzed, figures_dir, filename=f"wk3_4_phase_diagram_overlay_r{r_val}.png", adherence=adherence)
+        print(f"Saved wk3_4_phase_diagram_overlay_r{r_val}.png")
+    except Exception as e:
+        print(f"Failed to generate phase diagram overlay plot: {e}")
 
 if __name__ == "__main__":
     for r in [2, 3, 4]:

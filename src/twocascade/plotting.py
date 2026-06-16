@@ -6,7 +6,7 @@ import os
 from typing import Dict, Any, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from twocascade.meanfield import scaling_ratio
+from twocascade.meanfield import scaling_ratio, critical_seed_scaling
 from twocascade.analysis import evaluate_scaling_adherence
 
 def apply_plot_style() -> None:
@@ -175,6 +175,88 @@ def plot_critical_scaling_validation(analyzed_data: Dict[str, Any], output_dir: 
     ax.legend()
     ax.set_xlim(-0.02, 0.92)
     ax.set_ylim(-0.05, 1.05)
+    
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()
+
+def plot_phase_diagram_overlay(analyzed_data: Dict[str, Any], output_dir: str, filename: str, adherence: Dict[str, Any]) -> None:
+    """
+    Plot P(systemic) as a 2D phase diagram heatmap (initial seed size a vs. mean fear mu)
+    and overlay the theoretical critical threshold a_c(mu) and empirical crossing points.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    meta = analyzed_data["metadata"]
+    r = meta["r"]
+    n = meta["n"]
+    p = meta["p"]
+    
+    # Extract unique sorted mean_fear and seed_size grids
+    cells = analyzed_data["processed_cells"]
+    mean_fear_grid = sorted(list(set(cell["mean_fear"] for cell in cells)))
+    seed_size_grid = sorted(list(set(cell["seed_size"] for cell in cells)))
+    
+    # Construct 2D matrix of P(systemic)
+    p_sys_matrix = np.zeros((len(seed_size_grid), len(mean_fear_grid)))
+    
+    size_to_idx = {size: idx for idx, size in enumerate(seed_size_grid)}
+    mu_to_idx = {mu: idx for idx, mu in enumerate(mean_fear_grid)}
+    
+    for cell in cells:
+        mu = cell["mean_fear"]
+        a = cell["seed_size"]
+        p_sys = cell["p_systemic"]
+        p_sys_matrix[size_to_idx[a], mu_to_idx[mu]] = p_sys
+        
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    # Plot P(systemic) heatmap
+    X, Y = np.meshgrid(mean_fear_grid, seed_size_grid)
+    mesh = ax.pcolormesh(X, Y, p_sys_matrix, cmap="RdBu_r", shading="auto", vmin=0, vmax=1, alpha=0.85)
+    cbar = fig.colorbar(mesh, ax=ax)
+    cbar.set_label("Probability of Systemic Cascade $P(\\text{systemic})$")
+    
+    # Plot empirical crossings (where P(systemic) = 0.5)
+    mu_emp = []
+    a_emp = []
+    for row in adherence["results_table"]:
+        if not row["is_clamped"] and row["a_emp"] is not None:
+            mu_emp.append(row["mu"])
+            a_emp.append(row["a_emp"])
+            
+    ax.plot(mu_emp, a_emp, "o", color="#d62728", label="Empirical Crossings ($P=0.5$)", markersize=8, markeredgecolor="black")
+    
+    # Plot raw theoretical critical threshold a_c(mu)
+    mu_dense = np.linspace(0.0, 0.9, 200)
+    a_c_raw = np.array([critical_seed_scaling(n, p, r, mu) for mu in mu_dense])
+    ax.plot(mu_dense, a_c_raw, "-", color="#2ca02c", label="Asymptotic Theoretical $a_c(\\mu)$", linewidth=2.5)
+    
+    # Plot empirical-anchored/scaled theoretical shape
+    a_emp_0 = adherence["a_emp_0"]
+    a_c_scaled = a_emp_0 * np.array([scaling_ratio(mu, r) for mu in mu_dense])
+    ax.plot(mu_dense, a_c_scaled, "--", color="black", label="Scaled Theory $a_{\\text{emp}}(0)(1-\\mu)^{r/(r-1)}$", linewidth=2)
+    
+    # Annotate finite size offset
+    a_c_0_theory = critical_seed_scaling(n, p, r, 0.0)
+    offset_pct = (a_emp_0 / a_c_0_theory - 1.0) * 100
+    
+    ax.annotate(
+        f"Finite-size offset at $\\mu=0$: +{offset_pct:.1f}%\n($a_{{emp}}(0)={a_emp_0:.2f}$ vs $a_c(0)={a_c_0_theory:.2f}$)",
+        xy=(0.02, (a_emp_0 + a_c_0_theory) / 2),
+        xytext=(0.15, (a_emp_0 + a_c_0_theory) / 2 + (10 if r > 2 else 2)),
+        arrowprops=dict(facecolor='black', arrowstyle='->', shrinkA=0, shrinkB=0),
+        fontsize=9,
+        bbox=dict(boxstyle="round,pad=0.3", fc="yellow", alpha=0.5)
+    )
+    
+    ax.set_xlabel("Mean Global Fear ($\\mu$)")
+    ax.set_ylabel("Initial Seed Size ($a$)")
+    ax.set_title(f"Systemic Collapse Phase Diagram ($N={n}, r={r}$)")
+    ax.set_xlim(-0.02, 0.92)
+    ax.set_ylim(min(seed_size_grid) - 0.5, max(seed_size_grid) + 0.5)
+    ax.legend(loc="upper right")
     
     filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)

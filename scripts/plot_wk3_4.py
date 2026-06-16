@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import subprocess
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,7 +13,7 @@ sys.path.insert(0, os.path.join(base_dir, "src"))
 from twocascade.analysis import analyze_sweep, load_raw_results, evaluate_scaling_adherence
 from twocascade.plotting import plot_bimodality_histograms, apply_plot_style, plot_critical_scaling_validation, plot_mu_sweep, plot_phase_diagram_overlay
 
-def generate_plots_for_r(r_val):
+def generate_plots_for_r(r_val, write_analysis=False):
     raw_path = os.path.join(base_dir, "results", "raw", f"sweep_wk3_4_r{r_val}.json")
     figures_dir = os.path.join(base_dir, "results", "figures")
     os.makedirs(figures_dir, exist_ok=True)
@@ -89,29 +90,30 @@ def generate_plots_for_r(r_val):
     except Exception as e:
         print(f"Failed to plot histograms: {e}")
         
-    # 4. Relocate JSON Analysis Outputs and Stamp Metadata
-    analysis_dir = os.path.join(base_dir, "results", "analysis")
-    os.makedirs(analysis_dir, exist_ok=True)
-    
-    # Resolve the active analysishead git commit
-    try:
-        current_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=base_dir).decode("utf-8").strip()
-    except Exception:
-        current_head = "unknown"
-    
-    # Add validation metadata tracking schema
-    adherence["metadata_tracking"] = {
-        "origin_file": os.path.basename(raw_path),
-        "data_generation_commit": meta.get("git_commit", "unknown"),
-        "analysis_runtime_commit": current_head,
-        "base_seed": meta.get("base_seed", "unknown"),
-        "timestamp": meta.get("timestamp", "unknown")
-    }
-    
-    adherence_path = os.path.join(analysis_dir, f"sweep_wk3_4_r{r_val}_adherence.json")
-    with open(adherence_path, "w") as f:
-        json.dump(adherence, f, indent=2)
-    print(f"Saved adherence analysis data to: {adherence_path}")
+    # 4. Relocate JSON Analysis Outputs and Stamp Metadata (Gated behind write_analysis)
+    if write_analysis:
+        analysis_dir = os.path.join(base_dir, "results", "analysis")
+        os.makedirs(analysis_dir, exist_ok=True)
+        
+        # Resolve the active analysishead git commit
+        try:
+            current_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=base_dir).decode("utf-8").strip()
+        except Exception:
+            current_head = "unknown"
+        
+        # Add validation metadata tracking schema
+        adherence["metadata_tracking"] = {
+            "origin_file": os.path.basename(raw_path),
+            "data_generation_commit": meta.get("git_commit", "unknown"),
+            "analysis_runtime_commit": current_head,
+            "base_seed": meta.get("base_seed", "unknown"),
+            "timestamp": meta.get("timestamp", "unknown")
+        }
+        
+        adherence_path = os.path.join(analysis_dir, f"sweep_wk3_4_r{r_val}_adherence.json")
+        with open(adherence_path, "w") as f:
+            json.dump(adherence, f, indent=2)
+        print(f"Saved adherence analysis data to: {adherence_path}")
 
     # 5. Call Centralized Scaling Validation Plot (passing precomputed adherence)
     try:
@@ -128,5 +130,9 @@ def generate_plots_for_r(r_val):
         print(f"Failed to generate phase diagram overlay plot: {e}")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Plot week 3 & 4 sweep results and optional analytical adherence outputs.")
+    parser.add_argument("--write-analysis", action="store_true", help="Write adherence analysis JSON files to disk.")
+    args = parser.parse_args()
+    
     for r in [2, 3, 4]:
-        generate_plots_for_r(r)
+        generate_plots_for_r(r, write_analysis=args.write_analysis)

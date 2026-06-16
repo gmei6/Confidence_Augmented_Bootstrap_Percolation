@@ -409,9 +409,9 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete and independently verified.
+- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete, advisor brief finalized.
 - **Results & Testing Audit:**
-  - **Done this session:** Drafted `docs/research/janson_scaling_validation.md` (validates $a_c(\mu)=a_c(0)(1-\mu)^{r/(r-1)}$ against the C++ sweep) and passed it through the blind 3-agent `/verify` gate (Reviewer/Critic/Auditor).
+  - **Done this session:** Drafted and hardened `docs/research/advisor_brief_2026_06_16.md` using the 3-agent `/verify` gate and explicit human-in-the-loop review.
   - Latest validated result: the $(1-\mu)^{r/(r-1)}$ scaling law fits tightly for $r=3$ (mean |diff| 2.6%) and $r=4$ (2.0%); $r=2$ shows a SYSTEMATIC positive bias across the whole $\mu$ range (empirical ratio decays slower than $(1-\mu)^2$; max |diff| 0.189 at $\mu=0.65$, present already at $\mu=0.15$ well above the floor) — a $\mu$-dependent residual of the finite-size factor $K(\mu,n)$, NOT high-$\mu$ quantization. Baseline finite-size offset 45–62% (cancels in the ratio); clamping is data-driven (D-021). Full detail in `docs/research/janson_scaling_validation.md`.
   - Generated the MVP $(r,\mu)$ phase-diagram overlays — $P(\text{systemic})$ heatmap + mean-field $a_c(\mu)$ theoretical curve + empirical crossings with explicit labels for the finite-size positive offset.
   - Test suite remains stable (28/28 tests passing in main environment).
@@ -425,13 +425,13 @@ heuristic mean-field threshold** showing qualitative agreement.
 - **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter?
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling)?
 - **Engineering (minor):** Investigate AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** email Prof. Dhara about PACE access.
+- **Logistics:** Wait for advisor response to the briefing packet regarding PACE access and scope.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. Run the `/advisor-prep` workflow to assemble the advisor-meeting packet in `docs/research/`, pulling the MVP overlays and open questions (Q2/Q3) into a concise briefing document.
-2. Email Prof. Dhara with the packet to schedule the first meeting and request PACE access.
-3. Address the Wk 6–7 finite-size analysis to estimate the transition-width scaling exponent $\nu$ (if aligned with the advisor).
+1. Send the `docs/research/advisor_brief_2026_06_16.md` packet to Prof. Dhara to schedule the first meeting and request PACE access.
+2. Await advisor feedback on Q2 (configuration model stretch) and Q3 (critical-window framing/exponents).
+3. Begin addressing the Wk 6–7 finite-size analysis to estimate the transition-width scaling exponent $\nu$ once aligned.
 
 ---
 
@@ -463,6 +463,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-020 | 2026-06-15 | Add results/analysis/ directory for secondary analytical outputs and implement dual-commit provenance tracking. | Accommodates processed metrics files without cluttering results/raw/ or violating structural governance, stamped with both generation and analysis commits. | §5.3, §5.4`
 - `D-021 | 2026-06-15 | Purely Empirical Threshold Clamping. | Enforce exclusively data-driven clamping filter based on actual realization boundaries to prevent theoretical model offsets (~1.3x) from over-censoring high-mu empirical results. Keep predicted_ac descriptive. | §3.5, §8`
 - `D-022 | 2026-06-16 | Gated the adherence-JSON write + metadata-stamping in scripts/plot_wk3_4.py behind an explicit --write-analysis flag (default off); normal plotting now runs in-memory and only READS results/analysis/*_adherence.json. Restored the three adherence files' analysis_runtime_commit to 283776f to match the note. | A plain plot run had re-stamped analysis_runtime_commit (283776f → current HEAD), desyncing the artifacts from the provenance cited in janson_scaling_validation.md; gating keeps plotting read-only on analysis artifacts while preserving a committed producer path (run with --write-analysis) for §5.6 reproducibility. | §5.3, §5.4, §5.6`
+- `D-023 | 2026-06-16 | Formalize the r=2 systematic bias as a finite-size factor residual. | Prevents conflating the continuous finite-size inflation K(μ,n) with physical quantization/floor constraints, aligning with empirical data showing the bias emerges well above the physical floor. | §8`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -487,6 +488,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-022 | 2026-06-11 | v1.10 | Integrated C++ engine into runner.py sweeps with cell-level spawning. Run full n=1000 milestone sweeps for r ∈ {2, 3, 4} and generated figures. Validated C++ sweep results against Week 2 Python results. | §6, §8, §10, §11, §12`
 - `S-023 | 2026-06-15 | v1.11 | Hardened scaling analysis for r in {2,3,4} sweeps, refactored plot_wk3_4.py and plotting.py, added results/analysis/ path, logged D-020/D-021, and updated current status and next actions.`
 - `S-024 | 2026-06-16 | v1.11 | Completed Week 5 MVP phase-diagram overlays with theoretical scaling curves. Drafted docs/research/janson_scaling_validation.md and passed it through the 3-agent /verify gate. Decoupled analysis provenance from plotting (D-022). Updated current status (§8: latest validated finding, r=2 systemic bias vs r=3/4 tight fit) and next actions. | §8, §10, §11, §12`
+- `S-025 | 2026-06-16 | v1.11 | Hardened the advisor briefing document via the /harden workflow. Clarified the theoretical origin of the r=2 bias (finite-size factor residual vs. floor constraint) per D-023, tied PACE requirements to realization budgets, and added missing citations to the Q2 pivot. | §8, §10, §11, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

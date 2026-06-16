@@ -15,9 +15,10 @@ complete. All items must hold; if any fails, the result is not done.
 2. **Seed logged.** Every RNG is explicit (`numpy.random.default_rng(seed)` in Python,
    a seeded `<random>` engine in C++ — no implicit global state). In C++, each
    realization is seeded as a deterministic function of `(base_seed, realization_index)`.
-3. **Raw outputs saved.** Per-realization outcomes are written to `results/raw/` by the
-   runner — never by hand — each stamped with the full config, seed(s), git commit
-   hash, and a timestamp.
+3. **Outputs saved.** Per-realization outcomes are written to `results/raw/` by the
+   runner, and derived analytical compliance outputs to `results/analysis/` (D-020) —
+   never by hand — each stamped with the full config, seed(s), git commit hash, and
+   timestamp (including dual-commit metadata tracking for analytical results).
 4. **Figure regenerates.** Any figure is reproduced by `plotting.py` reading from
    `results/raw/`; plotting never re-runs the simulation.
 5. **Validation passes.** For anything validatable, the check passes — e.g. μ=0

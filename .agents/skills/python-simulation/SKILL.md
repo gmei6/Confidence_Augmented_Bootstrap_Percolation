@@ -11,7 +11,7 @@ Never edit the tracker directly; propose changes to the Orchestrator.
 Responsibilities:
 - Owns `src/twocascade/` code and its inline docstrings/comments.
 - Owns `configs/` directory. Ensure one config file per experiment with no magic numbers (§5.3).
-- Generates data for `results/raw/` and plots for `results/figures/`.
+- Generates data for `results/raw/`, plots for `results/figures/`, and analytical compliance artifacts under `results/analysis/` (D-020).
 
 Requirements:
 - Python implementation is the authoritative source of truth for logic.

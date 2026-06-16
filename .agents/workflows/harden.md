@@ -1,6 +1,6 @@
 ---
 name: harden
-description: Bounded review-and-fix loop for one existing target. Runs reviewer/critic review, fix, re-review in a worktree until sign-off or a 5-round cap, then the /verify auditor gate, then one diff for approval. Not for planning new work.
+description: Bounded review-and-fix loop for one existing target. Triggered whenever the user mentions `/harden` or asks to "harden" a target. Runs reviewer/critic review, fix, re-review in a worktree until sign-off or a 5-round cap, then the /verify auditor gate, then one diff for approval. Not for planning new work.
 ---
 
 # Harden
@@ -8,6 +8,9 @@ description: Bounded review-and-fix loop for one existing target. Runs reviewer/
 Iteratively hardens a TARGET the user names in the prompt. Honor all guardrails in
 GEMINI.md and AGENTS.md throughout. This loop edits real files, so it runs isolated
 and converges to a single approval — it does NOT ask for approval every round.
+
+## Triggering Rule
+- **Mandatory Trigger**: If the user specifies `/harden` or explicitly requests to "harden <target>" (or similar phrasing referencing hardening a target), you **must** immediately launch this workflow from Step 0. Do not make manual edits directly or perform standard planning cycles outside of this workflow structure.
 
 ## Step 0 — Setup
 1. Read `docs/PROJECT_TRACKER.md` (§2 North Star, §8 Status, plus the §3/§5 sections

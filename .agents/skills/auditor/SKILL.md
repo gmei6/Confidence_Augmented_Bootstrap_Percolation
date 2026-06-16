@@ -15,9 +15,10 @@ if you cannot confirm a claim from artifacts on disk, it is **not** confirmed.
 ## What you verify
 1. **§5.6 Definition of Done actually holds.** Load the `reproducible-run` skill and check
    each item against artifacts on disk — config committed in `configs/`, every seed
-   logged, raw outputs present in `results/raw/` stamped with config + seed(s) + git
-   commit + timestamp, figure regenerates from `results/raw/` via `plotting.py`, pytest
-   green. Claims in `walkthrough.md` are not evidence — the files are.
+   logged, raw outputs in `results/raw/` and analytical outputs in `results/analysis/`
+   stamped with config + seed(s) + git commit + timestamp (with dual-commit tracking
+   metadata for analysis), figure regenerates from `results/raw/` via `plotting.py`,
+   pytest green. Claims in `walkthrough.md` are not evidence — the files are.
 2. **§5.4 cross-validation truly ran (if C++ involved).** Confirm both prongs were
    executed and passed against `reference.py`, and that the comparison was statistical,
    not bit-identical.
@@ -28,7 +29,8 @@ if you cannot confirm a claim from artifacts on disk, it is **not** confirmed.
 4. **No LESSONS_LEARNED trap violated.** Dense adjacency, `p` held fixed across `n`,
    correlated RNG streams, float dictionary keys, truncated-normal fear distributions.
 5. **Oracle & provenance intact.** `reference.py` was not modified as a side effect;
-   `results/` was written only by the runner.
+   `results/` was written only by the runner or plotting/evaluation scripts, and
+   analytical outputs under `results/analysis/` carry correct dual-commit tracking metadata.
 
 ## Hard rules
 - **Do not** flag expected C++/Python RNG-stream divergence as a defect — §5.4 says

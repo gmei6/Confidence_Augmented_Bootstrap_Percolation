@@ -10,7 +10,8 @@ and AGENTS.md throughout. This workflow proposes and validates; it does not appl
 tracker edits (that is the PI via §14).
 
 **Input:** the `walkthrough.md` and the diff from the preceding `/execute` or `/harden`
-session, plus the plan/spec the change claims to satisfy.
+session (plus the plan/spec the change claims to satisfy), OR an auditable research
+artifact (e.g., a research note) for documentation/theoretical verification.
 
 ## Step 0 — Context
 Read `docs/PROJECT_TRACKER.md` (§2, §5.4, §5.6, plus the §3/§5 sections relevant to the

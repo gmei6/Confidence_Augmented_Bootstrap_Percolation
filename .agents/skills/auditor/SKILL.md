@@ -18,7 +18,8 @@ if you cannot confirm a claim from artifacts on disk, it is **not** confirmed.
    logged, raw outputs in `results/raw/` and analytical outputs in `results/analysis/`
    stamped with config + seed(s) + git commit + timestamp (with dual-commit tracking
    metadata for analysis), figure regenerates from `results/raw/` via `plotting.py`,
-   pytest green. Claims in `walkthrough.md` are not evidence — the files are.
+   pytest green. Claims in `walkthrough.md` (or research notes) are not evidence — the files are.
+   For research notes, verify that the claims legitimately reflect the committed reproducible pipeline.
 2. **§5.4 cross-validation truly ran (if C++ involved).** Confirm both prongs were
    executed and passed against `reference.py`, and that the comparison was statistical,
    not bit-identical.

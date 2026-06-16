@@ -32,3 +32,4 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 
 *   **Avoid Float Crossing Clamping**: When interpolating empirical thresholds, crossings that are stuck at the minimum sweep seed size are clamped floor points (lower bounds, not resolved crossings) under high fear. Check `a_emp > grid_floor` (inequality) rather than checking float equality to filter them out in validation plots.
 *   **Runnable Plotting Entry Point**: Keep plotting modules executable as standalone CLI scripts (e.g. via `if __name__ == "__main__":`) so that figures can be automatically regenerated from raw results on disk, ensuring complete reproducibility.
+*   **Metadata Provenance Decoupling**: Plotting scripts must never write or overwrite analytical data JSONs. Figure generation should strictly *read* analysis artifacts to prevent silently rewriting `analysis_runtime_commit` stamps and compromising provenance integrity.

@@ -1,0 +1,313 @@
+{
+  "meta": {
+    "timestamp": "2026-06-17T13:20:20.819346",
+    "git_commit": "08f50c3",
+    "platform": {
+      "system": "Darwin",
+      "release": "25.5.0",
+      "machine": "arm64",
+      "processor": "arm",
+      "logical_cpus": 10,
+      "python": "3.13.5",
+      "numpy": "2.3.4",
+      "cpu_brand": "Apple M1 Max",
+      "hw_model": "MacBookPro18,2",
+      "physical_cpus": 10,
+      "ram_gb": 32.0
+    },
+    "args": {
+      "repo_root": null,
+      "cpp_bin": null,
+      "engine": "both",
+      "mode": "all",
+      "r": 2,
+      "mu": 0.3,
+      "kappa": 50.0,
+      "seed_multiple": 1.0,
+      "scaling": "janson",
+      "alpha": 0.7,
+      "target_mean_degree": 8.0,
+      "n_ref": 1000,
+      "fixed_degree": 10.0,
+      "n_list": [
+        1000,
+        2000,
+        5000,
+        10000,
+        20000,
+        50000,
+        100000,
+        200000,
+        500000,
+        1000000
+      ],
+      "compare_n_list": [
+        1000,
+        5000,
+        20000
+      ],
+      "extrapolate_n": [
+        10000,
+        50000
+      ],
+      "target_cascades": [
+        1000000.0,
+        10000000.0
+      ],
+      "max_seconds_per_cascade": 2.0,
+      "max_total_seconds": 240.0,
+      "measure_seconds": 1.5,
+      "calib_trials": 3,
+      "min_trials": 5,
+      "max_trials": 2000,
+      "thread_bench_n": 5000,
+      "thread_bench_trials": 240,
+      "threads_list": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "base_seed": 20260617,
+      "no_mem": false,
+      "no_plot": false,
+      "out_dir": null,
+      "measure_mem": true
+    },
+    "cpp_bin": "/Users/garymei/Downloads/CABP_copy_for_antigravity/cpp/build/twocascade_run"
+  },
+  "nsweep": [
+    {
+      "wall_s": 0.08067362499423325,
+      "per_cascade_s": 0.00048307559876786376,
+      "cascades_per_s": 2070.0693691641795,
+      "mean_failed_fraction": 0.656185628742515,
+      "trials": 167,
+      "threads": 1,
+      "peak_rss_bytes": 2195456,
+      "n": 1000,
+      "p": 0.007999999999999998,
+      "mean_degree": 7.991999999999998,
+      "seed_size": 8,
+      "ceiling": false
+    },
+    {
+      "wall_s": 0.5653779590502381,
+      "per_cascade_s": 0.001000668954071218,
+      "cascades_per_s": 999.331493129175,
+      "mean_failed_fraction": 0.7224876106194691,
+      "trials": 565,
+      "threads": 1,
+      "peak_rss_bytes": 2424832,
+      "n": 2000,
+      "p": 0.004924577653379665,
+      "mean_degree": 9.84423072910595,
+      "seed_size": 10,
+      "ceiling": false
+    },
+    {
+      "wall_s": 0.8959328749915585,
+      "per_cascade_s": 0.002817398977960876,
+      "cascades_per_s": 354.93730487677016,
+      "mean_failed_fraction": 0.8592075471698114,
+      "trials": 318,
+      "threads": 1,
+      "peak_rss_bytes": 3063808,
+      "n": 5000,
+      "p": 0.0025930505547084198,
+      "mean_degree": 12.962659722987391,
+      "seed_size": 15,
+      "ceiling": false
+    },
+    {
+      "wall_s": 1.2277831670362502,
+      "per_cascade_s": 0.006264199831817603,
+      "cascades_per_s": 159.63730833118117,
+      "mean_failed_fraction": 0.9389785714285716,
+      "trials": 196,
+      "threads": 1,
+      "peak_rss_bytes": 5046272,
+      "n": 10000,
+      "p": 0.0015962098519751037,
+      "mean_degree": 15.960502309899061,
+      "seed_size": 20,
+      "ceiling": false
+    },
+    {
+      "wall_s": 1.2478271250147372,
+      "per_cascade_s": 0.013135022368576181,
+      "cascades_per_s": 76.1323408471971,
+      "mean_failed_fraction": 0.9894936842105264,
+      "trials": 95,
+      "threads": 1,
+      "peak_rss_bytes": 7454720,
+      "n": 20000,
+      "p": 0.0009825824208926322,
+      "mean_degree": 19.650665835431752,
+      "seed_size": 26,
+      "ceiling": false
+    },
+    {
+      "wall_s": 1.4381042909808457,
+      "per_cascade_s": 0.036874468999508865,
+      "cascades_per_s": 27.119034582255793,
+      "mean_failed_fraction": 1.0,
+      "trials": 39,
+      "threads": 1,
+      "peak_rss_bytes": 18857984,
+      "n": 50000,
+      "p": 0.0005173816052618859,
+      "mean_degree": 25.868562881489034,
+      "seed_size": 37,
+      "ceiling": false
+    },
+    {
+      "wall_s": 1.478190541965887,
+      "per_cascade_s": 0.09854603613105913,
+      "cascades_per_s": 10.14754158827933,
+      "mean_failed_fraction": 1.0,
+      "trials": 15,
+      "threads": 1,
+      "peak_rss_bytes": 44843008,
+      "n": 100000,
+      "p": 0.00031848573644279783,
+      "mean_degree": 31.84825515854334,
+      "seed_size": 49,
+      "ceiling": false
+    },
+    {
+      "wall_s": 1.6078608341049403,
+      "per_cascade_s": 0.2679768056841567,
+      "cascades_per_s": 3.7316662441995883,
+      "mean_failed_fraction": 1.0,
+      "trials": 6,
+      "threads": 1,
+      "peak_rss_bytes": 110477312,
+      "n": 200000,
+      "p": 0.00019605096757579598,
+      "mean_degree": 39.20999746419162,
+      "seed_size": 65,
+      "ceiling": false
+    },
+    {
+      "wall_s": 3.8975951669272035,
+      "per_cascade_s": 0.7795190333854407,
+      "cascades_per_s": 1.282842313236424,
+      "mean_failed_fraction": 1.0,
+      "trials": 5,
+      "threads": 1,
+      "peak_rss_bytes": 308346880,
+      "n": 500000,
+      "p": 0.00010323120194371457,
+      "mean_degree": 51.61549774065534,
+      "seed_size": 94,
+      "ceiling": false
+    },
+    {
+      "n": 1000000,
+      "p": 6.354625877794253e-05,
+      "mean_degree": 63.546195231683754,
+      "seed_size": 124,
+      "per_cascade_s": 2.3672490416405103,
+      "ceiling": true
+    }
+  ],
+  "threads": [
+    {
+      "wall_s": 0.6571276669856161,
+      "per_cascade_s": 0.0027380319457734003,
+      "cascades_per_s": 365.2258336662811,
+      "mean_failed_fraction": 0.8548958333333334,
+      "trials": 240,
+      "threads": 1,
+      "n": 5000,
+      "speedup": 1.0,
+      "efficiency": 1.0
+    },
+    {
+      "wall_s": 0.38034233392681926,
+      "per_cascade_s": 0.0015847597246950802,
+      "cascades_per_s": 631.0104834298509,
+      "mean_failed_fraction": 0.8548958333333334,
+      "trials": 240,
+      "threads": 2,
+      "n": 5000,
+      "speedup": 1.7277268617488486,
+      "efficiency": 0.8638634308744243
+    },
+    {
+      "wall_s": 0.21022295800503343,
+      "per_cascade_s": 0.0008759289916876393,
+      "cascades_per_s": 1141.645052840773,
+      "mean_failed_fraction": 0.8548958333333334,
+      "trials": 240,
+      "threads": 4,
+      "n": 5000,
+      "speedup": 3.125860625412198,
+      "efficiency": 0.7814651563530495
+    },
+    {
+      "wall_s": 0.1315817499998957,
+      "per_cascade_s": 0.0005482572916662321,
+      "cascades_per_s": 1823.9611496289588,
+      "mean_failed_fraction": 0.8548958333333334,
+      "trials": 240,
+      "threads": 8,
+      "n": 5000,
+      "speedup": 4.9940638955336665,
+      "efficiency": 0.6242579869417083
+    },
+    {
+      "wall_s": 0.13630162505432963,
+      "per_cascade_s": 0.0005679234377263735,
+      "cascades_per_s": 1760.800723427445,
+      "mean_failed_fraction": 0.8548958333333334,
+      "trials": 240,
+      "threads": 10,
+      "n": 5000,
+      "speedup": 4.821128630885259,
+      "efficiency": 0.48211286308852586
+    }
+  ],
+  "compare": [
+    {
+      "n": 1000,
+      "cpp_per_cascade_s": 0.0006838458532001824,
+      "py_per_cascade_s": 0.005074908188544214,
+      "speedup": 7.4211288476712225
+    },
+    {
+      "n": 5000,
+      "cpp_per_cascade_s": 0.0029189229011535645,
+      "py_per_cascade_s": 0.033969033206813035,
+      "speedup": 11.637523277298074
+    },
+    {
+      "n": 20000,
+      "cpp_per_cascade_s": 0.012698249996174128,
+      "py_per_cascade_s": 0.15087119159288703,
+      "speedup": 11.881258570144958
+    }
+  ],
+  "feasibility": [
+    {
+      "n": 10000,
+      "throughput_1thread": 159.63730833118117,
+      "throughput_allcore_est": 797.2389179169277,
+      "seconds_for_targets": {
+        "1e+06": 1254.3291321162021,
+        "1e+07": 12543.291321162022
+      }
+    },
+    {
+      "n": 50000,
+      "throughput_1thread": 27.119034582255793,
+      "throughput_allcore_est": 135.43419148897257,
+      "seconds_for_targets": {
+        "1e+06": 7383.659835126809,
+        "1e+07": 73836.5983512681
+      }
+    }
+  ]
+}

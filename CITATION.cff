@@ -12,7 +12,7 @@ authors:
     affiliation: "Georgia Institute of Technology, School of Mathematics"
     # orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX"   # add when you have one
 
-repository-code: "https://github.com/<username>/<repo>"   # fill in before publishing
+repository-code: "https://github.com/gmei6/Confidence_Augmented_Bootstrap_Percolation"   # fill in before publishing
 
 abstract: >
   A simulation framework for a two-channel cascade model on the Erdős–Rényi

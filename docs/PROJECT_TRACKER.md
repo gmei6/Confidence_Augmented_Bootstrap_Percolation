@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-24 — Session 26 (advisor meeting scheduled 2026-07-01; brief held back for further polish)
+- **Last updated:** 2026-06-24 — Session 27 (Task B θ/κ-robustness verified and recorded)
 - **File version:** v1.11
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -361,9 +361,9 @@ heuristic mean-field threshold** showing qualitative agreement.
       boundary**, not deep in either phase.
 - [ ] **Wk 8 — First stretch goal** (recommended: configuration-model variant; see §2/§7 and the
       advisor angles).
-- [ ] **Wk 9 — Robustness & consolidation:** $\theta$ sensitivity, $\sigma$-sweep, random vs.
+- [ ] **Wk 9 — Robustness & consolidation:** [x] $\theta$ sensitivity, [x] $\sigma$-sweep ($\kappa$), [ ] random vs.
       targeted seeding (expect a near-null on $G(n,p)$ — report as a deliberate negative result);
-      fear-persistence window ($X$) invariance check (D-006): pilot confirms boundary near-invariant
+      [ ] fear-persistence window ($X$) invariance check (D-006): pilot confirms boundary near-invariant
       in $X$ within $\pm 0.03$; expected result is an invariance/robustness lemma plus the
       cascade-duration effect.
 - [ ] **Wk 10 — Write-up, clean figures, reproducibility pass, final presentation.**
@@ -409,29 +409,30 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete; advisor brief finalized but **intentionally held back for further polish** (not yet sent). **First advisor meeting scheduled for 2026-07-01, 2:00pm.**
+- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete; **Task B (θ- and κ-robustness) executed and verified** (branch `task-b`, pending merge). Advisor brief finalized but **intentionally held back for further polish** (not yet sent). **First advisor meeting scheduled for 2026-07-01, 2:00pm.**
 - **Results & Testing Audit:**
-  - **Done this session:** Drafted and hardened `docs/research/advisor_brief_2026_06_16.md` using the 3-agent `/verify` gate and explicit human-in-the-loop review.
-  - Latest validated result: the $(1-\mu)^{r/(r-1)}$ scaling law fits tightly for $r=3$ (mean |diff| 2.6%) and $r=4$ (2.0%); $r=2$ shows a SYSTEMATIC positive bias across the whole $\mu$ range (empirical ratio decays slower than $(1-\mu)^2$; max |diff| 0.189 at $\mu=0.65$, present already at $\mu=0.15$ well above the floor) — a $\mu$-dependent residual of the finite-size factor $K(\mu,n)$, NOT high-$\mu$ quantization. Baseline finite-size offset 45–62% (cancels in the ratio); clamping is data-driven (D-021). Full detail in `docs/research/janson_scaling_validation.md`.
-  - Generated the MVP $(r,\mu)$ phase-diagram overlays — $P(\text{systemic})$ heatmap + mean-field $a_c(\mu)$ theoretical curve + empirical crossings with explicit labels for the finite-size positive offset.
-  - Test suite remains stable (28/28 tests passing in main environment).
-- **State of the Code:** Decoupled analysis provenance from plotting. The analytical adherence JSON generation is now isolated so plotting scripts only *read* adherence data, preventing figure generation from inadvertently rewriting runtime metadata stamps.
-- **Where the code lives:** Analysis library at `src/twocascade/analysis.py`; plotting at `src/twocascade/plotting.py`; sweep script at `scripts/plot_wk3_4.py`; tests in `tests/test_analysis.py`; research validation at `docs/research/janson_scaling_validation.md`.
+  - **Done this session:** Verified Task B end-to-end — claims independently re-checked against `results/raw/`, and C++↔Python parity re-run across many seeds. The runner produced 4 provenance-stamped κ sweeps in `results/raw/` and 4 figures in `results/figures/` (3 θ-robustness plots for $r\in\{2,3,4\}$ + 1 κ-robustness plot for $r=2$).
+  - **Task B key finding:** the cascade boundary is robust to the systemic-event threshold $\theta$ (re-analysis across $\theta\in[0.2,0.8]$ shows negligible first-order shift) and to fear concentration $\kappa$ (boundary unchanged across $\kappa\in\{2,10,50,200\}$, confirming the §3.5 second-order prediction even at the highest heterogeneity tested, $\kappa=2.0$). A hypothesized $\kappa=2$ "immune-node barrier" was tested and **rejected** as a null result; a true immune-node barrier needs the separate $\kappa\to0$ / two-point regime.
+  - **Latest validated analytical result:** the $(1-\mu)^{r/(r-1)}$ scaling law fits tightly for $r=3$ (mean |diff| 2.6%) and $r=4$ (2.0%); $r=2$ shows a SYSTEMATIC positive bias across the whole $\mu$ range — a $\mu$-dependent residual of the finite-size factor $K(\mu,n)$, NOT high-$\mu$ quantization (D-023). Full detail in `docs/research/janson_scaling_validation.md`.
+  - **Testing:** 36/36 in the `task-b` worktree (adds 8 unit tests for `systemic_prob_at_theta` + custom-θ `analyze_sweep`, and 10 cross-language tests parameterized across all four κ); 28/28 on the main checkout.
+- **State of the Code:** Task B added `systemic_prob_at_theta` and a custom-`theta` path in `analyze_sweep`, plus `plot_theta_robustness` / `plot_kappa_robustness` in `plotting.py` (read-only on raw). Cross-language validation (§5.4 Prong B) was re-calibrated to a scale-invariant p-value threshold (D-024). **No C++ engine changes this session.**
+- **Where the code lives:** Task B work on branch `task-b` (pending merge): `src/twocascade/analysis.py`, `src/twocascade/plotting.py`, `scripts/run_task_b.py`, `tests/test_analysis.py`, `tests/test_cpp_validation.py`; κ configs in `configs/kappa_sweep_r2_k*.json`; proof-of-work in `walkthrough.md`. Queued task briefs in `docs/antigravity_queue/`.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
 - **Blockers:** None.
 - **Active Constraints & Warnings:** Cross-reference D-018 platform limitations. Localized development profiles remain bound to macOS builds utilizing explicit ASan / Debug-UBSan-only testing targets.
-- **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter?
+- **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter? *(Task B shows fear heterogeneity $\kappa$ is inert at first order — so structural/degree heterogeneity is the more promising route to make heterogeneity/targeting meaningful.)*
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling)?
 - **Engineering (minor):** Investigate AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** First advisor meeting scheduled for **2026-07-01 at 2:00pm**. Briefing packet **not yet sent** — deliberately held back to keep improving the deliverables (phase diagram, scaling validation, brief) before sharing. PACE access and scope to be raised at the meeting.
+- **Logistics:** First advisor meeting scheduled for **2026-07-01 at 2:00pm**. Briefing packet **not yet sent** — deliberately held back to keep improving the deliverables and fold in the new Task B robustness results before sharing. PACE access and scope to be raised at the meeting.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. Keep polishing the deliverables (phase-diagram overlays, `docs/research/janson_scaling_validation.md`, and `docs/research/advisor_brief_2026_06_16.md`) in the run-up to the **2026-07-01 2:00pm** meeting; share the updated packet with Prof. Dhara shortly before it.
-2. Prepare to discuss Q2 (configuration-model stretch) and Q3 (critical-window framing/exponents), and request PACE access, at the meeting.
-3. Begin addressing the Wk 6–7 finite-size analysis to estimate the transition-width scaling exponent $\nu$ once aligned.
+1. Merge branch `task-b` once the formal `/verify` auditor verdict is on record.
+2. Assemble the advisor packet for the **2026-07-01 2:00pm** meeting (Week 5 overlays, Janson scaling validation, and the Task B robustness figures/walkthrough); share with Prof. Dhara shortly before it.
+3. Prepare to discuss Q2 (configuration-model stretch), Q3 (critical-window width exponent $\nu$), and request PACE access, at the meeting.
+4. Proceed with the remaining queued tasks (`docs/antigravity_queue/` A/C/D) and the Wk 6–7 finite-size $\nu$ analysis (preliminary, pending advisor alignment).
 
 ---
 
@@ -464,6 +465,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-021 | 2026-06-15 | Purely Empirical Threshold Clamping. | Enforce exclusively data-driven clamping filter based on actual realization boundaries to prevent theoretical model offsets (~1.3x) from over-censoring high-mu empirical results. Keep predicted_ac descriptive. | §3.5, §8`
 - `D-022 | 2026-06-16 | Gated the adherence-JSON write + metadata-stamping in scripts/plot_wk3_4.py behind an explicit --write-analysis flag (default off); normal plotting now runs in-memory and only READS results/analysis/*_adherence.json. Restored the three adherence files' analysis_runtime_commit to 283776f to match the note. | A plain plot run had re-stamped analysis_runtime_commit (283776f → current HEAD), desyncing the artifacts from the provenance cited in janson_scaling_validation.md; gating keeps plotting read-only on analysis artifacts while preserving a committed producer path (run with --write-analysis) for §5.6 reproducibility. | §5.3, §5.4, §5.6`
 - `D-023 | 2026-06-16 | Formalize the r=2 systematic bias as a finite-size factor residual. | Prevents conflating the continuous finite-size inflation K(μ,n) with physical quantization/floor constraints, aligning with empirical data showing the bias emerges well above the physical floor. | §8`
+- `D-024 | 2026-06-24 | Cross-language validation (§5.4 Prong B) now thresholds on a scale-invariant p-value (both z-test and KS require p > 0.005) instead of a fixed KS distance (< 0.05); standardize on seed 12345 for both engines. | The fixed KS-distance threshold sat below the two-sample 5% critical value (≈0.061 at N=1000/engine), giving ≈16% per-test false rejection (≈50% family-wise across the 4 KS cells) under a correct implementation — which had forced ad-hoc seed-shopping. A p-value threshold matching the z-test significance bounds the per-cell false-alarm rate to 0.5% while preserving power. §5.4 frozen spec text is unchanged (test implementation only). | §5.4 (test impl), §8, §11`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -490,6 +492,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-024 | 2026-06-16 | v1.11 | Completed Week 5 MVP phase-diagram overlays with theoretical scaling curves. Drafted docs/research/janson_scaling_validation.md and passed it through the 3-agent /verify gate. Decoupled analysis provenance from plotting (D-022). Updated current status (§8: latest validated finding, r=2 systemic bias vs r=3/4 tight fit) and next actions. | §8, §10, §11, §12`
 - `S-025 | 2026-06-16 | v1.11 | Hardened the advisor briefing document via the /harden workflow. Clarified the theoretical origin of the r=2 bias (finite-size factor residual vs. floor constraint) per D-023, tied PACE requirements to realization budgets, and added missing citations to the Q2 pivot. | §8, §10, §11, §12`
 - `S-026 | 2026-06-24 | v1.11 | Recorded that the first advisor meeting is scheduled for 2026-07-01 2:00pm and that the briefing packet is being deliberately held back for further polish (not yet sent). Live-only updates to §8 (phase line), §9 (logistics), and §10 (next actions reframed around the meeting date); header bumped to Session 26. No frozen edits, no new decisions. | §8, §9, §10, §12`
+- `S-027 | 2026-06-24 | v1.11 | Verified Antigravity's Task B (θ/κ robustness) and recorded it: live updates to §8 (status, Task B key finding, code map), §9 (Q2 note on fear- vs degree-heterogeneity; logistics), §10 (next actions); ticked the §6 Wk-9 θ/σ sub-items; appended D-024 (cross-language validation now thresholds on a p-value, not a fixed KS distance). Dropped two false-provenance drafts from the wrap-up — no C++ changed this session, and the Beta-underflow lesson already existed (LESSONS §2). | §6, §8, §9, §10, §11, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

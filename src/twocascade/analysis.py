@@ -7,6 +7,18 @@ import numpy as np
 from typing import Dict, Any, List, Optional
 from twocascade.meanfield import critical_seed_scaling, scaling_ratio
 
+def systemic_prob_at_theta(failed_fractions: np.ndarray, theta: float) -> float:
+    """
+    Compute the fraction of realizations where the failed fraction is at least theta.
+    
+    Args:
+        failed_fractions: Array of final failed fractions from trials.
+        theta: Systemic-event threshold.
+    """
+    if len(failed_fractions) == 0:
+        return 0.0
+    return float(np.mean(failed_fractions >= theta))
+
 def load_raw_results(filepath: str) -> Dict[str, Any]:
     """Load raw results JSON file."""
     with open(filepath, "r") as f:
@@ -33,10 +45,11 @@ def _interp_crossing(x: np.ndarray, y: np.ndarray, level: float = 0.5) -> Option
             return float(x_sorted[i - 1] + t * (x_sorted[i] - x_sorted[i - 1]))
     return float('nan')
 
-def analyze_sweep(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+def analyze_sweep(raw_data: Dict[str, Any], theta: Optional[float] = None) -> Dict[str, Any]:
     """Calculate systemic probabilities, find crossings, and organize bimodality data."""
     meta = raw_data["metadata"]
-    theta = meta["theta"]
+    if theta is None:
+        theta = meta["theta"]
     results = raw_data["results"]
     
     sweep_params = raw_data["sweep_parameters"]
@@ -56,7 +69,7 @@ def analyze_sweep(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         mult = float(cell["seed_multiple"])
         a = int(cell["seed_size"])
         ffs = np.array(cell["failed_fractions"])
-        p_sys = float(np.mean(ffs >= theta))
+        p_sys = systemic_prob_at_theta(ffs, theta)
         
         processed_cells.append({
             "mean_fear": mu,

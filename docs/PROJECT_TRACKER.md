@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-16 — Session 24 (MVP overlay and validated scaling-law adherence)
+- **Last updated:** 2026-06-24 — Session 26 (advisor meeting scheduled 2026-07-01; brief held back for further polish)
 - **File version:** v1.11
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -409,7 +409,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session to reflect reality)*
 
-- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete, advisor brief finalized.
+- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete; advisor brief finalized but **intentionally held back for further polish** (not yet sent). **First advisor meeting scheduled for 2026-07-01, 2:00pm.**
 - **Results & Testing Audit:**
   - **Done this session:** Drafted and hardened `docs/research/advisor_brief_2026_06_16.md` using the 3-agent `/verify` gate and explicit human-in-the-loop review.
   - Latest validated result: the $(1-\mu)^{r/(r-1)}$ scaling law fits tightly for $r=3$ (mean |diff| 2.6%) and $r=4$ (2.0%); $r=2$ shows a SYSTEMATIC positive bias across the whole $\mu$ range (empirical ratio decays slower than $(1-\mu)^2$; max |diff| 0.189 at $\mu=0.65$, present already at $\mu=0.15$ well above the floor) — a $\mu$-dependent residual of the finite-size factor $K(\mu,n)$, NOT high-$\mu$ quantization. Baseline finite-size offset 45–62% (cancels in the ratio); clamping is data-driven (D-021). Full detail in `docs/research/janson_scaling_validation.md`.
@@ -425,12 +425,12 @@ heuristic mean-field threshold** showing qualitative agreement.
 - **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter?
 - **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling)?
 - **Engineering (minor):** Investigate AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** Wait for advisor response to the briefing packet regarding PACE access and scope.
+- **Logistics:** First advisor meeting scheduled for **2026-07-01 at 2:00pm**. Briefing packet **not yet sent** — deliberately held back to keep improving the deliverables (phase diagram, scaling validation, brief) before sharing. PACE access and scope to be raised at the meeting.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. Send the `docs/research/advisor_brief_2026_06_16.md` packet to Prof. Dhara to schedule the first meeting and request PACE access.
-2. Await advisor feedback on Q2 (configuration model stretch) and Q3 (critical-window framing/exponents).
+1. Keep polishing the deliverables (phase-diagram overlays, `docs/research/janson_scaling_validation.md`, and `docs/research/advisor_brief_2026_06_16.md`) in the run-up to the **2026-07-01 2:00pm** meeting; share the updated packet with Prof. Dhara shortly before it.
+2. Prepare to discuss Q2 (configuration-model stretch) and Q3 (critical-window framing/exponents), and request PACE access, at the meeting.
 3. Begin addressing the Wk 6–7 finite-size analysis to estimate the transition-width scaling exponent $\nu$ once aligned.
 
 ---
@@ -489,6 +489,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-023 | 2026-06-15 | v1.11 | Hardened scaling analysis for r in {2,3,4} sweeps, refactored plot_wk3_4.py and plotting.py, added results/analysis/ path, logged D-020/D-021, and updated current status and next actions.`
 - `S-024 | 2026-06-16 | v1.11 | Completed Week 5 MVP phase-diagram overlays with theoretical scaling curves. Drafted docs/research/janson_scaling_validation.md and passed it through the 3-agent /verify gate. Decoupled analysis provenance from plotting (D-022). Updated current status (§8: latest validated finding, r=2 systemic bias vs r=3/4 tight fit) and next actions. | §8, §10, §11, §12`
 - `S-025 | 2026-06-16 | v1.11 | Hardened the advisor briefing document via the /harden workflow. Clarified the theoretical origin of the r=2 bias (finite-size factor residual vs. floor constraint) per D-023, tied PACE requirements to realization budgets, and added missing citations to the Q2 pivot. | §8, §10, §11, §12`
+- `S-026 | 2026-06-24 | v1.11 | Recorded that the first advisor meeting is scheduled for 2026-07-01 2:00pm and that the briefing packet is being deliberately held back for further polish (not yet sent). Live-only updates to §8 (phase line), §9 (logistics), and §10 (next actions reframed around the meeting date); header bumped to Session 26. No frozen edits, no new decisions. | §8, §9, §10, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

@@ -261,3 +261,138 @@ def plot_phase_diagram_overlay(analyzed_data: Dict[str, Any], output_dir: str, f
     filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()
+
+
+def plot_theta_robustness(analyzed_sweeps_by_theta: Dict[str, Dict[str, Any]], output_dir: str, filename: str = "theta_robustness.png") -> None:
+    """
+    Plot empirical critical seed boundaries a_c(mu) for different theta values to show robustness.
+    
+    Args:
+        analyzed_sweeps_by_theta: Dict mapping stringified theta (e.g., "0.35") to analyzed sweep data.
+        output_dir: Directory to save the generated plot.
+        filename: Output image filename.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    # Sort the stringified thetas by their float values
+    sorted_thetas = sorted(analyzed_sweeps_by_theta.keys(), key=float)
+    colors = plt.cm.plasma(np.linspace(0.1, 0.9, len(sorted_thetas)))
+    
+    first_sweep = next(iter(analyzed_sweeps_by_theta.values()))
+    meta = first_sweep["metadata"]
+    n = meta["n"]
+    p = meta["p"]
+    r = meta["r"]
+    
+    mu_dense = np.linspace(0.0, 0.9, 200)
+    a_c_raw = np.array([critical_seed_scaling(n, p, r, mu) for mu in mu_dense])
+    ax.plot(mu_dense, a_c_raw, ":", color="gray", label="Asymptotic $a_c(\\mu)$ Theory", linewidth=1.5)
+    
+    for idx, theta_str in enumerate(sorted_thetas):
+        sweep = analyzed_sweeps_by_theta[theta_str]
+        emp_thresholds = sweep["empirical_thresholds"]
+        
+        mu_vals = []
+        a_emp_vals = []
+        
+        for mu_str, a_emp in emp_thresholds.items():
+            if a_emp is not None and not np.isnan(a_emp):
+                mu_vals.append(float(mu_str))
+                a_emp_vals.append(float(a_emp))
+                
+        if len(mu_vals) > 0:
+            sort_idx = np.argsort(mu_vals)
+            mu_sorted = np.array(mu_vals)[sort_idx]
+            a_emp_sorted = np.array(a_emp_vals)[sort_idx]
+            
+            ax.plot(mu_sorted, a_emp_sorted, "o-", label=f"$\\theta = {theta_str}$", color=colors[idx], linewidth=2, markersize=5)
+            
+    ax.set_xlabel("Mean Global Fear ($\\mu$)")
+    ax.set_ylabel("Critical Seed Size Threshold ($a_{\\text{emp}}$)")
+    ax.set_title(f"Boundary Robustness to Systemic Threshold $\\theta$ ($N={n}, r={r}$)")
+    ax.set_xlim(-0.02, 0.92)
+    ax.legend(title="Systemic Threshold")
+    
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()
+
+
+def plot_kappa_robustness(analyzed_sweeps_by_kappa: Dict[str, Dict[str, Any]], output_dir: str, filename: str = "kappa_robustness_r2.png") -> None:
+    """
+    Plot empirical critical seed boundaries a_c(mu) for different concentration kappa values.
+    
+    Args:
+        analyzed_sweeps_by_kappa: Dict mapping stringified kappa (e.g., "50.0") to analyzed sweep data.
+        output_dir: Directory to save the generated plot.
+        filename: Output image filename.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    # Sort the stringified kappas by their float values
+    sorted_kappas = sorted(analyzed_sweeps_by_kappa.keys(), key=float)
+    colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(sorted_kappas)))
+    
+    first_sweep = next(iter(analyzed_sweeps_by_kappa.values()))
+    meta = first_sweep["metadata"]
+    n = meta["n"]
+    p = meta["p"]
+    r = meta["r"]
+    
+    min_seed_size = r
+    for sweep in analyzed_sweeps_by_kappa.values():
+        cells = sweep.get("processed_cells", [])
+        if cells:
+            min_seed_size = min(min_seed_size, min(cell["seed_size"] for cell in cells))
+            
+    mu_dense = np.linspace(0.0, 0.9, 200)
+    a_c_raw = np.array([critical_seed_scaling(n, p, r, mu) for mu in mu_dense])
+    ax.plot(mu_dense, a_c_raw, ":", color="gray", label="Asymptotic $a_c(\\mu)$ Theory", linewidth=1.5)
+    ax.axhline(min_seed_size, color="red", linestyle="--", linewidth=1.2, alpha=0.6, label=f"Physical Floor ($a={min_seed_size}$)")
+    
+    for idx, kappa_str in enumerate(sorted_kappas):
+        sweep = analyzed_sweeps_by_kappa[kappa_str]
+        emp_thresholds = sweep["empirical_thresholds"]
+        
+        mu_vals = []
+        a_emp_vals = []
+        
+        for mu_str, a_emp in emp_thresholds.items():
+            if a_emp is not None and not np.isnan(a_emp):
+                mu_vals.append(float(mu_str))
+                a_emp_vals.append(float(a_emp))
+                
+        if len(mu_vals) > 0:
+            sort_idx = np.argsort(mu_vals)
+            mu_sorted = np.array(mu_vals)[sort_idx]
+            a_emp_sorted = np.array(a_emp_vals)[sort_idx]
+            
+            is_clamped = a_emp_sorted <= min_seed_size
+            valid_mask = ~is_clamped
+            clamped_mask = is_clamped
+            
+            ax.plot(mu_sorted, a_emp_sorted, "-", color=colors[idx], linewidth=2, alpha=0.8)
+            
+            if np.any(valid_mask):
+                ax.plot(mu_sorted[valid_mask], a_emp_sorted[valid_mask], "o", 
+                        color=colors[idx], label=f"$\\kappa = {kappa_str}$", markersize=6)
+            if np.any(clamped_mask):
+                ax.plot(mu_sorted[clamped_mask], a_emp_sorted[clamped_mask], "s", 
+                        markerfacecolor="none", markeredgecolor=colors[idx], markersize=6, markeredgewidth=1.5)
+                
+    ax.set_xlabel("Mean Global Fear ($\\mu$)")
+    ax.set_ylabel("Critical Seed Size Threshold ($a_{\\text{emp}}$)")
+    ax.set_title(f"Boundary Sensitivity to Heterogeneity $\\kappa$ ($N={n}, r={r}$)")
+    ax.set_xlim(-0.02, 0.92)
+    ax.legend(title="Beta Concentration")
+    
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()
+

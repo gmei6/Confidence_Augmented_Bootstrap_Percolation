@@ -4,7 +4,47 @@ Unit tests for twocascade.analysis metrics and interpolation.
 
 import pytest
 import numpy as np
-from twocascade.analysis import _interp_crossing, analyze_sweep, evaluate_scaling_adherence
+from twocascade.analysis import _interp_crossing, analyze_sweep, evaluate_scaling_adherence, systemic_prob_at_theta
+
+def test_systemic_prob_at_theta():
+    """Verify systemic probability calculation under boundaries and edge cases."""
+    # Empty array case
+    assert systemic_prob_at_theta(np.array([]), 0.5) == 0.0
+    
+    # Normal cases
+    arr = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
+    assert np.isclose(systemic_prob_at_theta(arr, 0.5), 3/5)
+    assert np.isclose(systemic_prob_at_theta(arr, 0.0), 1.0)
+    assert np.isclose(systemic_prob_at_theta(arr, 1.0), 0.0)
+    
+    # Hard limits
+    all_zero = np.zeros(10)
+    assert systemic_prob_at_theta(all_zero, 0.0) == 1.0
+    assert systemic_prob_at_theta(all_zero, 0.1) == 0.0
+
+def test_analyze_sweep_with_custom_theta():
+    """Verify analyze_sweep respects custom theta and uses string keys for outputs."""
+    raw_data = {
+        "metadata": {
+            "n": 100, "p": 0.05, "r": 2, "concentration": 50.0, "theta": 0.5,
+            "window_len": 1, "weights": None, "trials_per_cell": 2, "base_seed": 42
+        },
+        "sweep_parameters": {
+            "mean_fear_grid": [0.0, 0.3],
+            "seed_multiples": [1.0],
+            "seed_size_grid": [4]
+        },
+        "results": [
+            {"mean_fear": 0.0, "seed_multiple": 1.0, "seed_size": 4, "failed_fractions": [0.2, 0.4], "rounds_completed": [1, 1]}
+        ]
+    }
+    # If custom theta = 0.3, failed_fractions [0.2, 0.4] has 1 element >= 0.3 -> p_sys = 0.5
+    res = analyze_sweep(raw_data, theta=0.3)
+    assert np.isclose(res["processed_cells"][0]["p_systemic"], 0.5)
+    
+    # Verify key types in empirical_thresholds mapping are strings
+    for key in res["empirical_thresholds"].keys():
+        assert isinstance(key, str)
 
 def test_interp_crossing():
     """Verify linear interpolation crossing logic."""

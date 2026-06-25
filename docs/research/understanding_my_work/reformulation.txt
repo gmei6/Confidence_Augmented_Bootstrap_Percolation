@@ -1,0 +1,393 @@
+\documentclass[11pt, a4paper]{article}
+
+% ==============================================================================
+% PAGE SETUP & TYPOGRAPHY
+% ==============================================================================
+\usepackage[margin=1in]{geometry}  % Sane margins (default LaTeX margins are massive)
+\usepackage{microtype}             % Micro-typographical adjustments (prevents bad line breaks)
+\usepackage{setspace}              % Allows easy \onehalfspacing or \doublespacing
+\usepackage{xcolor}
+
+\newcommand{\g}[1]{\textcolor{blue}{\texttt{#1}}}
+% ==============================================================================
+% THE MATH CORE (Load order matters here)
+% ==============================================================================
+\usepackage{amsmath}    % The absolute foundation (align, pmatrix, \text, etc.)
+\usepackage{amssymb}    % Extra symbols (\lesssim, \varnothing, \mathbb{R}, etc.)
+\usepackage{amsthm}     % Theorem environments (Proof, Lemma, Definition)
+\usepackage{mathtools}  % Fixes/enhances amsmath (gives us \coloneqq and auto-brackets)
+\usepackage{bm}         % The ONLY correct way to bold math (\bm{x} works on Greek letters!)
+\usepackage{cancel}     % Allows striking through terms: \cancel{2x}
+
+% ==============================================================================
+% UTILITIES & GRAPHICS
+% ==============================================================================
+\usepackage{graphicx}   % For \includegraphics
+\usepackage{xcolor}     % Color support
+\usepackage{booktabs}   % Professional table styling (\toprule, \midrule)
+\usepackage{enumitem}   % Better control over lists (e.g., [label=(\alph*)])
+
+% ==============================================================================
+% REFERENCING (CRITICAL: hyperref must go almost last; cleveref must go very last)
+% ==============================================================================
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage[capitalize, nameinlink]{cleveref} 
+
+% ==============================================================================
+% THEOREM ENVIRONMENTS SETUP
+% ==============================================================================
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% ==============================================================================
+% CUSTOM SHORTCUTS & MACROS 
+% ==============================================================================
+% Standard Number Sets
+\newcommand{\N}{\mathbb{N}} % Naturals
+\newcommand{\Z}{\mathbb{Z}} % Integers
+\newcommand{\Q}{\mathbb{Q}} % Rationals
+\newcommand{\R}{\mathbb{R}} % Reals
+\newcommand{\C}{\mathbb{C}} % Complex
+\newcommand{\F}{\mathbb{F}} % Arbitrary Field
+
+% Auto-scaling paired delimiters (Requires mathtools)
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% Quick operators
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Rank}{rank}
+
+% ==============================================================================
+% DOCUMENT METADATA
+% ==============================================================================
+\title{Rewrite of "2. A useful reformulation"}
+\author{Gary Mei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{2. A useful reformulation}
+
+In order to analyze the bootstrap percolation process on $G_{n,p}$, we change the time scale; we forget the generations and consider at each time step the infections from one vertex only. 
+
+\g{
+At this point, my work already diverges from the paper. Since my global fear is a function of the past, where $g_k \cdot f_i$ denotes the probability of a node failing, I instead need to use a FIFO queue in order to have the mean field, $g_k$. 
+But how do we know that this FIFO queue reformulation produces the same result and process as percolating generation by generation? 
+}
+
+\g{
+Here we introduce the Pathwise Equivalence Theorem. \\
+\\
+Here, there's 3 sets of nodes that we keep track of. \\
+\\
+$1. \mathcal{A}(t)$ Set of active vertices at time t\\
+$2. Z(t)$ Set of used vertices at time t\\
+$3. \mathcal{G}_k$ queue of nodes that were activated at generation $k$\\
+\\
+A couple of notes. 
+\\
+Regarding the base case, we define:
+\\
+$\mathcal{A}(0) = \{ u_1, ... ,u_a \}$ and $a_0 = a$
+\\
+$Z(t) = \emptyset$ 
+\\
+$T_0 := a$ 
+\\
+$Z(T_0) = \mathcal{A}(0)$
+\\
+$\mathcal{G}_0 = \mathcal{A}(0)$
+\\
+\\
+Now regarding the inductive step:
+\\
+$a_k = T_k - T_{k-1}$
+\\
+$T_{-1} = 0$
+\\
+$\mathcal{G}_k := \{ u_t : T_{k-1} < t \leq T_k \}$
+\\
+We use $k(t)$ to track generations for any step $t \in \{ 1, 2, ... , T_k \}$ to be a unique generation index which satisfies:\\
+$T_{k(t) -1} < t \leq T_{k(t)}$ \quad (with $k(t) = 0$ for $t \leq T_0$)
+\\
+\\
+Additionally, $T_k$ denotes the total number of active vertices processed up to the end of generation $k$. So not only are we keeping track of time through individual nodes used, with $t$, but we also keep track of generations used, with $T_k$. \\
+\\
+Now to prove that using the FIFO queue reformulation has the same result and process as percolating generation by generation, we use induction. \\
+\\
+We begin with the statements to prove. \\
+1. $Z(T_k) = A_{sync}(k)$ \\
+2. $a_k = a^{sync}_k$ \\
+3. $\mathcal{A}(T_k) = A_{sync}(k+1)$
+\\
+\\
+To interpret each of these statements: \\
+1. Once we've finished processing generation k, the set of active nodes at time k should be equal to the set of used nodes at generation k. Essentially, the same nodes should all be active (only looking at revealed active for queue).\\
+2. The size of each generation should match up for the queue and synchronous models. 
+3. The activated nodes at $T_k$ for the FIFO model should be equal to the active nodes at the synchronous model at time $k+1$. The reason behind this is that the FIFO model includes a "generation" ahead of nodes that are activated but not used and thus "not revealed". \\
+\\
+Now moving onto the proof:\\
+\\
+Base Case ($k = 0$): \\
+1. $Z(T_0) = A_{sync}(0)$ 
+\\
+Here, $Z(T_0) = \mathcal{A}(0) = \{u_1, ... , u_a \} = A_{sync}(0)$, so we have satisfied the first statement. 
+\\
+2. $a_k = a^{sync}_k$ \\
+By definition, $a_0 = a = |\{ u_1, ... , u_a \}| = a^{sync}_k$. Thus, we've proven the second statement. 
+\\
+3. $\mathcal{A}(T_0) = A_{sync}(1)$ \\
+Since $T_0$ is the set of nodes activated by set $\{u_1, ... , u_a \}$ to determine $A(T_0)$, the set of nodes active at time $T_0$, we need to determine what nodes are activated due to the initial set. We split this into two groups. Nodes activated due to marks (solvency) and nodes activated due to fear. \\ \\
+Let $\mathcal{S}(1)$ be the nodes activated in generation $1$ due to solvency. \\
+$\mathcal{S}(1) = \{ i \notin A_{sync}(0) : M_i(T_0) \geq r \}$ \\
+Meaning that $\mathcal{S}(1)$ is the set of nodes that are that accumulate more than $r$ marks within $T_0$ steps and are not in the initially active set. \\ \\
+Let $\mathcal{F}(1)$ be the nodes activated in generation $1$ due to fear. \\
+$\mathcal{F}(1) = \{ i \notin A_{sync}(0) \cup \mathcal{S}(1) : U_{i, 1} < f_i g_1 \}$ \\
+Here, we only consider nodes not in the initially active set or nodes activated due to solvency. We then have a uniform variable, $U_{i, 1}$ to determine whether we get a value lower than the node's fear value, determined by $f_i$, their individual fear level, and $g_1$, the global fear at generation $1$. \\ \\
+So the newly activated set at generation $1$ is denoted with $\mathcal{G}_1 = \mathcal{S}(1) \cup \mathcal{F}(1)$. Then the total active set is found with \\
+$\mathcal{A}(T_0) = \mathcal{A}(0) \cup \mathcal{G}_1 = A_{sync}(0) \cup (\mathcal{A}_{sync}(1) \setminus \mathcal{A}_{sync} (0)) = \mathcal{A}_{sync} (1)$ \\
+To verify, we know that $\mathcal{G}_1$ is the nodes activated in generation $1$, not including the initially active set, hence the equation. 
+\\
+\\
+\newpage
+The Inductive step:
+\\
+Assume the three claims hold for some $k$, meaning that \\
+1. $Z(T_k) = A_{sync}(k)$ \\
+2. $a_k = a^{sync}_k$ \\
+3. $\mathcal{A}(T_k) = A_{sync}(k+1)$
+\\
+Are all assumed to be true. 
+\\
+We aim to prove that the three claims are valid for $k + 1$. \\ \\
+1. $Z(T_{k+1}) = A_{sync}(k+1)$ \\
+We know that $Z(T_{k+1}) = \mathcal{A}(T_{k})$, as by generation $k+1$, we will have used all active nodes at $T_k$. So we have the equality, \\
+$Z(T_{k+1}) = \mathcal{A}(T_k) = A_{sync}(k+1)$, proving the first statement. 
+\\ \\
+2. $a_{k+1} = a^{sync}_{k+1}$ \\
+Since we know that $a_{k+1} = T_{k+1} - T_k$, we know that \\
+$\mathcal{S}(k+1) = \{ i \notin A_{sync}(k) : M_i(T_k) \geq r \}$\\
+$\mathcal{F}(k+1) = \{ i \notin A_{sync}(k) \cup \mathcal{S}(k+1) : U_{i, k+1} < g_{k+1} \cdot f_i \}$
+\\$\mathcal{G}_{k+1} = \mathcal{S}(k+1) \cup \mathcal{F}(k+1) = \mathcal{A}(T_k) \setminus Z(T_k) = \mathcal{A}_{sync}(k+1) \setminus \mathcal{A}_{sync}(k)$
+\\
+Then $a_{k+1} = \lvert \mathcal{G}_k \rvert = \lvert \mathcal{A}_{sync}(k+1) \setminus \mathcal{A}_{sync}(k) \rvert = a_{k+1}^{sync}$
+\\
+\\
+3. $\mathcal{A}(T_{k+1}) = A_{sync}(k+2)$
+\\
+We know that \\ $\mathcal{A}(T_{k+1}) = \mathcal{A}(T_k) \cup \mathcal{G}_{k+1} = \mathcal{A}_{sync}(k+1) \cup (\mathcal{A}_{sync}(k+2) \setminus \mathcal{A}_{sync}(k+1)) = \mathcal{A}_{sync}(k+2)$
+\\
+\\
+Thus, we have proven that all 3 claims hold by induction, and therefore that the pathwise equivalence theorem holds for all generations. 
+}
+
+Choose $u_1 \in \mathcal{A}(0)$ and give each of its neighbors a \emph{mark}; we then say that $u_1$ is \emph{used}, and let $Z(1) := \{u_1\}$ be the set of used vertices at time 1. We continue recursively: at time $t$, choose a vertex $u_t \in \mathcal{A}(t-1) \setminus Z(t-1)$. We give each neighbor of $u_t$ a new mark. Let $\bar{\mathcal{A}}(t)$ be the set of inactive vertices with $r$ marks; these now become active, and we let $\mathcal{A}(t) = \mathcal{A}(t-1) \cup \bar{\mathcal{A}}(t)$ be the set of active vertices at time $t$. We finally set $Z(t) = Z(t-1) \cup \{u_t\} = \{u_s : s \leq t\}$, the set of used vertices. [We start with $Z(0) = \emptyset$, and note that necessarily $\bar{\mathcal{A}}(t) = \emptyset$ for $t < r$.]
+
+The process stops when $\mathcal{A}(t) \setminus Z(t) = \emptyset$, that is, when all active vertices are used. We denote this time by $T$,
+
+\begin{equation} \tag{2.1}
+    T := \min\{t \geq 0 : \mathcal{A}(t) \setminus Z(t) = \emptyset\}.
+\end{equation}
+
+\g{
+This is where the next portion of my work modifies Janson's work. Since I keep track of both individual nodes ($t$ step and $k$ generation), I need to ensure that both are "empty" before stopping. This is accomplished with:
+\[
+K := \min \{ k \geq 0 : a_k = 0 \} \rightarrow T_K = T_{K-1}
+\]
+To interpret this, this finds the smallest generation in which the last generation size was $0$, meaning that the set of used nodes in generation $K$ is the same as generation $K-1$. 
+}
+
+Clearly, $T \leq n$; in particular, $T$ is finite. The final active set is $\mathcal{A}(T)$; it is clear that this is the same set as the one produced by the bootstrap percolation process defined in the Introduction; only the time development differs. Hence we may as well study the version just described. [This is true for any choice of the vertices $u_t$. For definiteness, we may assume that we keep the unused, active vertices in a queue and choose $u_t$ as the first vertex in the queue, and that the vertices in $\bar{\mathcal{A}}(t)$ are added at the end of the queue in order of their labels. Thus $u_t$ will always be one of the oldest unused, active vertices, which will enable us to recover the generations; see further Section 10. In Section 4, we consider other ways of choosing $u_t$.] This reformulation was used already by Scalia-Tomba [41] (for a more general model). It is related to the (continuous-time) construction by Sellke [43] for an epidemic process.
+
+Let $A(t) := |\mathcal{A}(t)|$, the number of active vertices at time $t$. Since $|Z(t)| = t$ and $Z(t) \subseteq \mathcal{A}(t)$ for $t = 0, \ldots, T$, we also have
+
+\begin{equation} \tag{2.2}
+    T = \min\{t \geq 0 : A(t) = t\} = \min\{t \geq 0 : A(t) \leq t\}.
+\end{equation}
+
+\g{As a note, we discard the notation of using T as the final step and instead use $T$ to help denote generations. }
+
+Moreover, since the final active set is $\mathcal{A}(T) = Z(T)$, its size $A^*$ is
+
+\begin{equation} \tag{2.3}
+    A^* := A(T) = |\mathcal{A}(T)| = |Z(T)| = T.
+\end{equation}
+
+\g{This equation remains unchanged, we simply have \\
+$A^* = T_K$}
+
+Hence, the set $\mathcal{A}(0)$ percolates if and only if $T = n$, and $\mathcal{A}(0)$ almost percolates if and only if $T = n - o(n)$.
+
+We analyze this process by the standard method of revealing the edges of the graph $G_{n,p}$ only on a need-to-know basis. We thus begin by choosing $u_1$ as above and then reveal its neighbors; we then find $u_2$ and reveal its neighbors, and so on. Let, for $i \notin Z(s)$, $I_i(s)$ be the indicator that there is an edge between the vertices $u_s$ and $i$. This is also the indicator that $i$ gets a mark at time $s$, so if $M_i(t)$ is the number of marks $i$ has at time $t$, then
+
+\begin{equation} \tag{2.4}
+    M_i(t) = \sum_{s=1}^{t} I_i(s),
+\end{equation}
+
+\g{We also leave this unchanged, as the solvency channel is exactly the same as Janson's}
+
+at least until $i$ is activated (and what happens later does not matter). Note that if $i \notin \mathcal{A}(0)$, then, for every $t \leq T$, $i \in \mathcal{A}(t)$ if and only if $M_i(t) \geq r$. The crucial feature of this description of the process, which makes the analysis simple, is that the random variables $I_i(s)$ are i.i.d. $\mathrm{Be}(p)$.
+
+We have defined $I_i(s)$ only for $s \leq T$ and $i \notin Z(s)$, but it is convenient to add further (redundant) variables so that $I_i(s)$ are defined, and i.i.d., for all $i \in V_n$ and all $s \geq 1$. One way to do this formally is to reverse the procedure above. We start with i.i.d. $I_i(s) \in \mathrm{Be}(p)$, for $i \in V_n$ and $s \geq 1$, and a set $\mathcal{A}(0) \subseteq V_n$. We let $Z(0) := \emptyset$ and start with an empty graph on $V_n$. We then, as above, for $t = 1, \ldots, n$ select $u_t \in \mathcal{A}(t-1) \setminus Z(t-1)$ if this set is nonempty; otherwise we select $u_t \in V_n \setminus Z(t-1)$ (taking, e.g., the smallest such vertex). We define $M_i(t)$ by (2.4) for all $i \in V_n$ and $t \geq 0$, and update $\mathcal{A}(t) := \mathcal{A}(0) \cup \{i : M_i(t) \geq r\}$ and $Z(t) := Z(t-1) \cup \{u_t\} = \{u_s : s \leq t\}$. 
+
+\g{My work includes fear, so we define it here again. \\
+At the step $T_{k-1} $ we define fear at $k$ with\\
+\[
+    g_k := \frac{a_{k-1}}{n} = \frac{T_{k-1} - T_{k-2}}{n}
+\]
+Meaning that fear is equal to the portion of nodes that activated in the latest generation. Now before we continue further, we also note that: \\
+$\mathcal{A}(T_{-1}) := \mathcal{A}(0) = \{ u_1 , ... , u_a \}$ to initialize recurrences at $k = 1$. \\
+We must draw individual susceptibility parameters for each node, $f_i \sim Beta(\alpha, \beta )$ where $\alpha = \mu \kappa$ and $\beta = (1-\mu) \kappa$. Note that we only draw the susceptibility parameters a single time at $t = 1$. \\
+Then for each generation, we pre-draw an $U_{i, j} \sim Unif[0,1]$ for all $i \in V_n$ and each generation $j \geq 1$. \\
+Mimicking the indicator variable for solvency, the indicator variable for fear is defined as:
+\[
+    I_i^{fear} (j) := [U_{i,j} < f_i \cdot g_i]
+\]
+Now the set of fear activated nodes at the transition to generation $k$ is\\
+\[
+    \mathcal{F}(k) := \{ 
+    i \notin \mathcal{A}(T_{k-2}) \cup \mathcal{S}_k
+    :
+    I^{fear}_i (k) = 1
+    \}
+\]
+As a quick reminder, $\mathcal{A}(T_{k-2}) = Z(T_{k-1})$, which is why we have the $k-2$ in fear definition. The solvency activated set is then \\
+\[
+    \mathcal{S} (k) := \{ 
+    i \notin \mathcal{A}(T_{k-2}) 
+    :
+    M_i (T_{k-1}) \geq r
+    \}
+\]
+Then for each generation $k$, the queue of nodes processed in generation $k$ is denoted with $\mathcal{G}_k = \mathcal{S}(k) \cup \mathcal{F}(k) $
+}
+
+Furthermore, add an edge $u_t i$ to the graph for each vertex $i \notin Z(t)$ such that $I_i(t) = 1$. Finally, define $T$ by (2.1) or (2.2). It is easy to see that this constructs a random graph $G_{n,p}$ and that $\mathcal{A}(t)$, $t \leq T$, is as above for this graph, so the final active set of the bootstrap percolation on the graph is $\mathcal{A}(T)$.
+
+
+
+Define also, for $i \in V_n \setminus \mathcal{A}(0)$,
+
+\begin{equation} \tag{2.5}
+    Y_i := \min\{t : M_i(t) \geq r\}.
+\end{equation}
+
+\g{Since Janson only keeps tracks of "steps" and not generations, they do not have to reconcile node activation time. Here's how I do so. \\
+The activation generation $K_i^{'} $ for each node not in the initially active set, $i \notin \mathcal{A}(0)$. \\
+\[
+    Y_i^{'} = \min 
+    \{ 
+    t \in 
+    (T_{K^{'}_i-2}, T_{K^{'}_i-1}
+    ]
+    :
+    M_i (t) \geq r
+    \}
+\]
+To interpret this, $Y_i^{'}$ denotes the activation step for a node that activates in generation $K^{'}_i - 1 $. \\
+If a node activates due to fear, which requires $M_i(T_{K_i^{'}-1} < r ) $ as nodes activated by solvency cannot be activated again by fear, the activation step for the node is:\\
+$Y_i^{'} = T_{K^{'}_i -1} $ \\
+Now to look at the set of active nodes at step $T_k$, we take the union of all used vertices up to generation $k$ and the queued vertices for generation $k + 1$ \\
+\[
+    \mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{S}(k+1) \cup \mathcal{F}(k+1) = \bigcup_{j = 0}^{k + 1} \mathcal{G}_j
+\]
+As stated previously, the process ends at generation $K$ when the queue, the active but not processed nodes, is empty. \\
+$K := \min 
+\{
+k \geq 0 : a_k = 0
+\}
+\to 
+T_K = T_{K-1}$ \\
+The final active set size is then $A^* = T_K$
+\\
+}
+
+If $Y_i \leq T$, then $Y_i$ is the time vertex $i$ becomes active, but if $Y_i > T$, then $i$ never becomes active. Thus, for $t \leq T$,
+
+\begin{equation} \tag{2.6}
+    \mathcal{A}(t) = \mathcal{A}(0) \cup \{i \notin \mathcal{A}(0) : Y_i \leq t\}.
+\end{equation}
+
+\g{
+Equation 2.6 is modified as well, as not rather than only looking at the nodes activated due to neighbors, we consider both the nodes activated due to fear and solvency. 
+\[
+    \mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{S}(k+1) \cup \mathcal{F}(k+1)
+\]
+To interpret, the active set at step $T_k$ is equal to the union of the previously active set and the nodes activated due to solvency and fear. Note that the $k$ appears to be missing, but this is due to $Z(T_k) = \mathcal{A}(T_{k-1})$. 
+}
+
+By (2.4), each $M_i(t)$ has a binomial distribution $\mathrm{Bin}(t, p)$. Further, by (2.4) and (2.5), each $Y_i$ has a negative binomial distribution $\mathrm{NegBin}(r, p)$,
+
+\begin{equation} \tag{2.7}
+    P(Y_i = k) = P\big(M_i(k-1) = r-1, I_i(k) = 1\big) = \binom{k-1}{r-1} p^r (1-p)^{k-r};
+\end{equation}
+
+moreover, these random variables $Y_i$ are i.i.d.
+
+\g{NOT RESOLVED YET}
+
+We let, for $t = 0, 1, 2, \ldots$,
+
+\begin{equation} \tag{2.8}
+    S(t) := |\{i \notin \mathcal{A}(0) : Y_i \leq t\}| = \sum_{i \notin \mathcal{A}(0)} \mathbf{1}\{Y_i \leq t\},
+\end{equation}
+
+\g{NOT RESOLVED YET}
+
+so, by (2.6), and our notation $A(0) = a$,
+
+\begin{equation} \tag{2.9}
+    A(t) = A(0) + S(t) = S(t) + a.
+\end{equation}
+
+\g{
+Here we modify to have: 
+\[
+    \mathbb{E} [A(t)] \approx a + (n-a)P[Y_1 \leq t]
+\]
+To interpret, the expected number of active vertices at time $t$ is equal to the initially active set plus the remaining nodes multiplied by the probability that any given node activates. 
+}
+
+By (2.9), (2.2) and (2.3), it suffices to study the stochastic process $S(t)$. Note that $S(t)$ is a sum of $n - a$ i.i.d. processes $\mathbf{1}\{t \geq Y_i\}$, each of which is $0/1$-valued and jumps from 0 to 1 at time $Y_i$, where $Y_i$ has the distribution $\mathrm{NegBin}(r, p)$ in (2.7). We write $S(t) = S_{n-a}(t)$ when we want to emphasize the number of summands in $S(t)$; more generally we define $S_m(t) := \sum_{i=1}^{m} \mathbf{1}\{Y_i \leq t\}$ for any $m \leq n$ [assuming for consistency that $\mathcal{A}(0) = \{n - a + 1, \ldots, n\}$].
+
+The fact that $S(t)$, and thus $A(t)$, is a sum of i.i.d. processes makes the analysis easy; in particular, for any given $t$,
+
+\begin{equation} \tag{2.10}
+    S(t) \in \mathrm{Bin}\big(n - a, \pi(t)\big),
+\end{equation}
+
+where
+
+\begin{equation} \tag{2.11}
+    \pi(t) := P(Y_1 \leq t) = P\big(M_1(t) \geq r\big) = P\big(\mathrm{Bin}(t, p) \geq r\big).
+\end{equation}
+
+In particular, we have
+
+\begin{equation} \tag{2.12}
+    \mathbb{E} S(t) = (n - a)\pi(t),
+\end{equation}
+
+\begin{equation} \tag{2.13}
+    \mathrm{Var}\, S(t) = (n - a)\pi(t)\big(1 - \pi(t)\big) \leq \mathbb{E} S(t) \leq n\pi(t).
+\end{equation}
+
+To avoid rounding to integers sometimes below, we define $S(t) := S(\lfloor t \rfloor)$ and $\pi(t) := \pi(\lfloor t \rfloor)$ for all real $t \geq 0$. We also sometimes (when it is obviously harmless) ignore rounding to simplify notation.
+
+\end{document}

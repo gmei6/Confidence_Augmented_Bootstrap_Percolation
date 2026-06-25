@@ -44,6 +44,8 @@ class CascadeResult:
     total_failed : int                  # |A*|
     rounds_completed: int               # Total number of rounds iterated
     history: list                       # The number of failed nodes at the end of each round. 
+    tracked_failure_rounds: dict[int, int] | None = None
+    # Python-only diagnostic side-channel. Exempt from C++ parity (§5.4) per D-026.
 
 
 # --------------------------------------------------------------------------- #
@@ -51,7 +53,8 @@ class CascadeResult:
 # --------------------------------------------------------------------------- #
 def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indices: list[int], 
                 rng: np.random.Generator, record_history: bool,
-                window_len: int = 1, weights: list[float] | None = None) -> CascadeResult:
+                window_len: int = 1, weights: list[float] | None = None,
+                track_nodes: set[int] | None = None) -> CascadeResult:
     """Runs the two channel cascade till completion
 
     Parameters
@@ -80,6 +83,10 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
     weights : list[float] or None, default=None
         Normalized weights for the fear window. Must sum to 1.0. Defaults to uniform weights.
  
+    track_nodes : set[int] or None, default=None
+        Optional set of node indices to track failure rounds for. Python-only diagnostic
+        side-channel. Exempt from C++ engine parity (§5.4) per D-026.
+
     Returns
     -------
     CascadeResult    
@@ -101,6 +108,7 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
         weights = [1.0 / window_len] * window_len
 
     n = len(nodes)
+    tracked_failure_rounds = {} if track_nodes is not None else None
 
     # ----- t = 0: apply the initial shock A(0) ----------------------------- #
     # We begin by marking the seed banks as failed, and then push the failures to their
@@ -108,6 +116,8 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
 
     for i in seed_indices:
         nodes[i].failed = True
+        if track_nodes and i in track_nodes:
+            tracked_failure_rounds[i] = 0
     
     for i in seed_indices:
         for neighbor_index in adjacency[i]:
@@ -161,6 +171,8 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
         # ================================================================== #
         for node in newly_failing_nodes:
             node.failed = True
+            if track_nodes and node.index in track_nodes:
+                tracked_failure_rounds[node.index] = rounds_completed + 1
         for node in newly_failing_nodes:
             for neighbor_index in adjacency[node.index]:
                 nodes[neighbor_index].failed_neighbor_count += 1
@@ -186,7 +198,8 @@ def run_cascade(adjacency: list[list[int]], nodes: list[Node], r: int, seed_indi
         final_failed_fraction=final_failed_fraction,
         total_failed=total_failed,
         rounds_completed=rounds_completed,
-        history=history
+        history=history,
+        tracked_failure_rounds=tracked_failure_rounds
     )
 
 

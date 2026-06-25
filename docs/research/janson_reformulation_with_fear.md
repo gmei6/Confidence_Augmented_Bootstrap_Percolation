@@ -154,6 +154,85 @@ This decouples the activation times into independent variables $Y_i = \min(Y_i^{
 
 > **Step-vs-Generation Clock Note:** In the coupled sequential process, fear activations are tested once per generation at the boundaries $T_{k-1}$, whereas the decoupled geometric clock tests fear step-by-step. By Bernoulli's inequality, $(1 - f_i/n)^{a_{j-1}} > 1 - f_i a_{j-1}/n$ for generation size $a_{j-1} > 1$, meaning the step-level geometric clock exhibits a minor finite-$n$ survival probability upward bias relative to the generational clock. However, in the thermodynamic limit where generation sizes are sub-macroscopic ($a_k = o(n)$ w.h.p.), this clock mismatch collapses, and the geometric clock represents the exact asymptotic limit.
 
+### 5.1 Joint Decoupling: Exact Conditional Factorisation
+
+The leave-one-out argument above establishes the marginal survival probability for a single node. We now extend it to the joint survival of multiple nodes, showing that the $Y_i'$ are **exactly conditionally independent given the fear field** — an exact finite-$n$ result requiring no asymptotic assumptions (Tier 1).
+
+#### Exact Joint-Survival Identity
+
+For distinct non-seed nodes $i, j \in V_n \setminus \mathcal{A}(0)$ and any step $t$, define the **leave-$\{i,j\}$-out system**: the FIFO sequential process run on $G \setminus \{i,j\}$ (with both nodes completely removed from the network from the start), producing fear fields $g_k^{(-i,-j)} = a_{k-1}^{(-i,-j)}/n$. 
+
+We couple the two systems on a common probability space by sharing all pre-drawn Bernoulli edge indicators $\{I_\ell(s)\}_{\ell \in V_n, s \geq 1}$ (representing potential network connections) and all fear uniform draws $\{U_{\ell,k}\}_{\ell \in V_n, k \geq 1}$, restricting the leave-$\{i,j\}$-out system to the sub-collection indexed by $V_n \setminus \{i,j\}$.
+
+The unconditional joint survival probability admits the exact finite-$n$ representation:
+$$P(Y_i' > t,\; Y_j' > t) = \mathbb{E}\!\left[\,P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f_i)\;\cdot\;P(Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_j)\,\right]$$
+
+where the expectation is over the random leave-out field $\mathbf{g}^{(-i,-j)}$ and the individual susceptibilities $f_i, f_j$. Each factor has the closed form:
+$$P(Y_\ell' > t \mid \mathbf{g}^{(-i,-j)}, f_\ell) = P(\text{Bin}(t,p) < r) \prod_{k=1}^{k(t)} \bigl(1 - f_\ell\, g_k^{(-i,-j)}\bigr) \quad \text{for } \ell \in \{i,j\}.$$
+
+Here, the solvency term $P(\text{Bin}(t,p) < r)$ is a marginal probability over node $\ell$'s solvency-edge indicators $\{I_\ell(s)\}_{s=1}^t$, which are independent of the leave-$\{i,j\}$-out field and the susceptibility $f_\ell$. These solvency edges are marginalized out and are not part of the conditioning sigma-algebra.
+
+This identity is the composition of two exact results: a **pathwise equivalence** on the joint survival event, and a **conditional factorisation** from the independence of private randomness.
+
+#### Pathwise Equivalence on Joint Survival
+
+**Lemma.** On the event $\{Y_i' > t\} \cap \{Y_j' > t\}$, the real cascade agrees pathwise with the leave-$\{i,j\}$-out cascade:
+$$g_k = g_k^{(-i,-j)} \quad \text{for all } k \leq k(t).$$
+
+*Proof.* By induction on generation $k$. Since $\{Y_i' > t\} \cap \{Y_j' > t\}$ guarantees that neither $i$ nor $j$ has activated up to step $t$, they cannot have activated by solvency or fear up to generation $k(t)$ (since $T_{k(t)} \leq t$).
+
+For the base case $k=1$, since neither $i$ nor $j$ is in the seed set $\mathcal{A}(0)$ (which is required by $i, j \notin \mathcal{A}(0)$), we have $a_0 = a_0^{(-i,-j)}$ and $g_1 = g_1^{(-i,-j)}$.
+
+For the inductive step, suppose the cascades agree through generation $k-1$: the set of processed vertices matches ($Z(T_{k-1}) = Z^{(-i,-j)}(T_{k-1})$) and all generation sizes match. In generation $k$:
+- **Solvency.** For any $\ell \neq i, j$: the solvency counter $M_\ell(T_{k-1})$ counts exposed edges from $Z(T_{k-1})$ to $\ell$. Under our coupling, the edge indicators $I_\ell(s)$ are identical across both systems for all $s \le T_{k-1}$. Since $Z(T_{k-1}) = Z^{(-i,-j)}(T_{k-1})$ by the inductive hypothesis, and neither $i$ nor $j$ is in $Z(T_{k-1})$, the mark counts are pathwise identical: $M_\ell(T_{k-1}) = M_\ell^{(-i,-j)}(T_{k-1})$. Since $t \ge T_{k(t)} \ge T_k$, the survival event guarantees $i, j \notin \mathcal{S}(k)$, so the set of newly solvency-activated nodes satisfies $\mathcal{S}^{(-i,-j)}(k) = \mathcal{S}(k)$.
+- **Fear.** The field $g_k = g_k^{(-i,-j)}$ by the inductive hypothesis. For any $\ell \neq i, j$: under the coupling, the uniform draw $U_{\ell,k}$ is identical in both systems. Thus, the fear indicator $I_\ell^{\text{fear}}(k) = \mathbf{1}[U_{\ell,k} < f_\ell g_k]$ is pathwise identical. The survival event guarantees $i, j \notin \mathcal{F}(k)$, so the set of newly fear-activated nodes satisfies $\mathcal{F}^{(-i,-j)}(k) = \mathcal{F}(k)$.
+
+Therefore, the active queue members in generation $k$ are identical ($\mathcal{G}_k^{(-i,-j)} = \mathcal{G}_k$), giving $a_k^{(-i,-j)} = a_k$ and $g_{k+1}^{(-i,-j)} = g_{k+1}$. $\square$
+
+**Converse (event equivalence).** The event $\{Y_i' > t,\; Y_j' > t\}$ in the real system is identical to $\{i \text{ survives vs. leave-}\{i,j\}\text{-out}\} \cap \{j \text{ survives vs. leave-}\{i,j\}\text{-out}\}$. 
+
+The forward direction follows directly from the pathwise equivalence lemma above. For the reverse direction: suppose both nodes survive up to step $t$ in the leave-$\{i,j\}$-out cascade. We prove by induction on $k \leq k(t)$ that the real cascade matches the leave-out cascade pathwise: since neither node has activated in either system, the solvency counts and fear activations remain identical at each step, ensuring no discrepancy can arise. Since they survive in the leave-$\{i,j\}$-out cascade, they must also survive in the pathwise-identical real cascade. $\square$
+
+#### Conditional Factorisation
+
+Since $i$ and $j$ are absent from the leave-$\{i,j\}$-out system, the fields $\mathbf{g}^{(-i,-j)}$ are **strictly independent** of the private susceptibilities $f_i, f_j$, the uniforms $\{U_{i,k}\}_{k \geq 1}, \{U_{j,k}\}_{k \geq 1}$, and the solvency edge indicators $\{I_i(s)\}_{s \geq 1}, \{I_j(s)\}_{s \geq 1}$.
+
+Conditional on $\mathbf{g}^{(-i,-j)}$ and $(f_i, f_j)$, node $i$'s survival depends only on $\{I_i(s)\}_{s=1}^t$ and $\{U_{i,k}\}_{k=1}^{k(t)}$; node $j$'s survival depends only on $\{I_j(s)\}_{s=1}^t$ and $\{U_{j,k}\}_{k=1}^{k(t)}$. These are disjoint collections of mutually independent random variables (by the Uniform Coupling, §3). Therefore:
+$$P(Y_i' > t,\; Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_i, f_j) = P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f_i) \cdot P(Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_j). \qquad \square$$
+
+#### Generalisation to $m$-Tuples
+
+The argument extends immediately. For any fixed $m$ and any subset of non-seed nodes $S = \{i_1, \ldots, i_m\} \subseteq V_n \setminus \mathcal{A}(0)$, define the leave-$S$-out system on $G \setminus S$, coupled by restricting the edge exposures and uniform draws to $V_n \setminus S$. The following invariants hold exactly for any finite $n > |S| + a$:
+
+**(I1) Pathwise equivalence on joint survival.** On the joint survival event $\bigcap_{i \in S} \{Y_i' > t\}$:
+$$g_k = g_k^{(-S)} \quad \text{for all } k \leq k(t).$$
+
+**(I2) Independence from $S$-private randomness.** The leave-$S$-out trajectory $\mathbf{g}^{(-S)}$ is independent of $\{f_i, U_{i,k}, I_i(s) : i \in S,\; k \geq 1,\; s \geq 1\}$.
+
+**(I3) Conditional factorisation.**
+$$P\!\left(\bigcap_{i \in S} \{Y_i' > t\} \;\middle|\; \mathbf{g}^{(-S)}, (f_i)_{i \in S}\right) = \prod_{i \in S} P\!\left(Y_i' > t \;\middle|\; \mathbf{g}^{(-S)}, f_i\right).$$
+
+*Proof.* Identical to the pairwise case. Under the coupled probability space, no node in $S$ activates, so the real cascade restricted to $V_n \setminus S$ is pathwise identical to the leave-$S$-out cascade (I1). The leave-$S$-out fields are independent of all $S$-private randomness (I2) since $S$ is absent from the system. Conditional on $\mathbf{g}^{(-S)}$ and the susceptibilities, each node's survival depends on its own disjoint set of independent random variables (I3). $\square$
+
+#### Structural Consequence: Common-Noise Conditional i.i.d.
+
+Invariant (I3) establishes that the activation times $Y_i'$ are **conditionally i.i.d. given the fear field**. The fear field acts as a latent common factor: once it is fixed, all inter-node dependence vanishes. By vertex-exchangeability of $G(n,p)$ and the i.i.d. draws of $f_i$, the conditional marginal distributions are identical across non-seed nodes. This "common-noise" structure is exact at finite $n$ and holds for any fixed $m$.
+
+Note that the conditioning field $\mathbf{g}^{(-S)}$ depends on the specific choice of subset $S$. Therefore, while any fixed $m$-tuple is conditionally independent given its own leave-$S$-out field, establishing a single, universal conditioning field for the entire population requires the Tier 2 leave-out field equivalence (i.e., that all $\mathbf{g}^{(-S)}$ concentrate around the same deterministic limit). Additionally, seed nodes $\mathcal{A}(0)$ do not participate in this conditional i.i.d. structure, as they are deterministically activated at step 0.
+
+#### Gap to Unconditional Independence (Tier 2)
+
+The exact joint-survival identity expresses $P(Y_i' > t,\; Y_j' > t)$ as an expectation over the random leave-out field. For this to equal $P(Y_i' > t) \cdot P(Y_j' > t)$, two additional ingredients are needed:
+
+1. **Fear-field concentration.** The random variable $\mathbb{E}_f[P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f)]$ (viewed as a function of the random field $\mathbf{g}^{(-i,-j)}$) must concentrate around its mean. Without concentration, the expectation of the product does not factorize, as the shared random field introduces residual positive correlation.
+2. **Leave-out field equivalence.** The marginal $P(Y_i' > t)$ uses the leave-$i$-out field $\mathbf{g}^{(-i)}$, while the joint probability uses the leave-$\{i,j\}$-out field $\mathbf{g}^{(-i,-j)}$. These fields must converge to the same deterministic limit as $n \to \infty$.
+
+Both are aspects of the **Asymptotic Decoupling Conjecture** (Tier 2). However, the conditional factorisation has sharpened the conjecture from a diffuse "activation times decouple" statement into a precise concentration question about a single well-defined random object — the fear-field trajectory.
+
+> **Pathway to the variance bound (companion_mapping row 14).** The conditional factorisation suggests that pairwise covariances satisfy:
+> $$\text{Cov}\bigl(\mathbf{1}\{Y_i' > t\},\; \mathbf{1}\{Y_j' > t\}\bigr) = \text{Var}_{\mathbf{g}^{(-i,-j)}}\!\bigl(\mathbb{E}_f[h(t, \mathbf{g}^{(-i,-j)}, f)]\bigr) + \text{Error}_{\text{field}},$$
+> where $h(t, \mathbf{g}, f) := P(\text{Bin}(t,p) < r) \prod_k (1 - f g_k)$, and the error term accounts for the field mismatch between the leave-$\{i,j\}$-out field $\mathbf{g}^{(-i,-j)}$ and the individual leave-one-out fields $\mathbf{g}^{(-i)}, \mathbf{g}^{(-j)}$ used in the marginals. The variance bound $\text{Var}(S(t))$ thus reduces to the same fear-field concentration targeted by the Asymptotic Decoupling Conjecture. Conditional on concentration, Janson's binomial variance bound (row 14) is recovered.
+
 ### Expectation Over Populations and Jensen's Inequality
 Aggregating survival across the population yields:
 $$P(Y_1 > t) = P\left(\text{Bin}(t, p) < r\right) \mathbb{E}_f \left[ \left(1 - \frac{f}{n}\right)^t \right].$$

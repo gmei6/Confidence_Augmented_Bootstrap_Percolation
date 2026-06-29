@@ -8,6 +8,7 @@ on:
     branches: [main, antigravity]
     paths:
       - "viz/**"
+      - "section2-reformulation/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -36,10 +37,15 @@ jobs:
         #   repo Settings -> Pages -> Build and deployment -> Source = GitHub Actions
         # After that this step just reads the existing site config and deploy works.
         uses: actions/configure-pages@v5
-      - name: Upload viz/ as the Pages artifact
+      - name: Build combined site
+        run: |
+          mkdir -p _site
+          cp -r viz/. _site/
+          cp -r section2-reformulation _site/section2-reformulation
+      - name: Upload site as Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: viz
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

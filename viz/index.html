@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Two-Channel Cascade — interactive demo</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- vis-network via CDN (no build step) -->
-  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <!-- vis-network vendored locally (no CDN / no build step) so the demo works
+       offline, from file://, and on GitHub Pages without external requests -->
+  <script src="vendor/vis-network.min.js"></script>
 </head>
 <body>
   <header>

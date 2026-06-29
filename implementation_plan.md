@@ -38,7 +38,9 @@ worktree isolation needed (AGENTS.md §III: standalone new files edited in place
 - **Re-run on parameter change** (slider `change` event) → rebuild + reset.
 
 ## index.html / UI
-- vis-network via CDN (no build step). Nodes colored by current revealed channel.
+- vis-network **vendored locally** (`viz/vendor/`, no CDN, no build step) — a CDN
+  dependency left the page blank on `file://`/offline opens; vendoring fixed it.
+  Nodes colored by current revealed channel via `{background, border}`.
 - Sliders: `r∈{2,3,4}`, `μ∈[0,1]`, `κ∈[0.5,200]`, `a∈[1,30]`, `p∈[0,0.3]`,
   `n∈[30,150]`, each with a tooltip giving symbol → §3 meaning + units.
 - Live panel: round, `g_t` thermometer (scaled to run-max for visibility) + value,

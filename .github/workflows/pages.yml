@@ -32,6 +32,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # auto-enable Pages (Build source = GitHub Actions) if not already on,
+          # so the workflow doesn't fail with "Get Pages site failed / Not Found"
+          enablement: true
       - name: Upload viz/ as the Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

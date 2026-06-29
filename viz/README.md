@@ -48,11 +48,15 @@ cd viz && python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
 Online — GitHub Pages publishes this folder via
-`.github/workflows/pages.yml` (set repo **Settings → Pages → Source = GitHub
-Actions**). vis-network loads from a CDN, so no build step is needed.
+`.github/workflows/pages.yml`. The workflow auto-enables Pages
+(`configure-pages` with `enablement: true`); if your org restricts that, set repo
+**Settings → Pages → Source = GitHub Actions** once by hand. vis-network is
+**vendored locally** (`vendor/`), so there is no CDN dependency and no build step —
+the page works offline and from `file://` too.
 
 ## Files
 - `index.html` — layout, sliders (with tooltips), legend, live panel.
 - `cascade.js` — seeded RNG, Beta sampler, the §3.4 cascade engine, trace output.
 - `app.js` — wires the engine to vis-network and the playback controls.
 - `style.css` — styling.
+- `vendor/vis-network.min.js` — vendored graph library (vis-network 9.1.9, no CDN).

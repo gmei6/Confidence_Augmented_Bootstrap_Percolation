@@ -4,14 +4,29 @@
 "use strict";
 
 (function () {
+  // fail loudly & visibly if a dependency didn't load, instead of a blank page
+  if (typeof vis === "undefined" || !vis.Network) {
+    const box = document.getElementById("network");
+    if (box) {
+      box.innerHTML =
+        '<div style="padding:24px;color:#b5640f;font:14px sans-serif">' +
+        "Graph library failed to load (<code>vendor/vis-network.min.js</code>). " +
+        "Serve the <code>viz/</code> folder over http (e.g. " +
+        "<code>python3 -m http.server</code>) or open via GitHub Pages.</div>";
+    }
+    console.error("[cascade demo] vis-network not loaded");
+    return;
+  }
+
   const { runCascade, CHANNEL } = window.Cascade;
 
-  // color per channel (must match the CSS legend chips)
+  // color per channel (must match the CSS legend chips).
+  // NOTE: vis-network node color uses { background, border } — not { bg, ... }.
   const COLORS = {
-    [CHANNEL.SOLVENT]: { bg: "#cfd8e3", border: "#9aa7b8" },
-    [CHANNEL.SEED]: { bg: "#222831", border: "#000000" },
-    [CHANNEL.SOLVENCY]: { bg: "#f08c2e", border: "#b5640f" },
-    [CHANNEL.FEAR]: { bg: "#9b5de5", border: "#6f33c0" },
+    [CHANNEL.SOLVENT]: { background: "#cfd8e3", border: "#9aa7b8" },
+    [CHANNEL.SEED]: { background: "#222831", border: "#000000" },
+    [CHANNEL.SOLVENCY]: { background: "#f08c2e", border: "#b5640f" },
+    [CHANNEL.FEAR]: { background: "#9b5de5", border: "#6f33c0" },
   };
 
   const THETA = 0.5; // systemic-event threshold (tracker §3.5 default)

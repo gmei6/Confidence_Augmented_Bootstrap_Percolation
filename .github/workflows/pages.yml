@@ -31,11 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Configure Pages
+        # One-time manual setup required first (the Actions token cannot create the
+        # Pages site itself — "Resource not accessible by integration"):
+        #   repo Settings -> Pages -> Build and deployment -> Source = GitHub Actions
+        # After that this step just reads the existing site config and deploy works.
         uses: actions/configure-pages@v5
-        with:
-          # auto-enable Pages (Build source = GitHub Actions) if not already on,
-          # so the workflow doesn't fail with "Get Pages site failed / Not Found"
-          enablement: true
       - name: Upload viz/ as the Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -95,7 +95,8 @@
       edges: { color: { color: "#d7dde6", highlight: "#b5640f" }, width: 0.6,
         smooth: false },
       physics: {
-        stabilization: { iterations: 220 },
+        enabled: true,
+        stabilization: { enabled: true, iterations: 220, fit: true },
         barnesHut: { gravitationalConstant: -3500, springLength: 70,
           springConstant: 0.04, avoidOverlap: 0.2 },
       },
@@ -103,6 +104,12 @@
     };
     if (network) network.destroy();
     network = new vis.Network(el("network"), data, options);
+    // Lay the graph out once, then FREEZE physics so nodes hold still during the
+    // cascade animation (recoloring/resizing nodes won't jiggle the layout).
+    // Dragging a node still works; it just stays where you drop it.
+    network.once("stabilizationIterationsDone", function () {
+      network.setOptions({ physics: false });
+    });
   }
 
   // recompute everything from current controls

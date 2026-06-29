@@ -31,7 +31,13 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 *   **Running Results:** Never write simulation outputs directly to `results/raw/` or `results/figures/`. They must always be written by a runner script that logs the seed, parameters, and commit hash.
 *   **GitHub Actions Path Filters and Cleanup Commits:** If a commit deletes or reorganizes temp directories (e.g. `viz-temp/`, `temp_zip/`) without touching files under the `viz/**` path filter, the Pages deploy workflow will not trigger — even if the commit message says "updated viz." When a deploy appears stale after a cleanup commit, add a trivial change (e.g. a trailing newline in `viz/README.md`) to a file inside the watched path and push to force a re-trigger.
 
-## 4. Multi-agent Orchestration & CLI Tooling
+## 4. AI Studio Code Generation Pitfalls
+
+*   **AI Studio defaults to React/Vite regardless of spec:** Even when a spec explicitly requires "pure static HTML + CSS + JS, no build step, no frameworks," AI Studio wraps the output in a React/Vite scaffold (`package.json`, `tsconfig.json`, `src/App.tsx`). The actual usable static files are typically in a subfolder. For future requests, add the explicit constraint: *"Do NOT use React, Vite, TypeScript, or any build tool. Output must be exactly three files: index.html, style.css, script.js. No package.json."*
+*   **AI Studio `.env.example` and `@google/genai` are template noise:** The generated zip includes a `.env.example` with `GEMINI_API_KEY` and `@google/genai` in `package.json` regardless of whether the spec prohibits API usage. Verify by checking the static HTML's Network tab — no actual API call may be made even when the dependency is present.
+*   **`fetch()`-based ZIP download buttons require a server:** A download button implemented with `fetch()` on local files works when served (`http://`) but silently fails from `file://`. For a purely local study page, either omit the button or replace it with a static link.
+
+## 5. Multi-agent Orchestration & CLI Tooling
 
 *   **Avoid Float Crossing Clamping**: When interpolating empirical thresholds, crossings that are stuck at the minimum sweep seed size are clamped floor points (lower bounds, not resolved crossings) under high fear. Check `a_emp > grid_floor` (inequality) rather than checking float equality to filter them out in validation plots.
 *   **Runnable Plotting Entry Point**: Keep plotting modules executable as standalone CLI scripts (e.g. via `if __name__ == "__main__":`) so that figures can be automatically regenerated from raw results on disk, ensuring complete reproducibility.

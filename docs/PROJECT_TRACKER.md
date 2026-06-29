@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-29 — Session 31 (viz/ Part A/B walkthroughs; GitHub Pages live)
+- **Last updated:** 2026-06-29 — Session 34 (section2-reformulation/ study site built and fixed)
 - **File version:** v1.12
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -407,14 +407,17 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 - **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete;
   Task B (θ- and κ-robustness) merged. **First advisor meeting 2026-07-01 at 2:00pm.**
-- **Viz (S-031/S-032):** Interactive teaching website live on GitHub Pages and confirmed
-  up to date. Section 3 has Part A (μ=0, seed={1,4} — Janson FIFO baseline, co-existence)
-  and Part B (μ=0.85, seed={1} — fear drives full systemic collapse |A*|/n=1.0 from a
-  single seed, with per-node Bernoulli probability captions and fᵢ column). Both
-  walkthroughs render correctly. Non-Technical Mode toggle drafted in `test-temp-viz/`
-  but not yet merged (button toggle CSS bug pending).
-- **Advisor briefing packet:** not yet sent — deliberately held pending final polish before
-  the 2026-07-01 meeting. Will include the viz site URL as an interactive companion.
+- **Viz (S-031/S-032/S-033):** Interactive teaching website live on GitHub Pages. Part A/B
+  walkthroughs confirmed. Non-Technical Mode toggle fixed and merged. Viz model validated
+  with Node.js tests (17/17 pass): FIFO generation trace (Part A/B) and cascade.js §3.4
+  behavioral invariants.
+- **Section 2 reformulation website (S-034):** Static personal-study site at
+  `section2-reformulation/` (project root, alongside `viz/`). Presents the two-channel
+  Janson §2 reformulation as a unified narrative with Annotation Mode (color-coded status
+  ribbons) and Audience Mode (raw vs. advisor-framed gap labels) toggles. Opens from
+  `file://`. Illustrative/reference only; §5.4/§5.6 do not apply.
+- **Advisor briefing packet:** draft complete — `docs/research/other/advisor_brief_2026_07_01.md`.
+  Send before 2026-07-01 2:00pm meeting.
 - **All prior validated results, code, and testing unchanged from S-029/S-030.**
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
@@ -433,15 +436,10 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Debug and promote visualizer's Non-Technical Mode:** a local sandbox `test-temp-viz/`
-   holds CDN-based Technical / Non-Technical mode toggle code. Once the active-button
-   toggle state CSS bug is resolved (last worked on in Google AI Studio), merge/copy
-   into `viz/` and deploy to GitHub Pages.
-2. **Assemble and send advisor packet** before 2026-07-01 2:00pm: Week 5 overlays,
-   Janson scaling validation, Task B robustness figures, S-029 joint-decoupling result,
-   and the GitHub Pages viz URL (Part A/B walkthrough is a strong inclusion).
-3. Prepare Q2 / Q3 / PACE access discussion points for the meeting.
-4. Proceed with `docs/antigravity_queue/` A/C/D tasks and the Wk 6–7 finite-size $\nu$
+1. **Send advisor packet** before 2026-07-01 2:00pm — brief at
+   `docs/research/other/advisor_brief_2026_07_01.md`; include viz site URL.
+2. Prepare Q2 / Q3 / PACE access discussion points for the meeting.
+3. Proceed with `docs/antigravity_queue/` A/C/D tasks and the Wk 6–7 finite-size $\nu$
    analysis (preliminary, pending advisor alignment).
 
 ---
@@ -511,6 +509,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-030 | 2026-06-28 | v1.11 | Built an interactive teaching website (viz/) mirroring the research talk: a single static GitHub Pages scroll page — Explainer → Glossary (MathJax) → Guided Walkthrough → Sandbox. New FIFO step-trace engine (viz/walkthrough.js) replays the talk's exact worked example (n=7, seed {1,4}, r=2, μ=0; graph/edges/layout extracted from the deck's slide XML) with the live Node/Marks/Gen and t/u_t/k/T_k/Z/A/g/S/F tables; new viz/tutorial.js renderer; MathJax (tex-svg) and vis-network vendored (no CDN, works offline). Illustrative only (not the oracle; §5.4/§5.6 N/A); banner retained; corrects two deck slips on the site (Beta second param; mark counts). Live-only tracker update: §8 communication-artifact note, §10 advisor-packet note. No frozen edits, no new decisions. | §8, §10, §12`
 - `S-031 | 2026-06-29 | v1.12 | Expanded viz/ section 3 into Part A / Part B guided walkthroughs (D-027). Part B demonstrates fear enabling systemic collapse from a single seed. Files: viz/walkthrough.js (WT_PART_B, fear channel, fi in snapshot, hasFear return), viz/tutorial.js (refactored to initWalkthrough(cfg,prefix), try-catch retained as defensive code), viz/index.html (Part A/B h3 headings + wt-b-* widget), viz/style.css (#wt-b-network height, Part B channel-color legend). GitHub Pages confirmed live. Non-Technical Mode toggle pending (test-temp-viz/ draft, CSS bug open). | §8, §9, §10, §11, §12`
 - `S-032 | 2026-06-29 | v1.12 | Logistics-only session. Diagnosed that commit bff403d ("updated viz") deleted viz-temp/ and temp_zip/ but did not touch viz/, so the GitHub Actions path filter (viz/**) did not trigger a Pages redeploy. Resolved by adding a trailing newline to viz/README.md and pushing — confirmed GitHub Pages now reflects the Part A/B walkthroughs from S-031. No code, simulation, or frozen-section changes. | §8, §12`
+- `S-033 | 2026-06-29 | v1.12 | Validated viz model correctness: Non-Technical Mode toggle confirmed fixed; added Node.js module export to cascade.js; wrote tests/test_viz_walkthrough.js and tests/test_viz_cascade.js (17/17 pass) covering Part A/B FIFO trace and cascade §3.4 behavioral invariants. Drafted advisor_brief_2026_07_01.md for 2026-07-01 2:00pm meeting. | §8, §10, §12`
+- `S-034 | 2026-06-29 | v1.12 | Specced and built a static personal-study website presenting the two-channel Janson §2 reformulation. Wrote build spec to docs/research/understanding_my_work/section2_website_spec.md; audited AI Studio output (React/Vite boilerplate wrapping a clean static HTML core); fixed 3 math bugs in index.html (two mangled < in set-builder notation, a_c(1-μ) → a_c(μ), broken LaTeX in §4.2 lemma); placed clean section2-reformulation/ (index.html + style.css + script.js) at project root alongside viz/. No frozen edits, no new decisions. | §8, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

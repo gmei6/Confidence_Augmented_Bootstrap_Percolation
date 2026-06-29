@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two-Channel Reformulation of Janson §2</title>
+    <!-- MathJax Configuration (Copy exactly as requested) -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'ams'
+      },
+      chtml: { scale: 0.95 }
+    };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+    <!-- JSZip for dynamic client-side offline ZIP download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+
+    <!-- Sticky Control Bar -->
+    <div id="control-bar">
+      <div class="controls-left">
+        <div class="logo-circle"></div>
+        <span class="logo-title">TwoCascade // MEI</span>
+      </div>
+      <div class="controls-right">
+        <label class="toggle-wrap">
+          <span class="toggle-label">Annotation Mode</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="toggle-annotation" checked>
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+        <label class="toggle-wrap">
+          <span class="toggle-label">Advisor Mode</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="toggle-audience">
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+        <button id="btn-download" class="btn-download" title="Download pure static package as ZIP">
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+          ZIP
+        </button>
+      </div>
+    </div>
+
+    <div class="app-wrapper">
+      <div class="page-container">
+        
+        <!-- Sidebar Navigation (Desktop Only) -->
+        <aside class="sidebar-toc">
+          <div class="toc-card">
+            <h3>Outline</h3>
+            <ul>
+              <li><a href="#intro">Introduction</a></li>
+              <li><a href="#sec1">§1 FIFO Generational Tracking</a></li>
+              <li><a href="#sec2">§2 Fear Field & Coupling</a></li>
+              <li><a href="#sec3">§3 Node Activation Times</a></li>
+              <li><a href="#sec4">§4 Asymptotic Decoupling</a></li>
+              <li class="toc-sub"><a href="#sec4-1">§4.1 Clock Collapse</a></li>
+              <li class="toc-sub"><a href="#sec4-2">§4.2 Joint Decoupling</a></li>
+              <li class="toc-sub"><a href="#sec4-3">§4.3 Gap to Independence</a></li>
+              <li class="toc-sub"><a href="#sec4-4">§4.4 Bridge to Janson</a></li>
+              <li><a href="#sec5">§5 Limiting Cases & Reductions</a></li>
+              <li><a href="#appendix">Appendix Table</a></li>
+            </ul>
+          </div>
+          <div class="sidebar-brand">
+            G. MEI (GEORGIA TECH ISYE)<br/>
+            PROJECT: TWOCASCADE<br/>
+            DATE: 2026-06-29
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+          <div class="main-content-inner">
+            <header class="doc-header">
+            <h1 id="intro">Two-Channel Reformulation of Janson §2</h1>
+            <div class="doc-metadata">
+              <span><strong>Prepared for:</strong> Google AI Lab</span>
+              <span><strong>Project:</strong> TwoCascade</span>
+              <span><strong>Author:</strong> Gary Mei (Georgia Tech ISyE)</span>
+              <span><strong>Date:</strong> 2026-06-29</span>
+            </div>
+            
+            <div class="purpose-box">
+              A mathematically rigorous, self-contained rewrite of Section 2 (&ldquo;A Useful Reformulation&rdquo;) from Janson, &#321;uczak, Turova &amp; Vallier (2012) adapted to incorporate a second, global &ldquo;fear&rdquo; failure channel. The page is for study and reference. It presents the two-channel model as the primary object.
+            </div>
+
+            <!-- Key: Shown only in Annotation Mode -->
+            <div class="key-container">
+              <div class="key-title">Status Chip Reference Key</div>
+              <div class="key-grid">
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #6b7280;"></div>
+                  <span><strong>Unchanged:</strong> Verbatim from Janson §2</span>
+                </div>
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #d97706;"></div>
+                  <span><strong>Modified:</strong> Adapted Janson construct</span>
+                </div>
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #2563eb;"></div>
+                  <span><strong>New Machinery:</strong> Entirely new construct</span>
+                </div>
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #059669;"></div>
+                  <span><strong>Tier 1:</strong> Proven finite-$n$ result</span>
+                </div>
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #7c3aed;"></div>
+                  <span><strong>Tier 2:</strong> Mean-field conjecture</span>
+                </div>
+                <div class="key-item">
+                  <div class="key-color-box" style="background-color: #dc2626;"></div>
+                  <span><strong>Open Gap:</strong> Structurally mapped only</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile TOC (<details>) -->
+            <div class="mobile-toc">
+              <details class="mobile-toc-details">
+                <summary>Table of Contents</summary>
+                <ul>
+                  <li><a href="#intro">Introduction</a></li>
+                  <li><a href="#sec1">§1 Sequential Edge-Exposure with FIFO Generational Tracking</a></li>
+                  <li><a href="#sec2">§2 Dynamic Fear Field &amp; Uniform Coupling</a></li>
+                  <li><a href="#sec3">§3 Reconciled Node Activation Times</a></li>
+                  <li><a href="#sec4">§4 Asymptotic Decoupling &amp; the Independent Limit</a></li>
+                  <li class="toc-sub"><a href="#sec4-1">§4.1 Geometric-Fear Clock Collapse</a></li>
+                  <li class="toc-sub"><a href="#sec4-2">§4.2 Joint Decoupling (Exact, Tier 1)</a></li>
+                  <li class="toc-sub"><a href="#sec4-3">§4.3 Gap to Unconditional Independence</a></li>
+                  <li class="toc-sub"><a href="#sec4-4">§4.4 Bridge to Janson Tangency</a></li>
+                  <li><a href="#sec5">§5 Limiting Cases &amp; Reductions</a></li>
+                  <li><a href="#appendix">Appendix &mdash; Companion Mapping Table</a></li>
+                </ul>
+              </details>
+            </div>
+          </header>
+
+          <!-- §1 -->
+          <section id="sec1">
+            <h2>§1 Sequential Edge-Exposure with FIFO Generational Tracking</h2>
+            
+            <div class="math-block" data-status="modified">
+              <p>
+                Janson's original sequential formulation explicitly discards rounds (generations) to enable a clean martingale analysis. In the two-channel model, however, the global fear field $g_k$ is intrinsically round-indexed. To resolve this, we restore generations within the sequential edge-exposure process by tracking active vertices using a First-In, First-Out (FIFO) queue structure. The equivalence between this sequential queue-based exposure and the standard simultaneous (synchronous) model is not merely assumed, but proved below via a Pathwise Equivalence Theorem.
+              </p>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                We construct the random graph $G(n,p)$ sequentially on a node-by-node basis. Let $u_t$ denote the vertex processed at Janson time step $t \geq 1$. We track three key vertex sets:
+              </p>
+              <ul>
+                <li>$\mathcal{A}(t)$: Active (solvency- or fear-activated) vertices up to step $t$.</li>
+                <li>$Z(t) = \{u_1, \ldots, u_t\}$: The set of used/processed vertices up to step $t$, with $Z(0) = \emptyset$.</li>
+                <li>$\mathcal{G}_k$: The queue of active vertices belonging to generation $k$.</li>
+              </ul>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                <strong>Base Case ($k = 0$):</strong> At time $t=0$, we begin with a seed set of active vertices $\mathcal{A}(0) = \{u_1, \ldots, u_a\}$ of size $a_0 = a$.
+              </p>
+              <ul>
+                <li>The cumulative processed vertex count at the end of generation 0 is $T_0 := a$.</li>
+                <li>The used set is $Z(T_0) = \mathcal{A}(0)$.</li>
+                <li>The queue of vertices in generation 0 is $\mathcal{G}_0 = \mathcal{A}(0)$.</li>
+              </ul>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                <strong>Recurrence ($k \geq 1$):</strong> For generation $k \geq 1$, let the size of the generation be $a_k := T_k - T_{k-1}$ (where $T_{-1} = 0$). The queue of vertices processed in generation $k$ is defined by:
+                $$\mathcal{G}_k := \{u_t : T_{k-1} < t \leq T_k\}$$
+                We also define a generation tracker function $k(t)$ for any time step $t$ as the unique index satisfying:
+                $$T_{k(t)-1} < t \leq T_{k(t)} \quad (\text{with } k(t) = 0 \text{ for } t \leq T_0)$$
+              </p>
+            </div>
+
+            <div class="math-block" data-status="tier1">
+              <p>
+                <strong>Pathwise Equivalence Theorem.</strong> Under a First-In, First-Out (FIFO) queue order, a pathwise equality holds on every realization of the random graph and uniform fear parameters: the set of vertices in generation $k$ in the sequential process ($\mathcal{G}_k$) is identical to the set of new failures in round $k$ of the simultaneous (synchronous) reference engine.
+              </p>
+              
+              <details class="proof-block">
+                <summary class="proof-title">Proof.</summary>
+                <p>
+                  Let $\mathcal{A}_{\text{sync}}(k)$ be the set of failed vertices at the end of round $k$ in the simultaneous model, and let $a_k^{\text{sync}} := |\mathcal{A}_{\text{sync}}(k) \setminus \mathcal{A}_{\text{sync}}(k-1)|$ be the number of new failures in round $k$ (with $\mathcal{A}_{\text{sync}}(-1) := \emptyset$ and $a_0^{\text{sync}} = a$). Let $T_k = \sum_{j=0}^k a_j$, where $a_j = |\mathcal{G}_j|$ is the size of generation $j$ in the sequential process. 
+                </p>
+                <p>
+                  We prove by induction on $k \geq 0$ that:
+                </p>
+                <ol>
+                  <li>$Z(T_k) = \mathcal{A}_{\text{sync}}(k)$</li>
+                  <li>$a_k = a_k^{\text{sync}}$</li>
+                  <li>$\mathcal{A}(T_k) = \mathcal{A}_{\text{sync}}(k+1)$</li>
+                </ol>
+                <p>
+                  <strong>Base Case ($k = 0$):</strong> By definition, $T_0 = a$. The seed vertices are processed in steps $1, \dots, T_0$, so the used set is $Z(T_0) = \mathcal{A}(0) = \mathcal{A}_{\text{sync}}(0)$. Thus, $a_0 = a = a_0^{\text{sync}}$, verifying claims (1) and (2).
+                </p>
+                <p>
+                  During these steps, the solvency mark counter $M_i(T_0) = \sum_{s=1}^{T_0} I_i(s)$ represents the number of neighbors node $i$ has in the seed set $\mathcal{A}_{\text{sync}}(0)$. A solvent node $i \notin \mathcal{A}_{\text{sync}}(0)$ is solvency-activated in generation 1 if $M_i(T_0) \geq r$, which is the exact solvency condition for round 1 in the synchronous model:
+                  $$\mathcal{S}(1) = \{i \notin \mathcal{A}_{\text{sync}}(0) : M_i(T_0) \geq r\}.$$
+                </p>
+                <p>
+                  The fear field at step $T_0$ is $g_1 = a_0/n = a_0^{\text{sync}}/n$. A solvent node $i \notin \mathcal{A}_{\text{sync}}(0) \cup \mathcal{S}(1)$ is fear-activated if $U_{i,1} \lt f_i g_1$, which is the exact fear activation condition for round 1 in the synchronous model:
+                  $$\mathcal{F}(1) = \{i \notin \mathcal{A}_{\text{sync}}(0) \cup \mathcal{S}(1) : U_{i,1} \lt f_i g_1\}.$$
+                </p>
+                <p>
+                  Thus, the new active set $\mathcal{G}_1 = \mathcal{S}(1) \cup \mathcal{F}(1)$ contains exactly the new failures in round 1 of the synchronous process. The total active set is:
+                  $$\mathcal{A}(T_0) = \mathcal{A}(0) \cup \mathcal{G}_1 = \mathcal{A}_{\text{sync}}(0) \cup (\mathcal{A}_{\text{sync}}(1) \setminus \mathcal{A}_{\text{sync}}(0)) = \mathcal{A}_{\text{sync}}(1),$$
+                  verifying claim (3).
+                </p>
+                <p>
+                  <strong>Inductive Step:</strong> Assume the inductive hypothesis holds for $k-1$. That is:
+                  $$Z(T_{k-1}) = \mathcal{A}_{\text{sync}}(k-1), \quad a_{k-1} = a_{k-1}^{\text{sync}}, \quad \mathcal{A}(T_{k-1}) = \mathcal{A}_{\text{sync}}(k).$$
+                  In generation $k$, the FIFO queue order ensures that we process the vertices of generation $k$ in steps $t \in (T_{k-1}, T_k]$, where $T_k = T_{k-1} + a_k$. The queue processed in generation $k$ is:
+                  $$\mathcal{G}_k = \mathcal{A}(T_{k-1}) \setminus Z(T_{k-1}) = \mathcal{A}_{\text{sync}}(k) \setminus \mathcal{A}_{\text{sync}}(k-1).$$
+                  The used set at step $T_k$ becomes:
+                  $$Z(T_k) = Z(T_{k-1}) \cup \mathcal{G}_k = \mathcal{A}_{\text{sync}}(k-1) \cup (\mathcal{A}_{\text{sync}}(k) \setminus \mathcal{A}_{\text{sync}}(k-1)) = \mathcal{A}_{\text{sync}}(k),$$
+                  verifying claim (1).
+                </p>
+                <p>
+                  At step $T_k$, all vertices of $\mathcal{A}_{\text{sync}}(k)$ have been processed. The solvency counter $M_i(T_k)$ represents the number of neighbors node $i$ has in $\mathcal{A}_{\text{sync}}(k)$. A solvent node $i \notin \mathcal{A}_{\text{sync}}(k)$ is solvency-activated in generation $k+1$ if $M_i(T_k) \geq r$:
+                  $$\mathcal{S}(k+1) = \{i \notin \mathcal{A}_{\text{sync}}(k) : M_i(T_k) \geq r\}.$$
+                </p>
+                <p>
+                  The fear field at step $T_k$ is $g_{k+1} = a_k/n = a_k^{\text{sync}}/n$. A solvent node $i \notin \mathcal{A}_{\text{sync}}(k) \cup \mathcal{S}(k+1)$ is fear-activated if $U_{i,k+1} \lt f_i g_{k+1}$:
+                  $$\mathcal{F}(k+1) = \{i \notin \mathcal{A}_{\text{sync}}(k) \cup \mathcal{S}(k+1) : U_{i,k+1} \lt f_i g_{k+1}\}.$$
+                </p>
+                <p>
+                  The new queue $\mathcal{G}_{k+1} = \mathcal{S}(k+1) \cup \mathcal{F}(k+1)$ contains exactly the new failures in round $k+1$ of the synchronous process. Thus, $a_{k+1} = a_{k+1}^{\text{sync}}$, verifying claim (2).
+                </p>
+                <p>
+                  The active set at step $T_k$ is:
+                  $$\mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{G}_{k+1} = \mathcal{A}_{\text{sync}}(k) \cup (\mathcal{A}_{\text{sync}}(k+1) \setminus \mathcal{A}_{\text{sync}}(k)) = \mathcal{A}_{\text{sync}}(k+1),$$
+                  verifying claim (3). By induction, the pathwise equivalence holds for all generations $k \geq 0$.
+                </p>
+                <div class="proof-qed">&#9633;</div>
+              </details>
+
+              <div class="note-callout">
+                <div class="note-title">FIFO Note</div>
+                While the generational FIFO ordering is necessary to prevent causal violations between rounds, the specific ordering of vertex exposure <em>within</em> a single generation does not affect the final set of activations or the sizes of subsequent generations.
+              </div>
+            </div>
+          </section>
+
+          <!-- §2 -->
+          <section id="sec2">
+            <h2>§2 Dynamic Fear Field &amp; Uniform Coupling</h2>
+            
+            <div class="math-block" data-status="unchanged">
+              <p>
+                To track neighbor exposures, we define the solvency mark counter:
+                $$M_i(t) := \sum_{s=1}^t I_i(s), \quad I_i(s) \sim \mathrm{Be}(p) \text{ i.i.d.}$$
+                For any node $i \notin Z(t)$, $M_i(t) \sim \mathrm{Bin}(t, p)$. The solvency channel is carried over from Janson verbatim. This block is unchanged.
+              </p>
+            </div>
+
+            <div class="math-block" data-status="new">
+              <p>
+                We introduce the global fear field $g_k$, which is determined at the generational boundary step $T_{k-1}$ and represents the fraction of failed nodes in the completed generation $k-1$:
+                $$g_k := \frac{a_{k-1}}{n} = \frac{T_{k-1} - T_{k-2}}{n}$$
+              </p>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                To formalize both channels on a single probability space, we extend Janson's "redundant variables" construction to define a <strong>Uniform Coupling</strong>:
+              </p>
+              <ol>
+                <li>Draw individual fear susceptibilities $f_i \sim \mathrm{Beta}(\alpha, \beta)$ once at $t=0$, where $\alpha = \mu\kappa$ and $\beta = (1-\mu)\kappa$. Boundary cases: $\mu=0$ → point mass at $0$; $\mu=1$ → point mass at $1$.</li>
+                <li>Pre-draw $U_{i,j} \sim \mathrm{Unif}[0,1]$ i.i.d. for all $i \in V_n$, $j \geq 1$.</li>
+                <li>Define the fear indicator of node $i$ at generation $j$ as:
+                   $$I_i^{\text{fear}}(j) := \mathbf{1}[U_{i,j} \lt f_i g_j]$$
+                </li>
+                <li>Define the solvency-activated and fear-activated sets for generation $k$:
+                  $$\mathcal{S}(k) := \{i \notin \mathcal{A}(T_{k-2}) : M_i(T_{k-1}) \geq r\}$$
+                  $$\mathcal{F}(k) := \{i \notin \mathcal{A}(T_{k-2}) \cup \mathcal{S}(k) : I_i^{\text{fear}}(k) = 1\}$$
+                  The new generation queue is the union of both: $\mathcal{G}_k = \mathcal{S}(k) \cup \mathcal{F}(k)$.
+                </li>
+              </ol>
+            </div>
+          </section>
+
+          <!-- §3 -->
+          <section id="sec3">
+            <h2>§3 Reconciled Node Activation Times</h2>
+            
+            <div class="math-block" data-status="modified">
+              <p>
+                To reconcile Janson's step-based clock with the generation-based fear clock, we first define the activation generation $K_i'$ for each node $i \notin \mathcal{A}(0)$:
+                $$K_i' := \min \left\{ k \geq 1 : M_i(T_{k-1}) \geq r \;\text{or}\; \exists j \leq k \text{ s.t. } I_i^{\text{fear}}(j) = 1 \right\}$$
+              </p>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                The sequential activation step $Y_i'$ is then defined via a strict solvency-precedence rule:
+              </p>
+              <ul>
+                <li><strong>Solvency Precedence</strong> (if $M_i(T_{K_i'-1}) \geq r$): The node is activated by neighbor exposures during generation $K_i'-1$. Its activation step is:
+                  $$Y_i' = \min \{ t \in (T_{K_i'-2},\, T_{K_i'-1}] : M_i(t) \geq r \}$$
+                </li>
+                <li><strong>Fear Activation</strong> (if $M_i(T_{K_i'-1}) \lt r$): The node is activated purely by the global fear field. Its activation step is mapped to the generational boundary:
+                  $$Y_i' = T_{K_i'-1}$$
+                </li>
+              </ul>
+
+              <div class="note-callout">
+                <div class="note-title">Temporal Mapping Note</div>
+                A node belongs to generation $k$ because it is activated by exposures of generation $k-1$ (either solvency-wise as neighbor edges expose, or fear-wise via the field $g_k = a_{k-1}/n$). Thus, its activation step $Y_i'$ falls in the step interval $(T_{k-2}, T_{k-1}]$ during which generation $k-1$ is processed.
+              </div>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                Using these definitions, the active set updates at each generation boundary according to:
+                $$\mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{S}(k+1) \cup \mathcal{F}(k+1) = \bigcup_{j=0}^{k+1} \mathcal{G}_j$$
+              </p>
+            </div>
+
+            <div class="math-block" data-status="modified">
+              <p>
+                The stopping condition is reached when no new vertices are activated in a generation:
+                $$K := \min\{k \geq 0 : a_k = 0\} \implies T_K = T_{K-1}$$
+              </p>
+            </div>
+
+            <div class="math-block" data-status="unchanged">
+              <p>
+                The final size of the active set is:
+                $$A^* = T_K$$
+                This is structurally identical to Janson's $A^* = T$.
+              </p>
+            </div>
+          </section>
+
+          <!-- §4 -->
+          <section id="sec4">
+            <h2>§4 Asymptotic Decoupling &amp; the Independent Limit</h2>
+            
+            <div class="math-block" data-status="modified">
+              <p>
+                At finite $n$, the activation steps $Y_i'$ are coupled because the global fear fields $g_j$ are random variables determined by the sizes of preceding generations. To evaluate the thermodynamic limit ($n \to \infty$), we analyze how this coupled system approaches a state of independent limits.
+              </p>
+            </div>
+
+            <!-- §4.1 -->
+            <section id="sec4-1">
+              <h3>§4.1 Geometric-Fear Clock Collapse</h3>
+              
+              <div class="math-block" data-status="tier2">
+                <p>
+                  <strong>Asymptotic Decoupling Conjecture.</strong> As $n \to \infty$, the generation sizes $(a_k)$ concentrate tightly around their deterministic mean-field trajectory, making the global fear fields $g_j$ asymptotically deterministic.
+                </p>
+                <div class="audience-label">
+                  <span class="label-raw">TIER 2 CONJECTURE — simulation-validated but not yet proved.</span>
+                  <span class="label-advisor">Tier 2 — Asymptotic Decoupling Conjecture: requires fear-field concentration; simulation confirms phase-boundary invariance within ±0.03.</span>
+                </div>
+              </div>
+
+              <div class="math-block" data-status="tier2">
+                <p>
+                  Under the concentration conjecture, and assuming sub-macroscopic generation sizes ($a_k = o(n)$ w.h.p.), the sum of fear fields collapses to Janson's continuous step clock:
+                  $$\sum_{j=1}^{k(t)} g_j = \sum_{j=1}^{k(t)} \frac{a_{j-1}}{n} = \frac{T_{k(t)-1}}{n} \approx \frac{t}{n}$$
+                </p>
+              </div>
+
+              <div class="math-block" data-status="tier2">
+                <p>
+                  The conditional survival probability for a node $i$ with susceptibility $f_i$ factors asymptotically:
+                  $$P\!\left(Y_i' > t \mid g_1, \ldots, g_{k(t)}, f_i\right) \to P(Y_i^{\text{solv}} > t \mid f_i) \prod_{j=1}^{k(t)} (1 - f_i g_j)$$
+                  In the leave-one-out field (which is exact at finite $n$ since it removes node $i$'s own feedback loop), we apply a logarithmic expansion and the clock collapse:
+                  $$P\!\left(Y_i' > t \mid \mathbf{g}^{(-i)}, f_i\right) \approx P\!\left(\mathrm{Bin}(t,p) \lt r\right) \left(1 - \frac{f_i}{n}\right)^t$$
+                </p>
+                
+                <div class="note-callout">
+                  <div class="note-title">Step-vs-Generation Clock Note</div>
+                  The sequential process evaluates fear activation once per generation at the boundaries $T_{k-1}$, whereas the decoupled geometric clock tests fear step-by-step. This introduces a minor upward bias in survival probability at finite $n$, which completely vanishes in the thermodynamic limit as generation sizes scale sub-macroscopically ($a_k = o(n)$).
+                </div>
+              </div>
+            </section>
+
+            <!-- §4.2 -->
+            <section id="sec4-2">
+              <h3>§4.2 Joint Decoupling: Exact Conditional Factorisation (Tier 1)</h3>
+              
+              <div class="math-block" data-status="tier1">
+                <p>
+                  To establish decoupling rigorously, we define a <strong>leave-$\{i,j\}$-out system</strong> on $G \setminus \{i,j\}$. We couple the original process and this leave-out process on a single probability space by sharing all pre-drawn edge indicators and uniforms. Let $\mathbf{g}^{(-i,-j)}$ be the resulting fear-field sequence. The exact joint-survival identity holds at finite $n$:
+                  $$P(Y_i' > t,\; Y_j' > t) = \mathbb{E}\!\left[P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f_i) \cdot P(Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_j)\right]$$
+                  where:
+                  $$P(Y_\ell' > t \mid \mathbf{g}^{(-i,-j)}, f_\ell) = P(\mathrm{Bin}(t,p) \lt r) \prod_{k=1}^{k(t)} (1 - f_\ell\, g_k^{(-i,-j)}), \quad \ell \in \{i,j\}$$
+                </p>
+              </div>
+
+              <div class="math-block" data-status="tier1">
+                <p>
+                  <strong>Pathwise Equivalence Lemma.</strong> On the survival event $\{Y_i' > t\} \cap \{Y_j' > t\}$, the actual cascade is pathwise identical to the leave-$\{i,j\}$-out cascade, meaning:
+                  $$g_k = g_k^{(-i,-j)} \quad \text{for all } k \leq k(t)$$
+                </p>
+                
+                <details class="proof-block">
+                  <summary class="proof-title">Proof by Induction.</summary>
+                  <p>
+                    Since $\{Y_i' > t\} \cap \{Y_j' > t\}$ guarantees neither $i$ nor $j$ has activated up to step $t$, they cannot have activated by solvency or fear up to generation $k(t)$ (since $T_{k(t)} \leq t$).
+                  </p>
+                  <p>
+                    For the base case $k=1$, since neither $i$ nor $j$ is in the seed set $\mathcal{A}(0)$ (which is required by $i, j \notin \mathcal{A}(0)$), we have $a_0 = a_0^{(-i,-j)}$ and $g_1 = g_1^{(-i,-j)}$.
+                  </p>
+                  <p>
+                    For the inductive step, suppose the cascades agree through generation $k-1$: the set of processed vertices matches ($Z(T_{k-1}) = Z^{(-i,-j)}(T_{k-1})$) and all generation sizes match. In generation $k$:
+                  </p>
+                  <ul>
+                    <li><strong>Solvency.</strong> For any $\ell \neq i, j$: the solvency counter $M_\ell(T_{k-1})$ counts exposed edges from $Z(T_{k-1})$ to $\ell$. Under our coupling, the edge indicators $I_\ell(s)$ are identical across both systems for all $s \le T_{k-1}$. Since $Z(T_{k-1}) = Z^{(-i,-j)}(T_{k-1})$ by the inductive hypothesis, and neither $i$ nor $j$ is in $Z(T_{k-1})$, the mark counts are pathwise identical: $M_\ell(T_{k-1}) = M_\ell^{(-i,-j)}(T_{k-1})$. Since $t \ge T_{k(t)} \ge T_k$, the survival event guarantees $i, j \notin \mathcal{S}(k)$, so the set of newly solvency-activated nodes satisfies $\mathcal{S}^{(-i,-j)}(k) = \mathcal{S}(k)$.</li>
+                    <li><strong>Fear.</strong> The field $g_k = g_k^{(-i,-j)}$ by the inductive hypothesis. For any $\ell \neq i, j$: under the coupling, the uniform draw $U_{\ell,k}$ is identical in both systems. Thus, the fear indicator $I_\ell^{\text{fear}}(k) = \mathbf{1}[U_{\ell,k} \lt f_\ell g_k]$ is pathwise identical. The survival event guarantees $i, j \notin \mathcal{F}(k)$, so the set of newly fear-activated nodes satisfies $\mathcal{F}^{(-i,-j)}(k) = \mathcal{F}(k)$.</li>
+                  </ul>
+                  <p>
+                    Therefore, the active queue members in generation $k$ are identical ($\mathcal{G}_k^{(-i,-j)} = \mathcal{G}_k$), giving $a_k^{(-i,-j)} = a_k$ and $g_{k+1}^{(-i,-j)} = g_{k+1}$. By induction, the pathwise equivalence holds for all $k \le k(t)$.
+                  </p>
+                  <p>
+                    <strong>Converse:</strong> The event $\{Y_i' > t\} \cap \{Y_j' > t\}$ in the actual system is identical to the event that both nodes survive up to step $t$ in the leave-$\{i,j\}$-out system. Since they do not activate, no discrepancy between systems is ever triggered, meaning the systems are pathwise identical.
+                  </p>
+                  <div class="proof-qed">&#9633;</div>
+                </details>
+              </div>
+
+              <div class="math-block" data-status="tier1">
+                <p>
+                  <strong>Conditional Factorisation.</strong> Because nodes $i$ and $j$ are absent from the leave-$\{i,j\}$-out system, the field sequence $\mathbf{g}^{(-i,-j)}$ is strictly independent of the private susceptibilities $f_i, f_j$ and fear uniform sequences. Thus:
+                  $$P(Y_i' > t,\; Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_i, f_j) = P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f_i) \cdot P(Y_j' > t \mid \mathbf{g}^{(-i,-j)}, f_j)$$
+                </p>
+              </div>
+
+              <div class="math-block" data-status="tier1">
+                <p>
+                  <strong>Generalisation to $m$-tuples.</strong> For any fixed $m$ and any subset $S$ of size $m$, we define the leave-$S$-out system on $G \setminus S$. The following exact invariants hold:
+                </p>
+                <ul>
+                  <li><strong>(I1) Pathwise Equivalence:</strong> On the joint survival event $\bigcap_{i \in S} \{Y_i' > t\}$, we have $g_k = g_k^{(-S)}$ for all $k \leq k(t)$.</li>
+                  <li><strong>(I2) Independence:</strong> The leave-$S$-out field sequence $\mathbf{g}^{(-S)}$ is strictly independent of the private randomness of nodes in $S$.</li>
+                  <li><strong>(I3) Conditional Factorisation:</strong> The joint survival probability conditional on the leave-out field and susceptibilities factors exactly:
+                    $$P\!\left(\bigcap_{i \in S} \{Y_i' > t\} \;\middle|\; \mathbf{g}^{(-S)}, (f_i)_{i \in S}\right) = \prod_{i \in S} P\!\left(Y_i' > t \;\middle|\; \mathbf{g}^{(-S)}, f_i\right)$$
+                  </li>
+                </ul>
+              </div>
+
+              <div class="math-block" data-status="tier1">
+                <p>
+                  <strong>Structural Consequence.</strong> The invariants establish that the node activation times $Y_i'$ are conditionally i.i.d. given the fear field. The fear field acts as a latent common-noise factor. Once the fear-field sequence is fixed, all pairwise and higher-order dependencies vanish.
+                </p>
+              </div>
+            </section>
+
+            <!-- §4.3 -->
+            <section id="sec4-3">
+              <h3>§4.3 Gap to Unconditional Independence (Tier 2)</h3>
+              
+              <div class="math-block" data-status="tier2">
+                <p>
+                  To transition from conditional independence to unconditional i.i.d., two criteria must be satisfied:
+                </p>
+                <ol>
+                  <li><strong>Fear-field concentration:</strong> The conditional survival expectation $\mathbb{E}_f[P(Y_i' > t \mid \mathbf{g}^{(-i,-j)}, f)]$ must concentrate tightly around its mean.</li>
+                  <li><strong>Leave-out field equivalence:</strong> The leave-$i$-out field and leave-$\{i,j\}$-out fields must converge pathwise to the same deterministic limit.</li>
+                </ol>
+                <div class="audience-label">
+                  <span class="label-raw">OPEN GAP — concentration proof not yet attempted.</span>
+                  <span class="label-advisor">Tier 2 — both sub-questions are aspects of the Asymptotic Decoupling Conjecture. The conditional factorisation has sharpened a diffuse conjecture into a precise concentration question about the fear-field trajectory.</span>
+                </div>
+              </div>
+
+              <div class="math-block" data-status="tier2">
+                <p>
+                  <strong>Variance Bound Pathway.</strong> The covariance decomposes exactly as:
+                  $$\mathrm{Cov}\!\left(\mathbf{1}\{Y_i' > t\},\, \mathbf{1}\{Y_j' > t\}\right) = \mathrm{Var}_{\mathbf{g}^{(-i,-j)}}\!\left(\mathbb{E}_f[h(t, \mathbf{g}^{(-i,-j)}, f)]\right) + \mathrm{Error}_{\text{field}}$$
+                  where $h(t, \mathbf{g}, f) := P(\mathrm{Bin}(t,p) \lt r) \prod_k (1 - f g_k)$. The error term captures the field mismatch between systems. Under concentration, the variance term vanishes, and Janson's binomial variance bound is recovered.
+                </p>
+              </div>
+
+              <div class="math-block" data-status="gap">
+                <p>
+                  <strong>Counting Process Gap:</strong> Janson defines the counting process $S(t) := \sum_{i \notin \mathcal{A}(0)} \mathbf{1}\{Y_i \leq t\}$ as a central object of analysis in his Section 2. In the two-channel model, the counting process analog exists, but its exact distribution has not yet been characterized.
+                </p>
+                <div class="audience-label">
+                  <span class="label-raw">OPEN GAP — S(t) counting process not yet given a distributional characterization.</span>
+                  <span class="label-advisor">Tier 2 — distributional characterization of $S(t)$ deferred; only its mean is tractable without concentration. Scope decision for the write-up.</span>
+                </div>
+              </div>
+
+              <div class="math-block" data-status="gap">
+                <p>
+                  <strong>Binomial Distribution Gap:</strong> Because Janson's $Y_i$ are i.i.d., $S(t)$ follows an exact binomial distribution: $S(t) \sim \mathrm{Bin}(n-a, \pi(t))$. In our model, this distribution is blocked by the coupling of nodes through the fear channel, and cannot be derived without proving concentration first.
+                </p>
+                <div class="audience-label">
+                  <span class="label-raw">OPEN GAP — distributional law of S(t) not derived; blocked on Tier 2 concentration.</span>
+                  <span class="label-advisor">Tier 2 — follows directly from concentration; not pursued independently.</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- §4.4 -->
+            <section id="sec4-4">
+              <h3>§4.4 Bridge to Janson Tangency Machinery</h3>
+              
+              <div class="math-block" data-status="modified">
+                <p>
+                  Applying Jensen's inequality to the population average:
+                  $$P(Y_1 > t) = P\!\left(\mathrm{Bin}(t, p) \lt r\right) \mathbb{E}_f\!\left[\left(1 - \frac{f}{n}\right)^t\right]$$
+                  Near the threshold, in the regime where the failed fraction $\varphi = t/n \to 0$ as $n \to \infty$, we expand via Jensen's inequality:
+                  $$\mathbb{E}_f\!\left[\left(1 - \frac{f}{n}\right)^t\right] \approx e^{-\mu\varphi + \frac{1}{2}\mathrm{Var}(f)\varphi^2}$$
+                  This reveals that population heterogeneity (the variance of $f$) enters only as a second-order correction; the first-order mean fear susceptibility $\mu = \mathbb{E}[f]$ dominates the leading-order behavior.
+                </p>
+              </div>
+
+              <div class="math-block" data-status="modified">
+                <p>
+                  The expected active set size under decoupling evolves according to:
+                  $$\mathbb{E}[A(t)] \approx a + (n-a)\left(1 - P\!\left(\mathrm{Bin}(t,p) \lt r\right) e^{-\mu\varphi}\right)$$
+                  At the mean-field equilibrium where $\mathbb{E}[A(t)] = t$ (with $\varphi = t/n$), this simplifies to:
+                  $$(1-\mu)\varphi \approx \frac{a}{n} + \frac{(np\varphi)^r}{r!}$$
+                </p>
+              </div>
+
+              <div class="math-block" data-status="tier2">
+                <p>
+                  <strong>Critical Seed Scaling Law.</strong> Solving for the saddle-node tangency of the self-consistent map yields a scaling relationship for the critical seed size:
+                  $$a_c(\mu) = (1-\mu)^{r/(r-1)} \, a_c(0)$$
+                </p>
+                <div class="audience-label">
+                  <span class="label-raw">TIER 2 CONJECTURE — derived from mean-field saddle-node; simulation-confirmed.</span>
+                  <span class="label-advisor">Tier 2 — conjectured scaling law from mean-field tangency; validated numerically at $n \in \{1000, 2000, 4000\}$, ratios match $(1-\mu)^{r/(r-1)} &middot; a_c(0)$ trend.</span>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <!-- §5 -->
+          <section id="sec5">
+            <h2>§5 Limiting Cases &amp; Reductions</h2>
+            
+            <div class="math-block" data-status="unchanged">
+              <p>
+                To verify that our model is a strict, mathematically sound generalization of Janson's bootstrap percolation process, we examine the behavior of our equations under two limiting boundaries.
+              </p>
+            </div>
+
+            <div class="math-block" data-status="unchanged">
+              <p>
+                <strong>Case 1: Pure Bootstrap Percolation ($\mu = 0$):</strong> If $\mu = 0$, fear susceptibilities are point masses at zero: $f_i \equiv 0$ w.h.p.
+              </p>
+              <ul>
+                <li>The fear indicators collapse: $I_i^{\text{fear}}(j) = 0$ for all $i$ and $j$.</li>
+                <li>The fear-activated sets vanish: $\mathcal{F}(k) = \emptyset$.</li>
+                <li>The active set recurrence collapses to: $\mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{S}(k+1)$.</li>
+                <li>The activation steps reduce to: $Y_i' = Y_i$.</li>
+              </ul>
+              <p>
+                This recovers Janson's original equations (2.1)&ndash;(2.13) exactly, proving that our formulation is an honest generalization.
+              </p>
+            </div>
+
+            <div class="math-block" data-status="new">
+              <p>
+                <strong>Case 2: Pure Fear-Only Branching ($p = 0$):</strong> If $p = 0$, no solvency-based edges exist, so $M_i(t) = 0$ for all $t$ and $\mathcal{S}(k) = \emptyset$.
+              </p>
+              <ul>
+                <li>The process is driven purely by the fear channel, with generation sizes governed by $a_k = |\mathcal{F}(k)|$.</li>
+                <li>As $n \to \infty$, this process is pathwise dominated by a subcritical Galton-Watson branching process with expected offspring per failure $\mathbb{E}[f] = \mu \lt 1$.</li>
+                <li>The cascade terminates in a sub-macroscopic number of steps $o(n)$, yielding a final failure size of $A^* = O(a)$ w.h.p.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Appendix -->
+          <section id="appendix" class="appendix-container">
+            <h2>Appendix &mdash; Companion Mapping Table</h2>
+            <p>
+              The following correspondence table documents the precise relationship between Janson's original mathematical objects in Section 2 and our two-channel reformulation. The status colors are always active as a reference tool.
+            </p>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Janson §2 Object</th>
+                    <th>Janson Statement</th>
+                    <th>Our Two-Channel Analog</th>
+                    <th>Status</th>
+                    <th>Reasoning / Adaptation Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-status="modified">
+                    <td>1</td>
+                    <td>Exposure Prose</td>
+                    <td>Sequential node-by-node exposure; &ldquo;forget the generations.&rdquo;</td>
+                    <td>FIFO generational queue ($\mathcal{G}_k, T_k$)</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Janson discards generations for martingale analysis. We restore them via a FIFO queue because the fear field is round-indexed. Proven pathwise-equivalent in §1.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>2</td>
+                    <td>Eq. (2.1)&ndash;(2.2)</td>
+                    <td>$T := \min\{t \ge 0: A(t) \le t\}$</td>
+                    <td>$K := \min\{k \ge 0 : a_k = 0\} \implies T_K = T_{K-1}$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Stopping logic (&ldquo;queue empties&rdquo;) is re-indexed to the generation level to reconcile step and generation clocks.</td>
+                  </tr>
+                  <tr data-status="unchanged">
+                    <td>3</td>
+                    <td>Eq. (2.3)</td>
+                    <td>$A^* := A(T) = T$</td>
+                    <td>$A^* = T_K$</td>
+                    <td class="status-cell">Unchanged</td>
+                    <td>Pure outcome-level definition representing total failures; transfers untouched.</td>
+                  </tr>
+                  <tr data-status="unchanged">
+                    <td>4</td>
+                    <td>Eq. (2.4)</td>
+                    <td>$M_i(t) \sim \mathrm{Bin}(t,p)$</td>
+                    <td>$M_i(t) \sim \mathrm{Bin}(t,p)$</td>
+                    <td class="status-cell">Unchanged</td>
+                    <td>The solvency channel's mark accumulation process is untouched.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>5</td>
+                    <td>Prose, line 86</td>
+                    <td>Pre-draw i.i.d. indicators $I_i(s)$ for all $s \ge 1$</td>
+                    <td>Pre-drawn $f_i \sim \mathrm{Beta}$ and $U_{i,j} \sim \mathrm{Unif}$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Extended probability space to pre-draw the fear channel's parameters and uniforms analogously.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>6</td>
+                    <td>Eq. (2.5)</td>
+                    <td>$Y_i := \min\{t : M_i(t) \ge r\}$</td>
+                    <td>$K_i'$ and step $Y_i'$ via precedence rules</td>
+                    <td class="status-cell">Modified</td>
+                    <td>We must arbitrate between the step-based solvency clock and generation-based fear clock.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>7</td>
+                    <td>Eq. (2.6)</td>
+                    <td>$\mathcal{A}(t) = \mathcal{A}(0) \cup \{i : Y_i \le t\}$</td>
+                    <td>$\mathcal{A}(T_k) = \mathcal{A}(T_{k-1}) \cup \mathcal{S}(k+1) \cup \mathcal{F}(k+1)$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Updates now union two separate activation mechanisms ($\mathcal{S}$ and $\mathcal{F}$) rather than a single step criterion.</td>
+                  </tr>
+                  <tr data-status="tier1">
+                    <td>8</td>
+                    <td>Eq. (2.7)</td>
+                    <td>$Y_i$ are i.i.d. variables</td>
+                    <td>$Y_i'$ are conditionally i.i.d. given the fear field</td>
+                    <td class="status-cell">Tier 1 Proved</td>
+                    <td>Pairwise decoupling and conditional independence proven exactly at finite $n$ via the leave-$m$-out coupling. Unconditional i.i.d. is Tier 2.</td>
+                  </tr>
+                  <tr data-status="gap">
+                    <td>9</td>
+                    <td>Eq. (2.8)</td>
+                    <td>$S(t) := \sum_{i \notin \mathcal{A}(0)} \mathbf{1}\{Y_i \le t\}$</td>
+                    <td>Not explicitly defined (implicit in $\mathbb{E}[A(t)]$)</td>
+                    <td class="status-cell">Open Gap</td>
+                    <td>Counting process analog exists, but its exact law is not yet mathematically characterized.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>10</td>
+                    <td>Eq. (2.9)</td>
+                    <td>$A(t) = A(0) + S(t)$</td>
+                    <td>$\mathbb{E}[A(t)] \approx a + (n-a) P(Y_1 \le t)$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Decomposition holds in expectation, whereas Janson's holds pathwise.</td>
+                  </tr>
+                  <tr data-status="gap">
+                    <td>11</td>
+                    <td>Eq. (2.10)</td>
+                    <td>$S(t) \sim \mathrm{Bin}(n-a, \pi(t))$</td>
+                    <td>&mdash;</td>
+                    <td class="status-cell">Open Gap</td>
+                    <td>Distributional law of $S(t)$ is currently un-derived; blocked by the coupling through the fear channel.</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>12</td>
+                    <td>Eq. (2.11)</td>
+                    <td>$\pi(t) := P(\mathrm{Bin}(t,p) \ge r)$</td>
+                    <td>$\pi(t) := 1 - P(\mathrm{Bin}(t,p) \lt r) \mathbb{E}_f[(1-f/n)^t]$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Generalization augmented by fear-survival factor. Reduces exactly to Janson's at $\mu = 0$ (Case 1).</td>
+                  </tr>
+                  <tr data-status="modified">
+                    <td>13</td>
+                    <td>Eq. (2.12)</td>
+                    <td>$\mathbb{E}S(t) = (n-a)\pi(t)$</td>
+                    <td>$\mathbb{E}[A(t)] \approx a + (n-a)\pi(t)$</td>
+                    <td class="status-cell">Modified</td>
+                    <td>Structurally identical, using our generalized survival function $\pi(t)$.</td>
+                  </tr>
+                  <tr data-status="tier2">
+                    <td>14</td>
+                    <td>Eq. (2.13)</td>
+                    <td>$\mathrm{Var}\,S(t) \le \mathbb{E}S(t)$</td>
+                    <td>Covariance bounds via conditional factorisation</td>
+                    <td class="status-cell">Tier 2 Conj.</td>
+                    <td>Pairwise covariances reduce to fear-field concentration. Janson's binomial variance bounds are recovered conditional on concentration.</td>
+                  </tr>
+                  <tr data-status="unchanged">
+                    <td>15</td>
+                    <td>Validation</td>
+                    <td>Pure Bootstrap Percolation</td>
+                    <td>$\mu=0$ recovers Janson exactly; $p=0$ yields branching limit</td>
+                    <td class="status-cell">Unchanged</td>
+                    <td>Validation confirms that our model reduces exactly to Janson's model at boundaries.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Bottom Status Key (Always visible) -->
+  <footer class="app-footer">
+    <span class="footer-item"><span class="color-dot" style="background-color: #6b7280;"></span> Unchanged</span>
+    <span class="footer-item"><span class="color-dot" style="background-color: #d97706;"></span> Modified</span>
+    <span class="footer-item"><span class="color-dot" style="background-color: #2563eb;"></span> New Machinery</span>
+    <span class="footer-item"><span class="color-dot" style="background-color: #059669;"></span> Tier 1 (Proved)</span>
+    <span class="footer-item"><span class="color-dot" style="background-color: #7c3aed;"></span> Tier 2 (Conjecture)</span>
+    <span class="footer-item"><span class="color-dot" style="background-color: #dc2626;"></span> Open Gap</span>
+  </footer>
+
+  </body>
+</html>

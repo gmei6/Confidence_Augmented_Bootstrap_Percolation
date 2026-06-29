@@ -398,34 +398,51 @@ heuristic mean-field threshold** showing qualitative agreement.
   simulation; sharpness stated as a conjecture." (Confirm boundary with advisor — §9 Q1.)
 - **Confounded finite-size scaling** from holding $p$ fixed across $n$. **Mitigation:** the
   $p_n = \beta n^{-\alpha}$ scaling and per-$n$ seeding at multiples of $a_c$ (§4). Four $n$ values
-  across ~1.7 decades is thin for a clean log-log exponent — add $n=2000$ and ideally - **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete; **Task B (θ- and κ-robustness) executed, verified, and merged** into `antigravity` (merge commit `08fc8f3`; `task-b` branch deleted post-merge). Advisor brief finalized but **intentionally held back for further polish** (not yet sent). **First advisor meeting scheduled for 2026-07-01, 2:00pm.**
-- **Communication artifact (S-030, new this session):** Built an interactive teaching website under `viz/` (static, client-side, GitHub Pages) that mirrors the research talk as a single scroll page — Explainer → Glossary (MathJax) → **Guided Walkthrough** → Sandbox. The walkthrough is a new FIFO step-trace engine (`viz/walkthrough.js`) that replays the talk's exact worked example ($n=7$, 10 edges, seed $\{1,4\}$, $r=2$, $\mu=0$ — graph, layout, and edges extracted from the deck's slide XML) as captioned sub-step frames with the live `Node/Marks/Active?/Gen` and `t/u_t/k/T_k/Z/A/g/S/F` tables. **Illustrative only** — a JS reimplementation for teaching at small $n$, carrying the "not the validated oracle, must not be cited as a result" banner; no `src/`, `cpp/`, `reference.py`, or `results/` touched, so §5.4/§5.6 do not apply. Corrects two deck slips on the site: $f_i\sim\text{Beta}(\mu\kappa,(1-\mu)\kappa)$ (D-002 form) and the mechanically-correct mark counts. MathJax and vis-network are vendored (no CDN; works offline / from `file://`). Merged to `antigravity` (commits `7aebd7e`, `25fb5a5`, `18133e9`, `ca5fa98`). Pending on Gary's side: enable GitHub Pages (Settings → Pages → Source = GitHub Actions) and a visual browser check.
-- **Q1 (analytical scope) — new this session:** Closed part of the row-8/row-14 gap flagged in `docs/research/janson_section2_companion/companion_mapping.md`. Proved (Tier 1, exact at finite $n$) that activation times $Y_i'$ are **conditionally i.i.d. given the leave-$m$-out fear field**, for any fixed $m$-tuple — new §5.1 in `janson_reformulation_with_fear.md`. This sharpens the still-open (Tier 2) Asymptotic Decoupling Conjecture into two distinct sub-questions: fear-field concentration, and leave-out field equivalence. The discrepancy-bound approach attempted earlier this session was found to be false (cascading effects near the saddle-node tangency are not bounded by a per-generation vertex count) and was withdrawn before any commit; the conditional-factorisation proof that replaced it was independently re-derived and checked line-by-line by the orchestrator, not accepted solely on the reported auditor PASS. Committed `cff4432` on `antigravity`. A second, independent Antigravity session tested pairwise decoupling empirically (stratified-pair covariance + Var($A(t)$)-vs-binomial-benchmark statistic at $t=3$) — **result now in (S-029)**. Primary finding: the variance ratio $R(n,\mu)$ exceeds the $\mu=0$ quenched-graph baseline by a positive excess (≈0.41 at $\mu=0.3$, ≈0.80 at $\mu=0.5$ at $n=8000$ subcritical seed regime) that does not clearly converge to zero within $n\in\{1000,\ldots,8000\}$. The design ($M=2000$, $n\le8000$) is underpowered to distinguish $O(1/n)$ decay from a persistent positive correlation. Tier 2 pairwise covariances are consistent with zero (mean $|\text{Cov}|\approx10^{-5}$ to $10^{-6}$). Verdict: no gross violation of the Asymptotic Decoupling Conjecture, but no positive confirmation either. Conjecture remains open. Changes committed to worktree `task-pairwise-decoupling` and merged to `antigravity`; see §10.
-- **Results & Testing Audit:**
-  - **Done this session:** Verified Task B end-to-end — claims independently re-checked against `results/raw/`, and C++↔Python parity re-run across many seeds. The runner produced 4 provenance-stamped κ sweeps in `results/raw/` and 4 figures in `results/figures/` (3 θ-robustness plots for $r\in\{2,3,4\}$ + 1 κ-robustness plot for $r=2$).
-  - **Task B key finding:** the cascade boundary is robust to the systemic-event threshold $\theta$ (re-analysis across $\theta\in[0.2,0.8]$ shows negligible first-order shift) and to fear concentration $\kappa$ (boundary unchanged across $\kappa\in\{2,10,50,200\}$, confirming the §3.5 second-order prediction even at the highest heterogeneity tested, $\kappa=2.0$). A hypothesized $\kappa=2$ "immune-node barrier" was tested and **rejected** as a null result; a true immune-node barrier needs the separate $\kappa\to0$ / two-point regime.
-  - **Latest validated analytical result:** the $(1-\mu)^{r/(r-1)}$ scaling law fits tightly for $r=3$ (mean |diff| 2.6%) and $r=4$ (2.0%); $r=2$ shows a SYSTEMATIC positive bias across the whole $\mu$ range — a $\mu$-dependent residual of the finite-size factor $K(\mu,n)$, NOT high-$\mu$ quantization (D-023). Full detail in `docs/research/janson_scaling_validation.md`.
-  - **Testing:** 36/36 confirmed on `antigravity` post-merge (re-ran the full suite this session) — includes the 8 unit tests for `systemic_prob_at_theta` + custom-θ `analyze_sweep`, and the 10 cross-language tests (Prong A on supercritical r=2 / subcritical r=4, Prong B z-test + KS across all four κ), no skips.
-- **State of the Code:** Task B added `systemic_prob_at_theta` and a custom-`theta` path in `analyze_sweep`, plus `plot_theta_robustness` / `plot_kappa_robustness` in `plotting.py` (read-only on raw). Cross-language validation (§5.4 Prong B) was re-calibrated to a scale-invariant p-value threshold (D-024). **No C++ engine changes this session.**
-- **Where the code lives:** Task B work merged into `antigravity` at `08fc8f3` (the `task-b` branch is deleted, work no longer lives on a separate branch): `src/twocascade/analysis.py`, `src/twocascade/plotting.py`, `scripts/run_task_b.py`, `tests/test_analysis.py`, `tests/test_cpp_validation.py`; κ configs in `configs/kappa_sweep_r2_k*.json`; proof-of-work in `walkthrough.md`. Queued task briefs in `docs/antigravity_queue/`. **S-029 (completed and merged):** `scripts/run_pairwise_decoupling.py`, `tests/test_pairwise_decoupling.py` (two new `@pytest.mark.slow` tests), `walkthrough.md` (worktree root); modified `src/twocascade/reference.py` (D-026 track_nodes side-channel docstrings), `pytest.ini` (slow marker), `docs/PROJECT_TRACKER.md` (D-026 + S-029 entries). Oracle violation caught and formally resolved via D-026.
+  across ~1.7 decades is thin for a clean log-log exponent — add $n=2000$ and ideally $n=3000$
+  on PACE (access pending).
+
+---
+
+## §8 — Current Status 🟢 *(overwrite each session)*
+
+- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete;
+  Task B (θ- and κ-robustness) merged. **First advisor meeting 2026-07-01 at 2:00pm.**
+- **Viz (S-030 + S-031):** Interactive teaching website live on GitHub Pages. Section 3
+  now has Part A (μ=0, seed={1,4} — Janson FIFO baseline, co-existence) and Part B
+  (μ=0.85, seed={1} — fear drives full systemic collapse |A*|/n=1.0 from a single seed,
+  with per-node Bernoulli probability captions and fᵢ column). Both walkthroughs render
+  correctly. Non-Technical Mode toggle drafted in `test-temp-viz/` but not yet merged
+  (button toggle CSS bug pending).
+- **Advisor briefing packet:** not yet sent — deliberately held pending final polish before
+  the 2026-07-01 meeting. Will include the viz site URL as an interactive companion.
+- **All prior validated results, code, and testing unchanged from S-029/S-030.**
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
 - **Blockers:** None.
-- **Active Constraints & Warnings:** Cross-reference D-018 platform limitations. Localized development profiles remain bound to macOS builds utilizing explicit ASan / Debug-UBSan-only testing targets.
-- **Q1 follow-up (resolved):** The empirical pairwise-decoupling test is complete (S-029). The variance ratio excess $R(\mu>0)-R(\mu=0)$ does not clearly converge to zero within $n\in\{1000,\ldots,8000\}$; pairwise covariances at $t=3$ are consistent with zero but cannot resolve $O(1/n)$ scaling. **The Asymptotic Decoupling Conjecture remains open.** Open design question: whether to pursue a direct fear-field-concentration proof (which would promote companion\_mapping rows 8 and 14 to Tier 1) or scope it out in the final write-up; see §10.
-- **Q2 (advisor):** stay on $G(n,p)$ with incremental fear for the cleanest Janson comparison, or move to a configuration model where heterogeneity/targeting matter? *(Task B shows fear heterogeneity $\kappa$ is inert at first order — so structural/degree heterogeneity is the more promising route to make heterogeneity/targeting meaningful.)*
-- **Q3 (advisor):** is a critical-window framing of interest (finite-size width exponent; whether the critical cascade shows $n^{2/3}$-type scaling)?
-- **Engineering (minor):** Investigate AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** First advisor meeting scheduled for **2026-07-01 at 2:00pm**. Briefing packet **not yet sent** — deliberately held back to keep improving the deliverables and fold in the new Task B robustness results before sharing. PACE access and scope to be raised at the meeting.
+- **Active Constraints & Warnings:** Cross-reference D-018 platform limitations (macOS
+  Debug = UBSan only; ASan deferred to Linux/PACE).
+- **Q1 follow-up:** Asymptotic Decoupling Conjecture remains open (S-029). Whether to
+  pursue a direct fear-field-concentration proof or scope it out in the write-up is an
+  open design question for the advisor meeting.
+- **Q2 (advisor):** stay on $G(n,p)$ or move to a configuration model?
+- **Q3 (advisor):** is a critical-window width-exponent framing of interest?
+- **Engineering (minor):** AppleClang 17 `-mcpu=native` build flag failure.
+- **Logistics:** Briefing packet not yet sent. PACE access and scope to be raised at
+  the 2026-07-01 2:00pm meeting.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Decide on fear-field-concentration proof scope:** given D-025 (exact conditional i.i.d.) and the S-029 empirical result (conjecture open), decide whether pursuing a direct fear-field-concentration proof is worth stretch-item time, or should be scoped out in the final write-up.
-2. Assemble the advisor packet for the **2026-07-01 2:00pm** meeting (Week 5 overlays, Janson scaling validation, Task B robustness figures, and the new joint-decoupling result); share with Prof. Dhara shortly before it. *(The new `viz/` teaching website can serve as an interactive companion — enable GitHub Pages and do a visual check first.)*
-3. Prepare to discuss Q2 (configuration-model stretch), Q3 (critical-window width exponent $\nu$), and request PACE access, at the meeting.
-4. Proceed with the remaining queued tasks (`docs/antigravity_queue/` A/C/D) and the Wk 6–7 finite-size $\nu$ analysis (preliminary, pending advisor alignment).
-5. **Debug and promote visualizer's Non-Technical Mode:** A local sandbox folder `test-temp-viz` exists where CDN-based Technical / Non-Technical modes have been drafted. Once the active-button toggle state styling is resolved in Google AI Studio, merge/copy the fixed code back into the main `viz/` directory and deploy to GitHub Pages.
+1. **Debug and promote visualizer's Non-Technical Mode:** a local sandbox `test-temp-viz/`
+   holds CDN-based Technical / Non-Technical mode toggle code. Once the active-button
+   toggle state CSS bug is resolved (last worked on in Google AI Studio), merge/copy
+   into `viz/` and deploy to GitHub Pages.
+2. **Assemble and send advisor packet** before 2026-07-01 2:00pm: Week 5 overlays,
+   Janson scaling validation, Task B robustness figures, S-029 joint-decoupling result,
+   and the GitHub Pages viz URL (Part A/B walkthrough is a strong inclusion).
+3. Prepare Q2 / Q3 / PACE access discussion points for the meeting.
+4. Proceed with `docs/antigravity_queue/` A/C/D tasks and the Wk 6–7 finite-size $\nu$
+   analysis (preliminary, pending advisor alignment).
 
 ---
 
@@ -461,6 +478,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-024 | 2026-06-24 | Cross-language validation (§5.4 Prong B) now thresholds on a scale-invariant p-value (both z-test and KS require p > 0.005) instead of a fixed KS distance (< 0.05); standardize on seed 12345 for both engines. | The fixed KS-distance threshold sat below the two-sample 5% critical value (≈0.061 at N=1000/engine), giving ≈16% per-test false rejection (≈50% family-wise across the 4 KS cells) under a correct implementation — which had forced ad-hoc seed-shopping. A p-value threshold matching the z-test significance bounds the per-cell false-alarm rate to 0.5% while preserving power. §5.4 frozen spec text is unchanged (test implementation only). | §5.4 (test impl), §8, §11`
 - `D-025 | 2026-06-25 | Proved exact conditional i.i.d. structure for joint decoupling using a leave-m-out construction (new §5.1 in janson_reformulation_with_fear.md). | Establishes exact conditional independence of activation times Y_i' given the leave-m-out fear field at finite n (Tier 1), for any fixed m-tuple, sharpening the Asymptotic Decoupling Conjecture (Tier 2) into two distinct sub-questions — fear-field concentration and leave-out field equivalence — rather than one diffuse claim. An earlier discrepancy-bound approach to the same goal was found false (unbounded cascading effects near the saddle-node tangency) and was withdrawn pre-commit; this result replaces it and was independently re-derived by the orchestrator, not accepted on the auditor's PASS alone. | §2 (D-009), §5.1, §8, §11`
 - `D-026 | 2026-06-25 | Adds a Python-only diagnostic side-channel (track_nodes/tracked_failure_rounds) in reference.py as a backward-compatible, observational extension; exempts it from §5.4 C++ parity. | The change is strictly additive, observational, backward-compatible, and does not alter cascade dynamics. Exemption is bounded as it does not change the core verification criteria of §5.4 (engine-logic identity at μ=0, statistical agreement of P(systemic) / |A*|/n). Any future reference.py change requires a new standalone instruction. | §5.3, §5.4`
+- `D-027 | 2026-06-29 | Expanded viz/ section 3 into Part A (μ=0, seed={1,4}) and Part B (μ=0.85, seed={1}) dual walkthroughs. Part A establishes co-existence with Janson; Part B shows fear enabling full systemic collapse from a single seed via trace F(0)={2,6}, S(1)={5}, F(1)={3}, S(2)={4,7}, halt — |A*|/n=1.0. Bernoulli outcomes are pre-determined for reproducibility. Illustrative only; §5.4/§5.6 do not apply. | viz/ only`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*

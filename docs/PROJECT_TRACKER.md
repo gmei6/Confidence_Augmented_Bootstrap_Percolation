@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-29 — Session 35 (queue tasks A/C/D completed and recorded)
+- **Last updated:** 2026-06-29 — Session 36 (section2-reformulation deployed to Pages; README updated; stale branches pruned)
 - **File version:** v1.12
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -409,7 +409,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - **Task D — Window invariance (S-035):** Max $|\Delta P|=0.0146\le0.03$ ✓; duration grows monotonically with $X$ ✓. C++ cross-language validation at X=4: Z-test p=0.83, KS p=1.00 ✓. Figures: `results/figures/window_r2_invariance.png`, `results/figures/window_r2_duration.png`. New test: `tests/test_cpp_window_validation.py`.
 - **Task B — θ/κ robustness (S-027):** Boundary invariant across θ∈[0.2,0.8]; κ enters only at 2nd order.
 - **Viz (S-031–S-033):** Interactive teaching website live on GitHub Pages. Part A/B walkthroughs; Node.js tests 17/17 pass.
-- **Section 2 reformulation website (S-034):** Static study site at `section2-reformulation/`. Opens from `file://`. Illustrative/reference only.
+- **Section 2 reformulation website (S-034/S-036):** Static study site at `section2-reformulation/`. Now live on GitHub Pages alongside viz/. Illustrative/reference only.
 - **Advisor briefing packet:** draft complete — `docs/research/other/advisor_brief_2026_07_01.md`. Send before 2026-07-01 2:00pm.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
@@ -498,6 +498,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-033 | 2026-06-29 | v1.12 | Validated viz model correctness: Non-Technical Mode toggle confirmed fixed; added Node.js module export to cascade.js; wrote tests/test_viz_walkthrough.js and tests/test_viz_cascade.js (17/17 pass) covering Part A/B FIFO trace and cascade §3.4 behavioral invariants. Drafted advisor_brief_2026_07_01.md for 2026-07-01 2:00pm meeting. | §8, §10, §12`
 - `S-034 | 2026-06-29 | v1.12 | Specced and built a static personal-study website presenting the two-channel Janson §2 reformulation. Wrote build spec to docs/research/understanding_my_work/section2_website_spec.md; audited AI Studio output (React/Vite boilerplate wrapping a clean static HTML core); fixed 3 math bugs in index.html (two mangled < in set-builder notation, a_c(1-μ) → a_c(μ), broken LaTeX in §4.2 lemma); placed clean section2-reformulation/ (index.html + style.css + script.js) at project root alongside viz/. No frozen edits, no new decisions. | §8, §12`
 - `S-035 | 2026-06-29 | v1.12 | Recorded completion of Antigravity queue tasks A/C/D (committed 2026-06-29). Task A: preliminary ν estimates (μ=0.0 → 8.39±1.57, μ=0.3 → 5.33±0.51) added to §8 and §9 Q3 note; §6 Wk-5 and Wk-6/7 ticked. Task C: targeted-seeding negative result recorded in §8; §6 Wk-9 remaining sub-items ticked. Task D: window X-invariance and C++ windowed cross-validation recorded in §8; Wk-9 ticked. §10 rewritten to remove completed A/C/D action; post-meeting actions added. No new decisions. | §6, §8, §9, §10, §12`
+- `S-036 | 2026-06-29 | v1.12 | Deployed section2-reformulation/ to GitHub Pages alongside viz/ (pages.yml updated to build combined _site/; path trigger extended). Updated README.md: added section2 badge and link, Key Validated Results table, full repo layout, C++ build instructions, sweep usage. Pruned two stale local branches (subagent-Python-Simulation-Agent-self-2ed9f165 and task-pairwise-decoupling) and their worktrees. §8 corrected: section2 now live on Pages, not file:// only. No frozen edits, no new decisions. | §8, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

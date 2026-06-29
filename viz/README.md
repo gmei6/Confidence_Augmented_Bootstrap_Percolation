@@ -80,3 +80,4 @@ the page works offline and from `file://` too.
 - `vendor/vis-network.min.js` — vendored graph library (vis-network 9.1.9, no CDN).
 - `vendor/tex-svg.js` — vendored MathJax (single self-contained tex-svg build, no
   external fonts) for rendering the glossary equations.
+

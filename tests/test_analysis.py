@@ -188,3 +188,53 @@ def test_evaluate_scaling_adherence_stats_exclusion():
     res_all_clamped = evaluate_scaling_adherence(analyzed_data_all_clamped)
     assert res_all_clamped["max_diff"] is None
     assert res_all_clamped["mean_diff"] is None
+
+
+def test_estimate_transition_width():
+    """Verify estimate_transition_width correctly fits synthetic logistic data and returns reasonable bootstrap CIs."""
+    from twocascade.analysis import estimate_transition_width
+    
+    # Generate synthetic logistic curves: L(x) = 1 / (1 + exp(-k * (x - x0)))
+    k = 15.0
+    x0 = 1.0
+    seed_multiples = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4]
+    trials_per_cell = 1000
+    failed_fractions_by_multiple = {}
+    
+    for m in seed_multiples:
+        p = 1.0 / (1.0 + np.exp(-k * (m - x0)))
+        ones_count = int(round(p * trials_per_cell))
+        outcomes = np.zeros(trials_per_cell)
+        outcomes[:ones_count] = 1.0
+        failed_fractions_by_multiple[m] = outcomes.tolist()
+        
+    res = estimate_transition_width(
+        failed_fractions_by_multiple=failed_fractions_by_multiple,
+        theta=0.5,
+        seed_multiples=seed_multiples,
+        bootstrap_reps=100,
+        seed=42
+    )
+    
+    # Expected width: 2 * ln(9) / k = 2 * 2.1972 / 15.0 ≈ 0.293
+    expected_width = (2.0 * np.log(9.0)) / k
+    assert np.isclose(res["width"], expected_width, rtol=0.1)
+    assert np.isclose(res["x0"], x0, rtol=0.05)
+    assert res["width_err"] > 0.0
+    assert res["ci"][0] < res["width"] < res["ci"][1]
+
+
+def test_fit_finite_size_exponent():
+    """Verify fit_finite_size_exponent correctly estimates the slope and nu from log-log data."""
+    from twocascade.analysis import fit_finite_size_exponent
+    
+    # w = C * n^(-1/nu). Let nu = 2.0 -> slope = -0.5. Let C = 10.0 -> intercept = log(10).
+    n_list = [1000, 2000, 5000, 10000]
+    widths_list = [10.0 * (n ** -0.5) for n in n_list]
+    
+    res = fit_finite_size_exponent(n_list, widths_list)
+    assert np.isclose(res["nu"], 2.0)
+    assert np.isclose(res["slope"], -0.5)
+    assert np.isclose(res["r_squared"], 1.0)
+    assert np.isclose(res["slope_err"], 0.0, atol=1e-7)
+

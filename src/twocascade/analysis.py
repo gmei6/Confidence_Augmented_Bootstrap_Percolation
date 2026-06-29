@@ -232,3 +232,187 @@ def evaluate_scaling_adherence(analyzed_data: Dict[str, Any]) -> Dict[str, Any]:
         "mean_diff": mean_diff,
         "a_emp_0": a_emp_0
     }
+
+
+def estimate_transition_width(
+    failed_fractions_by_multiple: Dict[float, List[float]],
+    theta: float,
+    seed_multiples: List[float],
+    bootstrap_reps: int = 500,
+    conf_level: float = 0.95,
+    seed: int = 12345
+) -> Dict[str, Any]:
+    """
+    Fit P(systemic) vs seed_multiple to a logistic curve, and estimate
+    the 10-90% transition width with a bootstrap confidence interval.
+    
+    Args:
+        failed_fractions_by_multiple: Dict mapping seed_multiple (float) to list of failed fractions (list of floats).
+        theta: Systemic event threshold (e.g. 0.5).
+        seed_multiples: List of seed multiples in the sweep.
+        bootstrap_reps: Number of bootstrap resamples.
+        conf_level: Confidence level for the interval (default 0.95).
+        seed: Random seed for bootstrap reproducibility.
+        
+    Returns:
+        Dict containing:
+            "width": Estimated transition width (dimensionless).
+            "width_err": Bootstrap standard error of the width.
+            "ci": Tuple (lower, upper) representing the bootstrap confidence interval.
+            "k": Fit growth rate parameter.
+            "x0": Fit midpoint parameter.
+            "p_systemic": Dict mapping multiple to empirical P(systemic).
+    """
+    from scipy.optimize import curve_fit
+    
+    # Sort multiples to ensure monotonic curve fitting
+    multiples = sorted(seed_multiples)
+    p_sys_list = []
+    binary_outcomes_by_multiple = {}
+    
+    for m in multiples:
+        ffs = np.array(failed_fractions_by_multiple[m])
+        outcomes = (ffs >= theta).astype(float)
+        binary_outcomes_by_multiple[m] = outcomes
+        p_sys_list.append(float(np.mean(outcomes)))
+        
+    x_data = np.array(multiples)
+    y_data = np.array(p_sys_list)
+    
+    def logistic(x, k, x0):
+        # Clip exponent to avoid overflow in exp
+        return 1.0 / (1.0 + np.exp(-np.clip(k * (x - x0), -500, 500)))
+        
+    # Fit the empirical data
+    p0 = [10.0, 1.0]  # Initial guess: k=10.0, x0=1.0
+    bounds = ([0.0, 0.0], [np.inf, 2.0])  # Force positive slope and midpoint in [0, 2]
+    
+    try:
+        popt, _ = curve_fit(logistic, x_data, y_data, p0=p0, bounds=bounds, maxfev=10000)
+        k_fit, x0_fit = popt
+        width_fit = (2.0 * np.log(9.0)) / k_fit
+    except Exception:
+        # Fallback if fit fails
+        k_fit, x0_fit = np.nan, np.nan
+        width_fit = np.nan
+        
+    # Bootstrap CI
+    rng = np.random.default_rng(seed)
+    boot_widths = []
+    
+    for _ in range(bootstrap_reps):
+        y_boot = []
+        for m in multiples:
+            outcomes = binary_outcomes_by_multiple[m]
+            if len(outcomes) > 0:
+                boot_outcomes = rng.choice(outcomes, size=len(outcomes), replace=True)
+                y_boot.append(float(np.mean(boot_outcomes)))
+            else:
+                y_boot.append(0.0)
+                
+        y_boot = np.array(y_boot)
+        try:
+            popt_b, _ = curve_fit(logistic, x_data, y_boot, p0=p0, bounds=bounds, maxfev=5000)
+            k_b = popt_b[0]
+            w_b = (2.0 * np.log(9.0)) / k_b
+            if not np.isnan(w_b) and not np.isinf(w_b):
+                boot_widths.append(w_b)
+        except Exception:
+            pass
+            
+    if len(boot_widths) > 0:
+        boot_widths = np.array(boot_widths)
+        alpha_err = 100.0 * (1.0 - conf_level)
+        lo = float(np.percentile(boot_widths, alpha_err / 2.0))
+        hi = float(np.percentile(boot_widths, 100.0 - alpha_err / 2.0))
+        width_err = float(np.std(boot_widths, ddof=1)) if len(boot_widths) > 1 else 0.0
+    else:
+        lo, hi = np.nan, np.nan
+        width_err = np.nan
+        
+    return {
+        "width": width_fit,
+        "width_err": width_err,
+        "ci": (lo, hi),
+        "k": k_fit,
+        "x0": x0_fit,
+        "p_systemic": {m: p_sys for m, p_sys in zip(multiples, p_sys_list)}
+    }
+
+
+def fit_finite_size_exponent(
+    n_list: List[int],
+    widths_list: List[float],
+    width_errs_list: Optional[List[float]] = None
+) -> Dict[str, Any]:
+    """
+    Fit log(width) = -1/nu * log(n) + C to estimate the transition-width exponent nu.
+    
+    Args:
+        n_list: List of system sizes (int).
+        widths_list: List of estimated widths (float).
+        width_errs_list: Optional list of width errors (float) to use as weights.
+        
+    Returns:
+        Dict containing:
+            "nu": Estimated exponent (float).
+            "nu_err": Propagated standard error of nu (float).
+            "slope": Slope of the log-log fit (-1/nu) (float).
+            "slope_err": Standard error of the slope (float).
+            "intercept": Intercept of the log-log fit (C) (float).
+            "r_squared": R^2 coefficient of determination of the fit (float).
+    """
+    from scipy.optimize import curve_fit
+    
+    x = np.log(np.array(n_list, dtype=float))
+    y = np.log(np.array(widths_list, dtype=float))
+    
+    # Simple linear fit: y = slope * x + intercept
+    def linear_model(x_val, slope, intercept):
+        return slope * x_val + intercept
+        
+    # Standard linear regression to get initial values and weights
+    if width_errs_list is not None:
+        # Propagate width_err to log(width) error: d(log(w)) = dw / w
+        w_arr = np.array(widths_list, dtype=float)
+        we_arr = np.array(width_errs_list, dtype=float)
+        # Avoid division by zero
+        we_arr = np.where(we_arr <= 0.0, 1e-8, we_arr)
+        y_err = we_arr / w_arr
+    else:
+        y_err = None
+        
+    popt, pcov = curve_fit(
+        linear_model, x, y,
+        p0=[-0.5, 0.0],
+        sigma=y_err,
+        absolute_sigma=(y_err is not None)
+    )
+    
+    slope, intercept = popt
+    slope_err = np.sqrt(pcov[0, 0])
+    
+    # Calculate R-squared
+    y_pred = linear_model(x, slope, intercept)
+    ss_res = np.sum((y - y_pred) ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    r_squared = 1.0 - (ss_res / ss_tot) if ss_tot > 0.0 else 1.0
+    
+    # Calculate nu = -1.0 / slope
+    if slope != 0.0:
+        nu = -1.0 / slope
+        # Error propagation: delta_nu = nu^2 * delta_slope
+        nu_err = (nu ** 2) * slope_err
+    else:
+        nu = np.nan
+        nu_err = np.nan
+        
+    return {
+        "nu": float(nu),
+        "nu_err": float(nu_err),
+        "slope": float(slope),
+        "slope_err": float(slope_err),
+        "intercept": float(intercept),
+        "r_squared": float(r_squared)
+    }
+

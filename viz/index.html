@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two-Channel Cascade — interactive demo</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- vis-network via CDN (no build step) -->
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>A Two-Channel Cascade of Bank Failure</h1>
+    <p class="subtitle">
+      Bootstrap percolation (solvency) + a self-reinforcing global panic field (fear),
+      on an Erd&#337;s&#8211;R&#233;nyi graph <em>G(n,&nbsp;p)</em>.
+    </p>
+    <div class="banner">
+      &#9888; <strong>Illustrative demo at small <em>n</em>.</strong> This is the
+      <em>mechanism</em>, not the asymptotic or validated regime. The live engine here is a
+      teaching reimplementation in JavaScript &mdash; <strong>not</strong> the validated C++/Python
+      engine used for results.
+    </div>
+  </header>
+
+  <main>
+    <section class="graph-pane">
+      <div id="network"></div>
+      <div class="legend">
+        <span class="chip solvent">solvent</span>
+        <span class="chip seed">seed (initial shock)</span>
+        <span class="chip solvency">failed &mdash; solvency (&ge; r neighbors)</span>
+        <span class="chip fear">failed &mdash; fear (panic)</span>
+      </div>
+    </section>
+
+    <section class="control-pane">
+      <div class="panel">
+        <h2>Live state</h2>
+        <div class="readout">
+          <div class="stat"><span class="k">round t</span><span class="v" id="stat-round">0</span></div>
+          <div class="stat"><span class="k">new failures a<sub>t</sub></span><span class="v" id="stat-at">0</span></div>
+          <div class="stat"><span class="k">failed fraction A(t)/n</span><span class="v" id="stat-frac">0.000</span></div>
+          <div class="stat"><span class="k">systemic? (&ge; &theta;=0.5)</span><span class="v" id="stat-systemic">&mdash;</span></div>
+        </div>
+        <div class="thermo-wrap" title="Global panic field g_t = a_{t-1}/n — fraction that failed last round. Fear is a SUBCRITICAL amplifier (R_fear ≈ μ < 1): this spikes then decays, it cannot self-ignite.">
+          <div class="thermo-label">panic field g<sub>t</sub> = a<sub>t&minus;1</sub>/n
+            <span class="v" id="stat-g">0.000</span></div>
+          <div class="thermo-bar"><div class="thermo-fill" id="thermo-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Playback</h2>
+        <div class="buttons">
+          <button id="btn-play">&#9654; Play</button>
+          <button id="btn-step">Step &#8594;</button>
+          <button id="btn-reset">&#8635; Reset</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Parameters</h2>
+
+        <div class="slider" title="Capital-buffer depth. A solvent bank fails once at least r of its neighbors have failed. r ≥ 2 (the model regime); larger r = sturdier banks.">
+          <label>r &mdash; solvency threshold <span class="val" id="val-r">3</span></label>
+          <input type="range" id="in-r" min="2" max="4" step="1" value="3" />
+        </div>
+
+        <div class="slider" title="Mean individual fear E[f] = μ ∈ [0,1]. The single continuous sweep axis. μ=0 is the pure Janson baseline (fear off).">
+          <label>&mu; &mdash; mean fear <span class="val" id="val-mu">0.30</span></label>
+          <input type="range" id="in-mu" min="0" max="1" step="0.01" value="0.30" />
+        </div>
+
+        <div class="slider" title="Fear heterogeneity via the Beta concentration κ. Large κ → all banks share fear ≈ μ; small κ → some near-immune, some near-certain. Affects variance only (2nd order).">
+          <label>&kappa; &mdash; fear concentration <span class="val" id="val-kappa">10</span></label>
+          <input type="range" id="in-kappa" min="0.5" max="200" step="0.5" value="10" />
+        </div>
+
+        <div class="slider" title="Seed size a — number of banks failed at t=0 (the initial shock). The cascade needs a macroscopic seed to cross the threshold; fear cannot ignite on its own.">
+          <label>a &mdash; seed size <span class="val" id="val-a">8</span></label>
+          <input type="range" id="in-a" min="1" max="30" step="1" value="8" />
+        </div>
+
+        <div class="slider" title="Edge probability p — interbank connectivity of G(n,p). Higher p = denser network = easier solvency contagion.">
+          <label>p &mdash; edge probability <span class="val" id="val-p">0.060</span></label>
+          <input type="range" id="in-p" min="0.01" max="0.30" step="0.005" value="0.06" />
+        </div>
+
+        <div class="slider" title="n — number of banks. Kept small here so individual banks are visible; the research regime is n ≥ 1000.">
+          <label>n &mdash; number of banks <span class="val" id="val-n">100</span></label>
+          <input type="range" id="in-n" min="30" max="150" step="10" value="100" />
+        </div>
+
+        <div class="slider seed-row" title="RNG seed — fix it to reproduce the exact graph, fear draws, and cascade.">
+          <label>seed</label>
+          <input type="number" id="in-seed" value="12345" min="0" step="1" />
+          <button id="btn-reroll" title="New random seed">&#127922;</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="cascade.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

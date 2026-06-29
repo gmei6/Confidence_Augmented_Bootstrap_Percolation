@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-29 — Session 34 (section2-reformulation/ study site built and fixed)
+- **Last updated:** 2026-06-29 — Session 35 (queue tasks A/C/D completed and recorded)
 - **File version:** v1.12
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -354,18 +354,16 @@ heuristic mean-field threshold** showing qualitative agreement.
       pipeline / parallelization / plotting; draft the heuristic mean-field threshold curve. *(Want
       C++ exposure sooner? Build it in parallel during Wk 2 against the stabilizing spec — but keep
       the Python prototype as the tool that decides the forks.)*
-- [ ] **Wk 5 — Overlay mean-field on empirical; iterate the analytics where they disagree.**
+- [x] **Wk 5 — Overlay mean-field on empirical; iterate the analytics where they disagree.**
       *(First/second advisor meeting ~here — bring the diagram + threshold comparison.)*
-- [ ] **Wk 6–7 — Finite-size analysis** across 5–6 values of $n$; estimate the **transition-width
+- [x] **Wk 6–7 — Finite-size analysis** across 5–6 values of $n$; estimate the **transition-width
       scaling exponent $\nu$** (width $\sim n^{-1/\nu}$). Put the realization budget **near the
-      boundary**, not deep in either phase.
+      boundary**, not deep in either phase. *(Preliminary: n∈{1000,2000,5000}; ν≈8.39 at μ=0, ν≈5.33 at μ=0.3; pending advisor Q3 alignment.)*
 - [ ] **Wk 8 — First stretch goal** (recommended: configuration-model variant; see §2/§7 and the
       advisor angles).
-- [ ] **Wk 9 — Robustness & consolidation:** [x] $\theta$ sensitivity, [x] $\sigma$-sweep ($\kappa$), [ ] random vs.
-      targeted seeding (expect a near-null on $G(n,p)$ — report as a deliberate negative result);
-      [ ] fear-persistence window ($X$) invariance check (D-006): pilot confirms boundary near-invariant
-      in $X$ within $\pm 0.03$; expected result is an invariance/robustness lemma plus the
-      cascade-duration effect.
+- [x] **Wk 9 — Robustness & consolidation:** [x] $\theta$ sensitivity, [x] $\sigma$-sweep ($\kappa$), [x] random vs.
+      targeted seeding (confirmed near-null on $G(n,p)$: shift shrinks from 0.13%→0.08% of $n$ as $n$ doubles);
+      [x] fear-persistence window ($X$) invariance check (D-006): max $|\Delta P|=0.0146\le0.03$ ✓; duration grows $X=1\to8.6,X=4\to13.2,X=8\to17.8$ rounds at $\mu=0.5$ ✓.
 - [ ] **Wk 10 — Write-up, clean figures, reproducibility pass, final presentation.**
 
 **Stretch menu (advisor-aligned, increasing ambition):**
@@ -405,42 +403,30 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session)*
 
-- **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete;
-  Task B (θ- and κ-robustness) merged. **First advisor meeting 2026-07-01 at 2:00pm.**
-- **Viz (S-031/S-032/S-033):** Interactive teaching website live on GitHub Pages. Part A/B
-  walkthroughs confirmed. Non-Technical Mode toggle fixed and merged. Viz model validated
-  with Node.js tests (17/17 pass): FIFO generation trace (Part A/B) and cascade.js §3.4
-  behavioral invariants.
-- **Section 2 reformulation website (S-034):** Static personal-study site at
-  `section2-reformulation/` (project root, alongside `viz/`). Presents the two-channel
-  Janson §2 reformulation as a unified narrative with Annotation Mode (color-coded status
-  ribbons) and Audience Mode (raw vs. advisor-framed gap labels) toggles. Opens from
-  `file://`. Illustrative/reference only; §5.4/§5.6 do not apply.
-- **Advisor briefing packet:** draft complete — `docs/research/other/advisor_brief_2026_07_01.md`.
-  Send before 2026-07-01 2:00pm meeting.
-- **All prior validated results, code, and testing unchanged from S-029/S-030.**
+- **Phase:** Pre-advisor-meeting consolidation. All four antigravity queue tasks complete. First advisor meeting 2026-07-01 at 2:00pm.
+- **Task A — Finite-size ν (S-035, preliminary):** ν≈8.39±1.57 at μ=0.0 (R²=0.83); ν≈5.33±0.51 at μ=0.3 (R²=0.97). Fear materially accelerates boundary sharpening. Figure: `results/figures/finite_size_scaling_r2.png` (watermarked "Preliminary, pending advisor alignment"). New code: `estimate_transition_width` + `fit_finite_size_exponent` in `src/twocascade/analysis.py`; unit tests in `tests/test_analysis.py`; scripts: `scripts/run_finite_size_sweeps.py`, `scripts/plot_finite_size_scaling.py`.
+- **Task C — Targeted seeding (S-035):** Confirmed deliberate negative result. Boundary shift 0.13% at n=1000 shrinks to 0.08% at n=2000 — vanishes in scaling limit on $G(n,p)$. Research doc: `docs/research/targeted_seeding_negative_result.md`. Figure: `results/figures/targeted_seeding_comparison.png`.
+- **Task D — Window invariance (S-035):** Max $|\Delta P|=0.0146\le0.03$ ✓; duration grows monotonically with $X$ ✓. C++ cross-language validation at X=4: Z-test p=0.83, KS p=1.00 ✓. Figures: `results/figures/window_r2_invariance.png`, `results/figures/window_r2_duration.png`. New test: `tests/test_cpp_window_validation.py`.
+- **Task B — θ/κ robustness (S-027):** Boundary invariant across θ∈[0.2,0.8]; κ enters only at 2nd order.
+- **Viz (S-031–S-033):** Interactive teaching website live on GitHub Pages. Part A/B walkthroughs; Node.js tests 17/17 pass.
+- **Section 2 reformulation website (S-034):** Static study site at `section2-reformulation/`. Opens from `file://`. Illustrative/reference only.
+- **Advisor briefing packet:** draft complete — `docs/research/other/advisor_brief_2026_07_01.md`. Send before 2026-07-01 2:00pm.
 
 ## §9 — Open Questions & Blockers 🟢 *(overwrite each session)*
 
 - **Blockers:** None.
-- **Active Constraints & Warnings:** Cross-reference D-018 platform limitations (macOS
-  Debug = UBSan only; ASan deferred to Linux/PACE).
-- **Q1 follow-up:** Asymptotic Decoupling Conjecture remains open (S-029). Whether to
-  pursue a direct fear-field-concentration proof or scope it out in the write-up is an
-  open design question for the advisor meeting.
+- **Active Constraints & Warnings:** Cross-reference D-018 platform limitations (macOS Debug = UBSan only; ASan deferred to Linux/PACE).
+- **Q1 follow-up:** Asymptotic Decoupling Conjecture remains open (S-029). Whether to pursue a direct fear-field-concentration proof or scope it out in the write-up is an open design question for the advisor meeting.
 - **Q2 (advisor):** stay on $G(n,p)$ or move to a configuration model?
-- **Q3 (advisor):** is a critical-window width-exponent framing of interest?
+- **Q3 (advisor):** is a critical-window width-exponent framing of interest? Preliminary ν estimates available (Task A): μ=0.0 → ν≈8.39, μ=0.3 → ν≈5.33; fear accelerates sharpening. CIs wide at 3 n values; n=10000 on PACE would tighten.
 - **Engineering (minor):** AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** Briefing packet not yet sent. PACE access and scope to be raised at
-  the 2026-07-01 2:00pm meeting.
+- **Logistics:** Briefing packet not yet sent. PACE access and scope to be raised at the 2026-07-01 2:00pm meeting.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Send advisor packet** before 2026-07-01 2:00pm — brief at
-   `docs/research/other/advisor_brief_2026_07_01.md`; include viz site URL.
-2. Prepare Q2 / Q3 / PACE access discussion points for the meeting.
-3. Proceed with `docs/antigravity_queue/` A/C/D tasks and the Wk 6–7 finite-size $\nu$
-   analysis (preliminary, pending advisor alignment).
+1. **Send advisor packet** before 2026-07-01 2:00pm — brief at `docs/research/other/advisor_brief_2026_07_01.md`; include viz site URL.
+2. Prepare Q2 / Q3 / PACE access discussion points; bring Task A preliminary ν figures.
+3. Post-meeting: update roadmap and open new tasks based on advisor direction (Q2 config model, Q3 critical-window scope, n=10000 on PACE to tighten ν CI).
 
 ---
 
@@ -511,6 +497,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-032 | 2026-06-29 | v1.12 | Logistics-only session. Diagnosed that commit bff403d ("updated viz") deleted viz-temp/ and temp_zip/ but did not touch viz/, so the GitHub Actions path filter (viz/**) did not trigger a Pages redeploy. Resolved by adding a trailing newline to viz/README.md and pushing — confirmed GitHub Pages now reflects the Part A/B walkthroughs from S-031. No code, simulation, or frozen-section changes. | §8, §12`
 - `S-033 | 2026-06-29 | v1.12 | Validated viz model correctness: Non-Technical Mode toggle confirmed fixed; added Node.js module export to cascade.js; wrote tests/test_viz_walkthrough.js and tests/test_viz_cascade.js (17/17 pass) covering Part A/B FIFO trace and cascade §3.4 behavioral invariants. Drafted advisor_brief_2026_07_01.md for 2026-07-01 2:00pm meeting. | §8, §10, §12`
 - `S-034 | 2026-06-29 | v1.12 | Specced and built a static personal-study website presenting the two-channel Janson §2 reformulation. Wrote build spec to docs/research/understanding_my_work/section2_website_spec.md; audited AI Studio output (React/Vite boilerplate wrapping a clean static HTML core); fixed 3 math bugs in index.html (two mangled < in set-builder notation, a_c(1-μ) → a_c(μ), broken LaTeX in §4.2 lemma); placed clean section2-reformulation/ (index.html + style.css + script.js) at project root alongside viz/. No frozen edits, no new decisions. | §8, §12`
+- `S-035 | 2026-06-29 | v1.12 | Recorded completion of Antigravity queue tasks A/C/D (committed 2026-06-29). Task A: preliminary ν estimates (μ=0.0 → 8.39±1.57, μ=0.3 → 5.33±0.51) added to §8 and §9 Q3 note; §6 Wk-5 and Wk-6/7 ticked. Task C: targeted-seeding negative result recorded in §8; §6 Wk-9 remaining sub-items ticked. Task D: window X-invariance and C++ windowed cross-validation recorded in §8; Wk-9 ticked. §10 rewritten to remove completed A/C/D action; post-meeting actions added. No new decisions. | §6, §8, §9, §10, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

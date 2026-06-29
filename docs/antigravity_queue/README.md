@@ -52,9 +52,8 @@
 | ID | Title | Touches | New `src/`? | Risk |
 |----|-------|---------|-------------|------|
 | [A](task_A_finite_size_nu.md) | Finite-size transition-width exponent $\nu$ | §6 Wk 6–7; informs Q3 | yes (`analysis.py`, `plotting.py`) | med |
-| [B](task_B_theta_kappa_robustness.md) | $\theta$- and $\kappa(\sigma)$-robustness | §3.5, §7, Wk 9 | small ($\theta$ = re-analysis) | low |
 | [C](task_C_targeted_seeding.md) | Random vs. targeted seeding (negative result) | §3.1, Wk 9 | none likely | low |
 | [D](task_D_window_invariance.md) | Memory-window $X$-invariance (D-006) | §3.6, Wk 9 | small | low |
 
-**Suggested order:** B (cheapest, partly free) → D → C → A (heaviest, most valuable).
+**Suggested order:** D → C → A (heaviest, most valuable). (Task B done — S-027.)
 Each task is independent; do them in any order, one full `/research-cycle` each.

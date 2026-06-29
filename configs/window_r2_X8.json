@@ -1,0 +1,26 @@
+{
+  "engine": "cpp",
+  "pinned_params": {
+    "n": 2000,
+    "r": 2,
+    "concentration": 50.0,
+    "theta": 0.5,
+    "window_len": 8,
+    "weights": [0.4201680672, 0.2100840336, 0.1260504202, 0.0840336134, 0.0588235294, 0.0420168067, 0.0336134454, 0.0252100840],
+    "target_high_degree": false
+  },
+  "scaling": {
+    "n_ref": 1000,
+    "target_mean_degree": 8.0,
+    "alpha": 0.7
+  },
+  "sweep": {
+    "mean_fear_grid": [0.3, 0.35, 0.4, 0.45, 0.5],
+    "seed_multiples": [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0],
+    "trials_per_cell": 5000,
+    "base_seed": 20260629
+  },
+  "output": {
+    "raw_filepath": "results/raw/window_r2_X8.json"
+  }
+}

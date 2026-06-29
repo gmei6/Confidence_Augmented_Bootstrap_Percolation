@@ -259,7 +259,7 @@ table.glossary tr:nth-child(even) td:not(:first-child) {
 .wt-layout {
   display: flex; gap: 24px; flex-wrap: wrap; align-items: stretch; margin: 16px 0;
 }
-#wt-network, #wt-b-network {
+#wt-network {
   flex: 1 1 420px; height: 420px;
   background: var(--panel-dark);
   border: 1px solid rgba(51, 65, 85, 0.6);

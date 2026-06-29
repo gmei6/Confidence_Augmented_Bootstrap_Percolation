@@ -7,17 +7,17 @@
   <title>Two-Channel Cascade — interactive tutorial</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- MathJax (vendored, single self-contained tex-svg build — no external fonts) -->
+  <!-- MathJax (CDN) -->
   <script>
     window.MathJax = {
       tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]] },
       svg: { fontCache: "global" },
     };
   </script>
-  <script src="vendor/tex-svg.js" id="MathJax-script" async></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
 
-  <!-- graph library (vendored, no CDN) -->
-  <script src="vendor/vis-network.min.js"></script>
+  <!-- graph library (CDN) -->
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 
 <body>
@@ -98,7 +98,7 @@
 
         <p class="keyfact">
           <strong>Key fact.</strong> Fear is a <strong>subcritical amplifier</strong>:
-          its per-round reproduction number is \(R_{\text{fear}} \approx \mu < 1\). It <em>cannot</em> ignite a cascade on
+          its per-round reproduction number is \(R_{\text{fear}} \approx \mu \lt 1\). It <em>cannot</em> ignite a cascade on
           its own — it only amplifies one the
           solvency channel has already started. Watch \(g_t\) in the sandbox spike then
           decay: that decay is this fact made visible.
@@ -148,7 +148,7 @@
     <!-- ============================ 2. GLOSSARY ============================ -->
     <section id="glossary" class="prose">
       <h2>2 · The variables</h2>
-
+      
       <div class="mode-only-academic">
         <p>Every symbol used on this page, grouped by role.</p>
 
@@ -319,39 +319,21 @@
       
       <div class="mode-only-academic">
         <p>
-          Both examples use the same \(n = 7\) network and threshold \(r = 2\).
-          They step through the <strong>FIFO / generation</strong> view of the cascade
-          (the Janson reformulation): instead of all banks updating at once, we pop one
-          <em>active</em> bank at a time, let it add a failed-neighbor
-          <strong>mark</strong> to each neighbor, and at each generation boundary
-          resolve which banks crossed the threshold \(r\) (solvency) or drew a
-          successful Bernoulli fear trial.
+          This example initializes with
+          (\(n=7\), seed \(A(0)=\{1,4\}\), \(r=2\), \(\mu=0\)), step by step. It uses the
+          <strong>FIFO / generation</strong> view of the cascade (the Janson
+          reformulation): instead of all banks updating at once, we pop one
+          <em>active</em> bank at a time, let it add a failed-neighbor <strong>mark</strong>
+          to each neighbor, and at each generation boundary resolve which banks crossed
+          the threshold \(r\).
         </p>
       </div>
 
       <div class="mode-only-layperson">
         <p>
-          These step-by-step examples show how a crisis spreads through a small network of 7 banks.
+          This step-by-step example shows how a crisis spreads through a small network of 7 banks.
+          We start with <strong>Banks 1 and 4</strong> collapsing due to an initial shock, and trace how their failures domino through their business connections.
           Click <strong>Next</strong> or <strong>Play</strong> to watch the warning marks and failure states progress.
-        </p>
-      </div>
-
-      <!-- ---- Part A ---- -->
-      <div class="mode-only-academic">
-        <h3>Part A — The Janson FIFO reformulation &nbsp;<span class="muted">(\(\mu = 0\), seed \(A(0) = \{1,4\}\))</span></h3>
-        <p>
-          Fear is switched off (\(\mu = 0\), so every \(f_i = 0\)). The cascade
-          propagates <em>purely</em> through the solvency channel. This establishes
-          the baseline: the two-channel model is a strict <strong>add-on</strong> —
-          at \(\mu = 0\) it reduces exactly to Janson's bootstrap percolation.
-        </p>
-      </div>
-      
-      <div class="mode-only-layperson">
-        <h3>Part A — The Domino Effect <span class="muted">(Solvency only)</span></h3>
-        <p>
-          In this first example, public panic is turned off. The crisis propagates purely through direct business connections between banks.
-          This shows how a chain reaction of failures propagates when banks cannot absorb the losses from their collapsed business partners.
         </p>
       </div>
 
@@ -381,72 +363,6 @@
 
       <div class="wt-steptable-wrap mode-only-academic">
         <table class="wt-step-table" id="wt-step-table"></table>
-      </div>
-
-      <!-- ---- Part B ---- -->
-      <div class="mode-only-academic">
-        <h3>Part B — The fear channel takes over &nbsp;<span class="muted">(\(\mu = 0.85\), seed \(A(0) = \{1\}\))</span></h3>
-        <p>
-          Now change two knobs: the initial shock is a <strong>single bank</strong>,
-          \(A(0) = \{1\}\), and mean fear is \(\mu = 0.85\). With Janson alone
-          (\(\mu = 0\)), a single seed <em>cannot</em> cascade — node 1's three
-          neighbors each collect only one mark and never reach \(r = 2\), so the
-          cascade halts at \(S(0) = \emptyset\). Here the fear channel takes over:
-          the panic from one failure sparks two more banks by fear, whose marks then
-          push another bank over the solvency threshold, and so on until the
-          <strong>entire system collapses</strong> (\(|A^*|/n = 1.0\)) from a single seed.
-        </p>
-        <p class="muted" style="font-size:0.88rem">
-          Individual fear values \(f_i\) are pre-drawn from
-          \(\mathrm{Beta}(\mu\kappa,\,(1{-}\mu)\kappa)\) with \(\mu = 0.85\),
-          \(\kappa = 20\) and shown in the table. Bernoulli outcomes are fixed so
-          the example is reproducible.
-        </p>
-      </div>
-
-      <div class="mode-only-layperson">
-        <h3>Part B — The Rumor &amp; Panic Effect <span class="muted">(With Public Panic)</span></h3>
-        <p>
-          Here, we turn public panic back on with a high anxiety level (\(\mu = 0.85\)) and start with a single failure (Bank 1).
-          Under the domino effect alone, a single failure cannot spread because no bank has 2 or more failed partners.
-          However, public panic triggers the collapse of Banks 2 and 6, whose failure then dominoes through the network, ultimately causing a total meltdown.
-        </p>
-      </div>
-
-      <div class="node-states mode-only-academic">
-        <span class="ns ns-solvent">solvent</span>
-        <span class="ns ns-seed">seed (initial shock)</span>
-        <span class="ns ns-solvency">failed — solvency</span>
-        <span class="ns ns-fear">failed — fear</span>
-        <span class="ns ns-processing">processing now</span>
-      </div>
-      <div class="node-states mode-only-layperson">
-        <span class="ns ns-solvent">healthy</span>
-        <span class="ns ns-seed">initial failure (shock)</span>
-        <span class="ns ns-solvency">collapsed — domino effect</span>
-        <span class="ns ns-fear">collapsed — public panic</span>
-        <span class="ns ns-processing">processing now</span>
-      </div>
-
-      <div class="wt-layout">
-        <div id="wt-b-network"></div>
-        <div class="wt-side">
-          <table class="wt-node-table" id="wt-b-node-table"></table>
-        </div>
-      </div>
-
-      <div class="wt-caption" id="wt-b-caption"></div>
-
-      <div class="wt-controls">
-        <button id="wt-b-prev">&#8592; Prev</button>
-        <button id="wt-b-next">Next &#8594;</button>
-        <button id="wt-b-play">&#9654; Play</button>
-        <button id="wt-b-reset">&#8635; Reset</button>
-        <span class="wt-counter" id="wt-b-counter"></span>
-      </div>
-
-      <div class="wt-steptable-wrap mode-only-academic">
-        <table class="wt-step-table" id="wt-b-step-table"></table>
       </div>
     </section>
 
@@ -483,7 +399,7 @@
                   id="stat-systemic">&mdash;</span></div>
             </div>
             <div class="thermo-wrap"
-              title="Global panic field g_t = a_{t-1}/n — fraction that failed last round. Fear is a SUBCRITICAL amplifier (R_fear ≈ μ < 1): this spikes then decays, it cannot self-ignite.">
+              title="Global panic field g_t = a_{t-1}/n — fraction that failed last round. Fear is a SUBCRITICAL amplifier (R_fear ≈ μ &lt; 1): this spikes then decays, it cannot self-ignite.">
               <div class="thermo-label">panic field g<sub>t</sub> = a<sub>t&minus;1</sub>/n
                 <span class="v" id="stat-g">0.000</span>
               </div>

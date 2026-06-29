@@ -1,6 +1,10 @@
 # Two-Channel Cascade Model of Bank Failure
 
+[![Interactive Demo](https://img.shields.io/badge/Interactive%20Demo-Live%20on%20GitHub%20Pages-blue?style=for-the-badge)](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/)
+
 This repository houses the simulation environment and analytical tools for **A Two-Channel Cascade Model of Bank Failure**. The project investigates the propagation of systemic failures on financial networks by coupling a local threshold rule (solvency failure) with a self-reinforcing global feedback field (panic/fear channel).
+
+👉 **[Try the Interactive Visualizer & Guided Tutorial here!](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/)**
 
 ---
 

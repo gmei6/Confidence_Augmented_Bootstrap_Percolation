@@ -4,8 +4,8 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-28 — Session 30 (interactive teaching website built; live-only)
-- **File version:** v1.11
+- **Last updated:** 2026-06-29 — Session 31 (viz/ Part A/B walkthroughs; GitHub Pages live)
+- **File version:** v1.12
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
 ---
@@ -425,6 +425,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 2. Assemble the advisor packet for the **2026-07-01 2:00pm** meeting (Week 5 overlays, Janson scaling validation, Task B robustness figures, and the new joint-decoupling result); share with Prof. Dhara shortly before it. *(The new `viz/` teaching website can serve as an interactive companion — enable GitHub Pages and do a visual check first.)*
 3. Prepare to discuss Q2 (configuration-model stretch), Q3 (critical-window width exponent $\nu$), and request PACE access, at the meeting.
 4. Proceed with the remaining queued tasks (`docs/antigravity_queue/` A/C/D) and the Wk 6–7 finite-size $\nu$ analysis (preliminary, pending advisor alignment).
+5. **Debug and promote visualizer's Non-Technical Mode:** A local sandbox folder `test-temp-viz` exists where CDN-based Technical / Non-Technical modes have been drafted. Once the active-button toggle state styling is resolved in Google AI Studio, merge/copy the fixed code back into the main `viz/` directory and deploy to GitHub Pages.
 
 ---
 

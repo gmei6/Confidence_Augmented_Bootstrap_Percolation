@@ -1,35 +1,23 @@
-/* tutorial.js — renders GUIDED WALKTHROUGH instances (section 3).
+/* tutorial.js — renders the GUIDED WALKTHROUGH (section 3).
  * Drives a fixed-layout vis-network graph + the Node/Marks/Gen table + the
- * t/u_t/k/T_k/Z/A/g/S/F step table, frame by frame, for each walkthrough.
- *
- * initWalkthrough(cfg, prefix) creates one self-contained widget whose DOM
- * element IDs all start with `prefix` (e.g. "wt-" for Part A, "wt-b-" for
- * Part B).  Call it once per walkthrough after the page loads.
- */
+ * t/u_t/k(t)/T_{k(t)}/Z(t)/A(t)/g_{k(t)}/S(k)/F(k) step table, frame by frame,
+ * over the trace produced by walkthrough.js. Plain <script>; relies on window.Walkthrough and global `vis`. */
 
 "use strict";
 
-function initWalkthrough(cfg, prefix) {
+(function () {
   if (typeof window.Walkthrough === "undefined") return;
-  const host = document.getElementById(prefix + "network");
+  const host = document.getElementById("wt-network");
   if (!host) return;
   if (typeof vis === "undefined" || !vis.Network) {
     host.innerHTML =
-      '<div style="padding:20px;color:#f59e0b">Graph library failed to load.</div>';
+      '<div style="padding:20px;color:#b5640f">Graph library failed to load.</div>';
     return;
   }
 
-  const { buildWalkthrough } = window.Walkthrough;
-  let wt;
-  try {
-    wt = buildWalkthrough(cfg);
-  } catch (e) {
-    const capEl = document.getElementById(prefix + "caption");
-    if (capEl) capEl.textContent = "buildWalkthrough error: " + e.message + " — " + e.stack;
-    return;
-  }
+  const { buildWalkthrough, WT_EXAMPLE } = window.Walkthrough;
+  const wt = buildWalkthrough();
   const frames = wt.frames;
-  const hasFear = wt.hasFear;
 
   // channel fill colors (match cascade.js / the sandbox legend)
   const FILL = {
@@ -42,9 +30,9 @@ function initWalkthrough(cfg, prefix) {
   // ---- fixed node layout from the deck (normalized 0..1, y-down) ----
   const SCALE = 230;
   const nodesDS = new vis.DataSet(
-    Object.keys(cfg.pos).map((idStr) => {
+    Object.keys(WT_EXAMPLE.pos).map((idStr) => {
       const id = parseInt(idStr, 10);
-      const [px, py] = cfg.pos[id];
+      const [px, py] = WT_EXAMPLE.pos[id];
       return {
         id, label: String(id),
         x: (px - 0.5) * 2 * SCALE, y: (py - 0.5) * 2 * SCALE,
@@ -72,14 +60,14 @@ function initWalkthrough(cfg, prefix) {
   network.fit({ animation: false });
 
   // ---- DOM ----
-  const elCaption   = document.getElementById(prefix + "caption");
-  const elCounter   = document.getElementById(prefix + "counter");
-  const elNodeTable = document.getElementById(prefix + "node-table");
-  const elStepTable = document.getElementById(prefix + "step-table");
-  const btnPrev     = document.getElementById(prefix + "prev");
-  const btnNext     = document.getElementById(prefix + "next");
-  const btnPlay     = document.getElementById(prefix + "play");
-  const btnReset    = document.getElementById(prefix + "reset");
+  const elCaption = document.getElementById("wt-caption");
+  const elCounter = document.getElementById("wt-counter");
+  const elNodeTable = document.getElementById("wt-node-table");
+  const elStepTable = document.getElementById("wt-step-table");
+  const btnPrev = document.getElementById("wt-prev");
+  const btnNext = document.getElementById("wt-next");
+  const btnPlay = document.getElementById("wt-play");
+  const btnReset = document.getElementById("wt-reset");
 
   let idx = 0;
   let timer = null;
@@ -87,33 +75,18 @@ function initWalkthrough(cfg, prefix) {
 
   function renderNodeTable(frame) {
     const isLayperson = document.body.classList.contains("layperson-mode");
-    let html = "";
-    if (isLayperson) {
-      html = "<tr><th>Bank</th><th>Warning Marks</th><th>Collapsed?</th><th>Generation</th></tr>";
-    } else {
-      html = hasFear
-        ? "<tr><th>Node</th><th>f<sub>i</sub></th><th>Marks</th><th>Active?</th><th>Gen</th></tr>"
-        : "<tr><th>Node</th><th>Marks</th><th>Active?</th><th>Gen</th></tr>";
-    }
-
+    const headers = isLayperson
+      ? "<tr><th>Bank</th><th>Warning Marks</th><th>Collapsed?</th><th>Generation</th></tr>"
+      : "<tr><th>Node</th><th>Marks</th><th>Active?</th><th>Gen</th></tr>";
+    let html = headers;
     for (const r of frame.table) {
       const marks = r.marks === null ? dash : r.marks;
       const act = r.active
         ? `<span class="yes">${isLayperson ? "YES" : check}</span>`
         : `<span class="no">${isLayperson ? "NO" : cross}</span>`;
-      const genVal = r.gen === null ? dash : r.gen;
+      const gen = r.gen === null ? dash : r.gen;
       const hi = frame.hi.processing === r.node ? ' class="row-proc"' : "";
-
-      if (isLayperson) {
-        html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
-      } else {
-        if (hasFear) {
-          const fi = r.fi === null || r.fi === undefined ? dash : r.fi.toFixed(2);
-          html += `<tr${hi}><td>${r.node}</td><td>${fi}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
-        } else {
-          html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
-        }
-      }
+      html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${gen}</td></tr>`;
     }
     elNodeTable.innerHTML = html;
   }
@@ -139,8 +112,8 @@ function initWalkthrough(cfg, prefix) {
       const isProc = frame.hi.processing === r.node;
       let border = "#10b981";
       let borderWidth = 2;
-      if (r.active && r.used)  { border = "#94a3b8"; borderWidth = 3; }
-      else if (r.active && !r.used) { border = "#ef4444"; borderWidth = 3; }
+      if (r.active && r.used) { border = "#94a3b8"; borderWidth = 3; } // active+used: solid dark
+      else if (r.active && !r.used) { border = "#ef4444"; borderWidth = 3; } // active+unused: red ring
       if (isProc) { border = PROCESSING_RING; borderWidth = 6; }
       return {
         id: r.node,
@@ -151,9 +124,8 @@ function initWalkthrough(cfg, prefix) {
     });
     nodesDS.update(nodeUpd);
 
-    const marked = new Set(
-      frame.hi.newMarks.map((e) => `${Math.min(e[0], e[1])}-${Math.max(e[0], e[1])}`)
-    );
+    // edges: highlight the marks just added this frame
+    const marked = new Set(frame.hi.newMarks.map((e) => `${Math.min(e[0], e[1])}-${Math.max(e[0], e[1])}`));
     edgesDS.update(
       wt.edges.map(([a, b], k) => {
         const key = `${Math.min(a, b)}-${Math.max(a, b)}`;
@@ -168,7 +140,7 @@ function initWalkthrough(cfg, prefix) {
     renderGraph(frame);
     renderNodeTable(frame);
     renderStepTable(idx);
-    
+
     const isLayperson = document.body.classList.contains("layperson-mode");
     const caption = isLayperson && frame.caption_layperson ? frame.caption_layperson : frame.caption;
 
@@ -204,19 +176,10 @@ function initWalkthrough(cfg, prefix) {
   btnReset.addEventListener("click", () => { stop(); go(0); });
   btnPlay.addEventListener("click", () => (timer ? stop() : play()));
 
+  // Listen for the custom modechange event to trigger a re-render
   window.addEventListener("modechange", () => {
     render();
   });
 
-  try {
-    go(0);
-  } catch (e) {
-    if (elCaption) elCaption.textContent = "render error: " + e.message;
-  }
-}
-
-// Initialize both walkthroughs once the script loads
-if (typeof window !== "undefined" && window.Walkthrough) {
-  initWalkthrough(window.Walkthrough.WT_EXAMPLE, "wt-");
-  initWalkthrough(window.Walkthrough.WT_PART_B, "wt-b-");
-}
+  go(0);
+})();

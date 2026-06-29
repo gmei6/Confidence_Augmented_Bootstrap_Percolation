@@ -3,106 +3,274 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Two-Channel Cascade — interactive demo</title>
+  <title>Two-Channel Cascade — interactive tutorial</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- vis-network vendored locally (no CDN / no build step) so the demo works
-       offline, from file://, and on GitHub Pages without external requests -->
+
+  <!-- MathJax (vendored, single self-contained tex-svg build — no external fonts) -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]] },
+      svg: { fontCache: "global" },
+    };
+  </script>
+  <script src="vendor/tex-svg.js" id="MathJax-script" async></script>
+
+  <!-- graph library (vendored, no CDN) -->
   <script src="vendor/vis-network.min.js"></script>
 </head>
 <body>
   <header>
     <h1>A Two-Channel Cascade of Bank Failure</h1>
     <p class="subtitle">
-      Bootstrap percolation (solvency) + a self-reinforcing global panic field (fear),
-      on an Erd&#337;s&#8211;R&#233;nyi graph <em>G(n,&nbsp;p)</em>.
+      Bootstrap percolation (solvency) coupled with a self-referential global panic
+      field (fear), on an Erd&#337;s&#8211;R&#233;nyi graph <em>G(n,&nbsp;p)</em>.
     </p>
     <div class="banner">
-      &#9888; <strong>Illustrative demo at small <em>n</em>.</strong> This is the
-      <em>mechanism</em>, not the asymptotic or validated regime. The live engine here is a
-      teaching reimplementation in JavaScript &mdash; <strong>not</strong> the validated C++/Python
-      engine used for results.
+      &#9888; <strong>Illustrative teaching demo.</strong> The engines on this page
+      are a JavaScript reimplementation for explaining the mechanism at small
+      <em>n</em>. They are <strong>not</strong> the validated C++/Python engine and
+      <strong>must not</strong> be cited as a result.
     </div>
+    <nav class="sectionnav">
+      <a href="#explainer">1 · The model</a>
+      <a href="#glossary">2 · The variables</a>
+      <a href="#walkthrough">3 · Guided walkthrough</a>
+      <a href="#sandbox">4 · Sandbox</a>
+    </nav>
   </header>
 
   <main>
-    <section class="graph-pane">
-      <div id="network"></div>
-      <div class="legend">
-        <span class="chip solvent">solvent</span>
-        <span class="chip seed">seed (initial shock)</span>
-        <span class="chip solvency">failed &mdash; solvency (&ge; r neighbors)</span>
-        <span class="chip fear">failed &mdash; fear (panic)</span>
+
+    <!-- ============================ 1. EXPLAINER ============================ -->
+    <section id="explainer" class="prose">
+      <h2>1 · The model: two ways a bank can fail</h2>
+      <p>
+        The interbank network is an Erd&#337;s&#8211;R&#233;nyi random graph
+        <span class="term" data-def="Erdős–Rényi graph: each pair of banks is connected independently with probability p.">\(G(n,p)\)</span>.
+        Each bank is either <strong>solvent</strong> or <strong>failed</strong>, and
+        failure is <strong>absorbing</strong> — once failed, always failed. A bank can
+        fail through either of two channels in a given round:
+      </p>
+
+      <div class="channels">
+        <div class="channel solvency-card">
+          <h3>Channel 1 — Solvency <span class="muted">(local, Janson)</span></h3>
+          <p>
+            A solvent bank fails once at least
+            <span class="term" data-def="Capital-buffer depth: how many failed neighbors a bank can absorb before failing. Tested at r ∈ {2,3,4}.">\(r\)</span>
+            of its neighbors have already failed:
+          </p>
+          <p class="eq">\[ \bigl|\{\, j \in N(i) : j \text{ failed} \,\}\bigr| \ge r \]</p>
+          <p>
+            This is the classic bootstrap-percolation rule. It is <em>super-linear</em>
+            near zero for \(r \ge 2\): a tiny shock does nothing until enough neighbors
+            pile up — which is why a <strong>macroscopic seed</strong> is needed to
+            ignite a cascade.
+          </p>
+        </div>
+
+        <div class="channel fear-card">
+          <h3>Channel 2 — Fear <span class="muted">(global, self-referential)</span></h3>
+          <p>
+            A global <strong>panic field</strong> equals the fraction of banks that
+            failed in the <em>previous</em> round:
+          </p>
+          <p class="eq">\[ g_t = \frac{a_{t-1}}{n} \]</p>
+          <p>
+            A still-solvent bank \(i\) then fails with probability
+            \(f_i \cdot g_t\), where \(f_i\) is its personal fear sensitivity.
+          </p>
+        </div>
+      </div>
+
+      <p class="keyfact">
+        <strong>Key fact.</strong> Fear is a <strong>subcritical amplifier</strong>:
+        its per-round reproduction number is \(R_{\text{fear}} \approx \mu < 1\). It
+        <em>cannot</em> ignite a cascade on its own — it only amplifies one the
+        solvency channel has already started. Watch \(g_t\) in the sandbox spike then
+        decay: that decay is this fact made visible.
+      </p>
+    </section>
+
+    <!-- ============================ 2. GLOSSARY ============================ -->
+    <section id="glossary" class="prose">
+      <h2>2 · The variables</h2>
+      <p>Every symbol used on this page, grouped by role.</p>
+
+      <h3>Network &amp; solvency channel</h3>
+      <table class="glossary">
+        <tr><th>Symbol</th><th>What it is</th></tr>
+        <tr><td>\(r\)</td><td>Capital-buffer depth — a bank fails if at least \(r\) of its neighbors have already failed; \(r \in \{2,3,4\}\) (tested).</td></tr>
+      </table>
+
+      <h3>Fear channel</h3>
+      <table class="glossary">
+        <tr><th>Symbol</th><th>What it is</th></tr>
+        <tr><td>\(\mu\)</td><td>Average individual fear across all banks; the main sweep axis, \(\mu \in [0,1]\).</td></tr>
+        <tr><td>\(\kappa\)</td><td>How tightly clustered individual fears are around \(\mu\) (Beta concentration parameter).</td></tr>
+        <tr><td>\(f_i\)</td><td>Each bank's personal fear sensitivity, drawn once at \(t=0\) from \(\mathrm{Beta}(\mu\kappa,\,(1-\mu)\kappa)\), so \(\mathbb{E}[f_i]=\mu\) exactly.</td></tr>
+        <tr><td>\(g_t\)</td><td>Global fear field at round \(t\): the fraction of banks that newly failed in the previous round, \(g_t = a_{t-1}/n\).</td></tr>
+        <tr><td>\(f_i\,g_t\)</td><td>Probability bank \(i\) fails through fear in round \(t\) — a Bernoulli draw with this probability.</td></tr>
+      </table>
+
+      <h3>State variables <span class="muted">(change each round)</span></h3>
+      <table class="glossary">
+        <tr><th>Symbol</th><th>What it is</th></tr>
+        <tr><td>\(A(t)\)</td><td>Cumulative number of failed banks after round \(t\).</td></tr>
+        <tr><td>\(a\)</td><td>Initial shock — how many banks start failed (seed size, at \(t=0\)).</td></tr>
+        <tr><td>\(a_t\)</td><td>New failures in round \(t\). Drives the next round's fear field via \(g_{t+1}=a_t/n\).</td></tr>
+        <tr><td>\(A^{*}\)</td><td>Final failed count when the cascade stops.</td></tr>
+        <tr><td>\(A^{*}/n\)</td><td>Final failed fraction — the key outcome variable.</td></tr>
+        <tr><td>\(S(t)\)</td><td>The set of nodes that failed in generation \(t\) due to solvency.</td></tr>
+        <tr><td>\(F(t)\)</td><td>The set of nodes that failed in generation \(t\) due to fear.</td></tr>
+        <tr><td>\(k(t)\)</td><td>The generation that "step" \(t\) belongs to.</td></tr>
+        <tr><td>\(T_{k(t)}\)</td><td>The step count at which the current generation ends.</td></tr>
+      </table>
+
+      <h3>Measurement</h3>
+      <table class="glossary">
+        <tr><th>Symbol</th><th>What it is</th></tr>
+        <tr><td>\(\theta\)</td><td>Systemic-event threshold: a run counts as "systemic" if \(A^{*}/n \ge \theta\); working value \(\theta = 0.5\).</td></tr>
+        <tr><td>\(P(\text{systemic})\)</td><td>Fraction of simulation runs that end as systemic events — the phase diagram's \(y\)-axis.</td></tr>
+      </table>
+
+      <h3>Analytical benchmarks <span class="muted">(no-fear baseline, \(\mu = 0\))</span></h3>
+      <table class="glossary">
+        <tr><th>Symbol</th><th>What it is</th></tr>
+        <tr><td>\(t_c\)</td><td>Intermediate scale used to compute \(a_c\): \(\; t_c = \bigl((r-1)!\,/\,np^{r}\bigr)^{1/(r-1)}\).</td></tr>
+        <tr><td>\(a_c\)</td><td>Janson critical seed size at \(\mu=0\): \(\; a_c = \tfrac{r-1}{r}\,t_c\).</td></tr>
+        <tr><td>\(a_c(\mu)\)</td><td>Conjectured scaling law: \(\; a_c(\mu) = (1-\mu)^{\,r/(r-1)}\,a_c(0)\). The threshold shifts left as \(\mu\) grows.</td></tr>
+      </table>
+    </section>
+
+    <!-- ========================= 3. GUIDED WALKTHROUGH ========================= -->
+    <section id="walkthrough" class="prose">
+      <h2>3 · Guided walkthrough</h2>
+      <p>
+        This reproduces the worked example from the research talk
+        (\(n=7\), seed \(A(0)=\{1,4\}\), \(r=2\), \(\mu=0\)), step by step. It uses the
+        <strong>FIFO / generation</strong> view of the cascade (the Janson
+        reformulation): instead of all banks updating at once, we pop one
+        <em>active</em> bank at a time, let it add a failed-neighbor <strong>mark</strong>
+        to each neighbor, and at each generation boundary resolve which banks crossed
+        the threshold \(r\).
+      </p>
+
+      <div class="node-states">
+        <span class="ns ns-inactive">inactive &amp; unused</span>
+        <span class="ns ns-active-unused">active &amp; unused (failed, in queue)</span>
+        <span class="ns ns-active-used">active &amp; used (processed)</span>
+        <span class="ns ns-processing">processing now</span>
+      </div>
+
+      <div class="wt-layout">
+        <div id="wt-network"></div>
+        <div class="wt-side">
+          <table class="wt-node-table" id="wt-node-table"></table>
+        </div>
+      </div>
+
+      <div class="wt-caption" id="wt-caption"></div>
+
+      <div class="wt-controls">
+        <button id="wt-prev">&#8592; Prev</button>
+        <button id="wt-next">Next &#8594;</button>
+        <button id="wt-play">&#9654; Play</button>
+        <button id="wt-reset">&#8635; Reset</button>
+        <span class="wt-counter" id="wt-counter"></span>
+      </div>
+
+      <div class="wt-steptable-wrap">
+        <table class="wt-step-table" id="wt-step-table"></table>
       </div>
     </section>
 
-    <section class="control-pane">
-      <div class="panel">
-        <h2>Live state</h2>
-        <div class="readout">
-          <div class="stat"><span class="k">round t</span><span class="v" id="stat-round">0</span></div>
-          <div class="stat"><span class="k">new failures a<sub>t</sub></span><span class="v" id="stat-at">0</span></div>
-          <div class="stat"><span class="k">failed fraction A(t)/n</span><span class="v" id="stat-frac">0.000</span></div>
-          <div class="stat"><span class="k">systemic? (&ge; &theta;=0.5)</span><span class="v" id="stat-systemic">&mdash;</span></div>
-        </div>
-        <div class="thermo-wrap" title="Global panic field g_t = a_{t-1}/n — fraction that failed last round. Fear is a SUBCRITICAL amplifier (R_fear ≈ μ < 1): this spikes then decays, it cannot self-ignite.">
-          <div class="thermo-label">panic field g<sub>t</sub> = a<sub>t&minus;1</sub>/n
-            <span class="v" id="stat-g">0.000</span></div>
-          <div class="thermo-bar"><div class="thermo-fill" id="thermo-fill"></div></div>
-        </div>
-      </div>
+    <!-- ============================ 4. SANDBOX ============================ -->
+    <section id="sandbox" class="prose">
+      <h2>4 · Sandbox — now try it yourself</h2>
+      <p>
+        The walkthrough fixed every knob. Here they are all live, at larger \(n\) and
+        with fear switched on. Drag a slider to re-run; colors mark how each bank
+        failed.
+      </p>
 
-      <div class="panel">
-        <h2>Playback</h2>
-        <div class="buttons">
-          <button id="btn-play">&#9654; Play</button>
-          <button id="btn-step">Step &#8594;</button>
-          <button id="btn-reset">&#8635; Reset</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Parameters</h2>
-
-        <div class="slider" title="Capital-buffer depth. A solvent bank fails once at least r of its neighbors have failed. r ≥ 2 (the model regime); larger r = sturdier banks.">
-          <label>r &mdash; solvency threshold <span class="val" id="val-r">3</span></label>
-          <input type="range" id="in-r" min="2" max="4" step="1" value="3" />
+      <div class="sandbox-layout">
+        <div class="graph-pane">
+          <div id="network"></div>
+          <div class="legend">
+            <span class="chip solvent">solvent</span>
+            <span class="chip seed">seed (initial shock)</span>
+            <span class="chip solvency">failed &mdash; solvency (&ge; r neighbors)</span>
+            <span class="chip fear">failed &mdash; fear (panic)</span>
+          </div>
         </div>
 
-        <div class="slider" title="Mean individual fear E[f] = μ ∈ [0,1]. The single continuous sweep axis. μ=0 is the pure Janson baseline (fear off).">
-          <label>&mu; &mdash; mean fear <span class="val" id="val-mu">0.30</span></label>
-          <input type="range" id="in-mu" min="0" max="1" step="0.01" value="0.30" />
-        </div>
+        <div class="control-pane">
+          <div class="panel">
+            <h3>Live state</h3>
+            <div class="readout">
+              <div class="stat"><span class="k">round t</span><span class="v" id="stat-round">0</span></div>
+              <div class="stat"><span class="k">new failures a<sub>t</sub></span><span class="v" id="stat-at">0</span></div>
+              <div class="stat"><span class="k">failed fraction A(t)/n</span><span class="v" id="stat-frac">0.000</span></div>
+              <div class="stat"><span class="k">systemic? (&ge; &theta;=0.5)</span><span class="v" id="stat-systemic">&mdash;</span></div>
+            </div>
+            <div class="thermo-wrap" title="Global panic field g_t = a_{t-1}/n — fraction that failed last round. Fear is a SUBCRITICAL amplifier (R_fear ≈ μ < 1): this spikes then decays, it cannot self-ignite.">
+              <div class="thermo-label">panic field g<sub>t</sub> = a<sub>t&minus;1</sub>/n
+                <span class="v" id="stat-g">0.000</span></div>
+              <div class="thermo-bar"><div class="thermo-fill" id="thermo-fill"></div></div>
+            </div>
+          </div>
 
-        <div class="slider" title="Fear heterogeneity via the Beta concentration κ. Large κ → all banks share fear ≈ μ; small κ → some near-immune, some near-certain. Affects variance only (2nd order).">
-          <label>&kappa; &mdash; fear concentration <span class="val" id="val-kappa">10</span></label>
-          <input type="range" id="in-kappa" min="0.5" max="200" step="0.5" value="10" />
-        </div>
+          <div class="panel">
+            <h3>Playback</h3>
+            <div class="buttons">
+              <button id="btn-play">&#9654; Play</button>
+              <button id="btn-step">Step &#8594;</button>
+              <button id="btn-reset">&#8635; Reset</button>
+            </div>
+          </div>
 
-        <div class="slider" title="Seed size a — number of banks failed at t=0 (the initial shock). The cascade needs a macroscopic seed to cross the threshold; fear cannot ignite on its own.">
-          <label>a &mdash; seed size <span class="val" id="val-a">8</span></label>
-          <input type="range" id="in-a" min="1" max="30" step="1" value="8" />
-        </div>
-
-        <div class="slider" title="Edge probability p — interbank connectivity of G(n,p). Higher p = denser network = easier solvency contagion.">
-          <label>p &mdash; edge probability <span class="val" id="val-p">0.060</span></label>
-          <input type="range" id="in-p" min="0.01" max="0.30" step="0.005" value="0.06" />
-        </div>
-
-        <div class="slider" title="n — number of banks. Kept small here so individual banks are visible; the research regime is n ≥ 1000.">
-          <label>n &mdash; number of banks <span class="val" id="val-n">100</span></label>
-          <input type="range" id="in-n" min="30" max="150" step="10" value="100" />
-        </div>
-
-        <div class="slider seed-row" title="RNG seed — fix it to reproduce the exact graph, fear draws, and cascade.">
-          <label>seed</label>
-          <input type="number" id="in-seed" value="12345" min="0" step="1" />
-          <button id="btn-reroll" title="New random seed">&#127922;</button>
+          <div class="panel">
+            <h3>Parameters</h3>
+            <div class="slider" title="Capital-buffer depth. A solvent bank fails once at least r of its neighbors have failed. r ≥ 2; larger r = sturdier banks.">
+              <label>r &mdash; solvency threshold <span class="val" id="val-r">3</span></label>
+              <input type="range" id="in-r" min="2" max="4" step="1" value="3" />
+            </div>
+            <div class="slider" title="Mean individual fear E[f] = μ ∈ [0,1]. μ=0 is the pure Janson baseline (fear off).">
+              <label>&mu; &mdash; mean fear <span class="val" id="val-mu">0.30</span></label>
+              <input type="range" id="in-mu" min="0" max="1" step="0.01" value="0.30" />
+            </div>
+            <div class="slider" title="Fear heterogeneity via the Beta concentration κ. Large κ → all banks share fear ≈ μ; small κ → some near-immune. Affects variance only.">
+              <label>&kappa; &mdash; fear concentration <span class="val" id="val-kappa">10</span></label>
+              <input type="range" id="in-kappa" min="0.5" max="200" step="0.5" value="10" />
+            </div>
+            <div class="slider" title="Seed size a — banks failed at t=0 (the initial shock). The cascade needs a macroscopic seed; fear cannot ignite on its own.">
+              <label>a &mdash; seed size <span class="val" id="val-a">8</span></label>
+              <input type="range" id="in-a" min="1" max="30" step="1" value="8" />
+            </div>
+            <div class="slider" title="Edge probability p — interbank connectivity. Higher p = denser network = easier solvency contagion.">
+              <label>p &mdash; edge probability <span class="val" id="val-p">0.060</span></label>
+              <input type="range" id="in-p" min="0.01" max="0.30" step="0.005" value="0.06" />
+            </div>
+            <div class="slider" title="n — number of banks. Kept small here so individual banks are visible; the research regime is n ≥ 1000.">
+              <label>n &mdash; number of banks <span class="val" id="val-n">100</span></label>
+              <input type="range" id="in-n" min="30" max="150" step="10" value="100" />
+            </div>
+            <div class="slider seed-row" title="RNG seed — fix it to reproduce the exact graph, fear draws, and cascade.">
+              <label>seed</label>
+              <input type="number" id="in-seed" value="12345" min="0" step="1" />
+              <button id="btn-reroll" title="New random seed">&#127922;</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
   </main>
 
   <script src="cascade.js"></script>
+  <script src="walkthrough.js"></script>
+  <script src="tutorial.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,11 +1,24 @@
-# Interactive demo — Two-Channel Cascade
+# Interactive tutorial — Two-Channel Cascade
 
-An in-browser, **illustrative** visualization of the two-channel cascade model:
+An in-browser, **illustrative** tutorial for the two-channel cascade model:
 bootstrap percolation (the *solvency* channel) plus a self-reinforcing global
 *fear* field, on an Erdős–Rényi graph $G(n,p)$.
 
-It animates a cascade round-by-round at small $n$ so you can see individual banks
-fail and tell the two channels apart by color:
+It is a single scroll page with four sections (mirroring the research talk):
+
+1. **The model** — prose + diagrams of the two failure channels.
+2. **The variables** — a MathJax-rendered glossary of every symbol, with
+   hover-to-define terms.
+3. **Guided walkthrough** — a step-by-step replay of the talk's worked example
+   ($n=7$, seed $\{1,4\}$, $r=2$, $\mu=0$) using the Janson FIFO / generation view,
+   with the live `Node/Marks/Active?/Gen` table and the
+   `t/u_t/k/T_k/Z/A/g/S/F` step table. The 7-node graph and its layout are
+   extracted from the slide deck, so it matches the slides node-for-node.
+4. **Sandbox** — the original live demo: all knobs ($r,\mu,\kappa,a,p,n$),
+   round-by-round animation at larger $n$ with fear on.
+
+The sandbox (section 4) animates a cascade round-by-round at small $n$ so you can
+see individual banks fail and tell the two channels apart by color:
 
 | color | meaning |
 |---|---|
@@ -55,8 +68,15 @@ Online — GitHub Pages publishes this folder via
 the page works offline and from `file://` too.
 
 ## Files
-- `index.html` — layout, sliders (with tooltips), legend, live panel.
-- `cascade.js` — seeded RNG, Beta sampler, the §3.4 cascade engine, trace output.
-- `app.js` — wires the engine to vis-network and the playback controls.
+- `index.html` — the four-section tutorial page.
+- `cascade.js` — seeded RNG, Beta sampler, the §3.4 cascade engine (sandbox).
+- `walkthrough.js` — the FIFO step-trace engine for the guided example; emits
+  captioned sub-step frames + the Node/Marks/Gen and step-table state. The fixed
+  7-node graph, edges, and layout come from the slide deck.
+- `tutorial.js` — renders the guided walkthrough (fixed-layout graph + tables +
+  frame navigation).
+- `app.js` — wires the sandbox engine to vis-network and the playback controls.
 - `style.css` — styling.
 - `vendor/vis-network.min.js` — vendored graph library (vis-network 9.1.9, no CDN).
+- `vendor/tex-svg.js` — vendored MathJax (single self-contained tex-svg build, no
+  external fonts) for rendering the glossary equations.

@@ -255,6 +255,10 @@ table.glossary tr:nth-child(even) td:not(:first-child) {
 .ns-active-unused::before { background: #78350f; border: 1.5px solid #ef4444; }
 .ns-active-used::before { background: #78350f; border: 1.5px solid #94a3b8; }
 .ns-processing::before { background: #78350f; border: 2px solid var(--accent); }
+.ns-solvent::before { background: #064e3b; border: 1.5px solid #10b981; }
+.ns-seed::before { background: #475569; border: 1.5px solid #94a3b8; }
+.ns-solvency::before { background: #78350f; border: 1.5px solid var(--accent); }
+.ns-fear::before { background: #7f1d1d; border: 1.5px solid var(--c-fear); }
 
 .wt-layout {
   display: flex; gap: 24px; flex-wrap: wrap; align-items: stretch; margin: 16px 0;
@@ -293,6 +297,7 @@ table.wt-node-table tr.row-proc td {
 }
 .wt-node-table .yes { color: #10b981; font-weight: 700; }
 .wt-node-table .no { color: #ef4444; }
+.wt-node-table td.fear-fail { color: var(--c-fear); font-weight: 700; }
 
 .wt-caption {
   background: rgba(30, 41, 59, 0.3);

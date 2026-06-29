@@ -87,13 +87,16 @@ function initWalkthrough(cfg, prefix) {
 
   function renderNodeTable(frame) {
     const isLayperson = document.body.classList.contains("layperson-mode");
+    const showU = !isLayperson && hasFear && !!frame.bernoulliDraws;
     let html = "";
     if (isLayperson) {
       html = "<tr><th>Bank</th><th>Warning Marks</th><th>Collapsed?</th><th>Generation</th></tr>";
+    } else if (hasFear) {
+      html = showU
+        ? "<tr><th>Node</th><th>f<sub>i</sub></th><th>U<sub>i</sub></th><th>f<sub>i</sub>&thinsp;&middot;&thinsp;g</th><th>Marks</th><th>Active?</th><th>Gen</th></tr>"
+        : "<tr><th>Node</th><th>f<sub>i</sub></th><th>Marks</th><th>Active?</th><th>Gen</th></tr>";
     } else {
-      html = hasFear
-        ? "<tr><th>Node</th><th>f<sub>i</sub></th><th>Marks</th><th>Active?</th><th>Gen</th></tr>"
-        : "<tr><th>Node</th><th>Marks</th><th>Active?</th><th>Gen</th></tr>";
+      html = "<tr><th>Node</th><th>Marks</th><th>Active?</th><th>Gen</th></tr>";
     }
 
     for (const r of frame.table) {
@@ -106,13 +109,22 @@ function initWalkthrough(cfg, prefix) {
 
       if (isLayperson) {
         html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
-      } else {
-        if (hasFear) {
-          const fi = r.fi === null || r.fi === undefined ? dash : r.fi.toFixed(2);
-          html += `<tr${hi}><td>${r.node}</td><td>${fi}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
+      } else if (hasFear) {
+        const fi = r.fi === null || r.fi === undefined ? dash : r.fi.toFixed(2);
+        if (showU) {
+          const uVal = frame.bernoulliDraws[r.node] !== undefined
+            ? frame.bernoulliDraws[r.node].toFixed(3) : dash;
+          const pVal = frame.fearProbs && frame.fearProbs[r.node] !== undefined
+            ? frame.fearProbs[r.node].toFixed(3) : dash;
+          const fearFail = frame.hi.fear.includes(r.node);
+          const uCell  = fearFail ? `<td class="fear-fail">${uVal}</td>` : `<td>${uVal}</td>`;
+          const pCell  = fearFail ? `<td class="fear-fail">${pVal}</td>` : `<td>${pVal}</td>`;
+          html += `<tr${hi}><td>${r.node}</td><td>${fi}</td>${uCell}${pCell}<td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
         } else {
-          html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
+          html += `<tr${hi}><td>${r.node}</td><td>${fi}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
         }
+      } else {
+        html += `<tr${hi}><td>${r.node}</td><td>${marks}</td><td>${act}</td><td>${genVal}</td></tr>`;
       }
     }
     elNodeTable.innerHTML = html;

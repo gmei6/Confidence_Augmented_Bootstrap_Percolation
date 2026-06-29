@@ -52,6 +52,12 @@ const WT_PART_B = {
   kappa: 20,
   fearValues: { 2: 0.90, 3: 0.80, 4: 0.85, 5: 0.88, 6: 0.92, 7: 0.83 },
   fearOutcomes: { 0: [2, 6], 1: [3] }, // missing keys → []
+  // U_i ~ Uniform(0,1) pre-drawn per solvent node per generation.
+  // Node i fails if U_i < f_i * g_{k+1}.
+  fearBernoulli: {
+    0: { 2: 0.08, 3: 0.62, 4: 0.44, 5: 0.71, 6: 0.09, 7: 0.55 },
+    1: { 3: 0.14, 4: 0.56, 7: 0.51 },
+  },
   pos: {
     1: [0.733, 0.487], 2: [0.251, 0.046], 3: [0.606, 1.000], 4: [0.216, 1.000],
     5: [0.000, 0.394], 6: [0.618, 0.000], 7: [1.000, 0.440],
@@ -76,8 +82,9 @@ function emptyOr(arr) { return arr.length ? setStr(arr) : "∅"; }
 function buildWalkthrough(cfg) {
   cfg = cfg || WT_EXAMPLE;
   const { n, edges, seed, r, mu } = cfg;
-  const fearValues = cfg.fearValues || null;    // { nodeId: fi, ... }
-  const fearOutcomes = cfg.fearOutcomes || null; // { genK: [nodeIds], ... }
+  const fearValues = cfg.fearValues || null;      // { nodeId: fi, ... }
+  const fearOutcomes = cfg.fearOutcomes || null;  // { genK: [nodeIds], ... }
+  const fearBernoulli = cfg.fearBernoulli || null; // { genK: { nodeId: U_i }, ... }
   const kappa = cfg.kappa || null;
 
   const adj = Array.from({ length: n + 1 }, () => []);
@@ -228,19 +235,36 @@ function buildWalkthrough(cfg) {
     if (lastRow) lastRow.F = emptyOr(Fk);
 
     // Build fear caption
+    const bDraws = fearBernoulli ? (fearBernoulli[k] || null) : null;
+    // f_i * g for each solvent node — shown in the table on fear frames
+    const fearProbs = {};
+    if (fearValues) {
+      for (const i of solventBeforeFear) {
+        fearProbs[i] = (fearValues[i] !== undefined ? fearValues[i] : 0) * g;
+      }
+    }
     let fearCaption;
     if (mu > 0 && fearValues && solventBeforeFear.length > 0) {
-      // Detailed per-node probability breakdown
+      // Per-node breakdown: show U_i draw when available, else show probability
       const details = solventBeforeFear.map((i) => {
         const fi = fearValues[i] !== undefined ? fearValues[i] : 0;
-        const prob = (fi * g).toFixed(3);
+        const p = fi * g;
         const failed = Fk.includes(i);
-        return `node ${i}: ${fi.toFixed(2)}&thinsp;&times;&thinsp;${g.toFixed(3)} = ${prob} → ${failed ? "<strong>fails</strong>" : "survives"}`;
+        if (bDraws && bDraws[i] !== undefined) {
+          const u = bDraws[i];
+          const cmp = failed
+            ? `U<sub>${i}</sub>=<strong>${u.toFixed(3)}</strong> &lt; f<sub>${i}</sub>&thinsp;&middot;&thinsp;g&thinsp;=&thinsp;${p.toFixed(3)}`
+            : `U<sub>${i}</sub>=${u.toFixed(3)} &ge; f<sub>${i}</sub>&thinsp;&middot;&thinsp;g&thinsp;=&thinsp;${p.toFixed(3)}`;
+          return `node ${i}: ${cmp} &rarr; ${failed ? "<strong>fails</strong>" : "survives"}`;
+        }
+        return `node ${i}: ${fi.toFixed(2)}&thinsp;&times;&thinsp;${g.toFixed(3)}&thinsp;=&thinsp;${p.toFixed(3)} &rarr; ${failed ? "<strong>fails</strong>" : "survives"}`;
       }).join("; ");
+      const drawPhrase = bDraws
+        ? `Each still-solvent bank i draws U<sub>i</sub>&thinsp;~&thinsp;Uniform(0,1) and fails if U<sub>i</sub> &lt; f<sub>i</sub>&thinsp;&middot;&thinsp;g<sub>${k + 1}</sub>:`
+        : `Each still-solvent bank i draws Bernoulli(f<sub>i</sub>&thinsp;&times;&thinsp;g<sub>${k + 1}</sub>):`;
       fearCaption =
-        `Panic field g<sub>${k + 1}</sub> = a<sub>${k}</sub>/n = ${curGenNew}/${n} ≈ ${g.toFixed(3)}. ` +
-        `Each still-solvent bank i draws Bernoulli(f<sub>i</sub>&thinsp;&times;&thinsp;g<sub>${k + 1}</sub>): ` +
-        `${details}. F(${k}) = ${emptyOr(Fk)}.`;
+        `Panic field g<sub>${k + 1}</sub> = a<sub>${k}</sub>/n = ${curGenNew}/${n} &asymp; ${g.toFixed(3)}. ` +
+        `${drawPhrase} ${details}. F(${k}) = ${emptyOr(Fk)}.`;
     } else if (mu > 0 && fearValues && solventBeforeFear.length === 0) {
       fearCaption =
         `Panic field g<sub>${k + 1}</sub> = a<sub>${k}</sub>/n = ${curGenNew}/${n} ≈ ${g.toFixed(3)}. ` +
@@ -258,6 +282,8 @@ function buildWalkthrough(cfg) {
 
     frames.push({
       type: "fear", k,
+      bernoulliDraws: bDraws,                                        // { nodeId: U_i } for this gen, or null
+      fearProbs: Object.keys(fearProbs).length ? fearProbs : null,   // { nodeId: f_i*g } for this gen, or null
       caption: fearCaption,
       caption_layperson:
         `Check for crowd panic: ${curGenNew} out of ${n} banks failed last round, so the panic level ` +

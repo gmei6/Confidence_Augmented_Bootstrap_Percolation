@@ -186,3 +186,5 @@ function runCascade(params) {
 
 // expose for index.html (plain <script>, no module system)
 window.Cascade = { runCascade, CHANNEL };
+
+if (typeof module !== "undefined") module.exports = { runCascade, CHANNEL };

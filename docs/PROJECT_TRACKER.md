@@ -407,12 +407,12 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 - **Phase:** Week 5 (Overlay & Analysis) — MVP overlay + scaling-law validation complete;
   Task B (θ- and κ-robustness) merged. **First advisor meeting 2026-07-01 at 2:00pm.**
-- **Viz (S-030 + S-031):** Interactive teaching website live on GitHub Pages. Section 3
-  now has Part A (μ=0, seed={1,4} — Janson FIFO baseline, co-existence) and Part B
-  (μ=0.85, seed={1} — fear drives full systemic collapse |A*|/n=1.0 from a single seed,
-  with per-node Bernoulli probability captions and fᵢ column). Both walkthroughs render
-  correctly. Non-Technical Mode toggle drafted in `test-temp-viz/` but not yet merged
-  (button toggle CSS bug pending).
+- **Viz (S-031/S-032):** Interactive teaching website live on GitHub Pages and confirmed
+  up to date. Section 3 has Part A (μ=0, seed={1,4} — Janson FIFO baseline, co-existence)
+  and Part B (μ=0.85, seed={1} — fear drives full systemic collapse |A*|/n=1.0 from a
+  single seed, with per-node Bernoulli probability captions and fᵢ column). Both
+  walkthroughs render correctly. Non-Technical Mode toggle drafted in `test-temp-viz/`
+  but not yet merged (button toggle CSS bug pending).
 - **Advisor briefing packet:** not yet sent — deliberately held pending final polish before
   the 2026-07-01 meeting. Will include the viz site URL as an interactive companion.
 - **All prior validated results, code, and testing unchanged from S-029/S-030.**
@@ -509,6 +509,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-028 | 2026-06-25 | v1.11 | Drove two parallel Antigravity sessions on the row-8/row-14 joint-decoupling gap (companion_mapping.md). Analytical session: rejected a first draft's discrepancy-bound argument as unproven/false, redirected it to a sequential leave-out conditioning argument, independently re-verified the resulting exact conditional-i.i.d. proof (not just the auditor's reported PASS), and committed it (cff4432) — appended D-025. Empirical session: spun up in a separate Claude Code session via a handoff brief; sent back design feedback (stratify pairs to isolate fear-specific covariance from ambient solvency-channel correlation; flagged the proposed M=2000 trial count as underpowered for an O(1/n) effect and added a Var(A(t))-vs-binomial-benchmark statistic as the primary test for row 14) — result not yet in. Live updates to §8–§10; no frozen edits. | §8, §9, §10, §11, §12`
 - `S-029 | 2026-06-25 | v1.11 | Reviewed and finalized S-028 empirical pairwise-decoupling session. Caught oracle violation (reference.py modified as a side effect without prior approval per AGENTS.md §III); surfaced to Gary; Gary formally approved via D-026 (bounded §5.4 exemption for track_nodes/tracked_failure_rounds observational side-channel). Fixed four syntax errors in tests/test_pairwise_decoupling.py (literal newlines → \n). Applied D-026 tracker entry and docstring updates. Wrote walkthrough.md with verbatim sweep tables and honest verdict. Verification gate: AUDIT PASS (27 passed, 11 skipped). Empirical finding: variance ratio excess R(μ>0)−R(μ=0) does not clearly vanish within n∈{1000,…,8000}; pairwise covariances consistent with zero; Asymptotic Decoupling Conjecture remains open. Committed and merged to antigravity. Live updates to §8–§9–§10; D-026 appended to §11. | §8, §9, §10, §11, §12`
 - `S-030 | 2026-06-28 | v1.11 | Built an interactive teaching website (viz/) mirroring the research talk: a single static GitHub Pages scroll page — Explainer → Glossary (MathJax) → Guided Walkthrough → Sandbox. New FIFO step-trace engine (viz/walkthrough.js) replays the talk's exact worked example (n=7, seed {1,4}, r=2, μ=0; graph/edges/layout extracted from the deck's slide XML) with the live Node/Marks/Gen and t/u_t/k/T_k/Z/A/g/S/F tables; new viz/tutorial.js renderer; MathJax (tex-svg) and vis-network vendored (no CDN, works offline). Illustrative only (not the oracle; §5.4/§5.6 N/A); banner retained; corrects two deck slips on the site (Beta second param; mark counts). Live-only tracker update: §8 communication-artifact note, §10 advisor-packet note. No frozen edits, no new decisions. | §8, §10, §12`
+- `S-031 | 2026-06-29 | v1.12 | Expanded viz/ section 3 into Part A / Part B guided walkthroughs (D-027). Part B demonstrates fear enabling systemic collapse from a single seed. Files: viz/walkthrough.js (WT_PART_B, fear channel, fi in snapshot, hasFear return), viz/tutorial.js (refactored to initWalkthrough(cfg,prefix), try-catch retained as defensive code), viz/index.html (Part A/B h3 headings + wt-b-* widget), viz/style.css (#wt-b-network height, Part B channel-color legend). GitHub Pages confirmed live. Non-Technical Mode toggle pending (test-temp-viz/ draft, CSS bug open). | §8, §9, §10, §11, §12`
+- `S-032 | 2026-06-29 | v1.12 | Logistics-only session. Diagnosed that commit bff403d ("updated viz") deleted viz-temp/ and temp_zip/ but did not touch viz/, so the GitHub Actions path filter (viz/**) did not trigger a Pages redeploy. Resolved by adding a trailing newline to viz/README.md and pushing — confirmed GitHub Pages now reflects the Part A/B walkthroughs from S-031. No code, simulation, or frozen-section changes. | §8, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

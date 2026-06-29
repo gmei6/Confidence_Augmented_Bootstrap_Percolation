@@ -29,6 +29,7 @@ This file records codebase-specific gotchas, performance constraints, and modeli
 
 *   **Oracle Protection:** `src/twocascade/reference.py` is the unassailable oracle. Do not edit it as a side-effect of C++ work; any changes require a dedicated and approved plan.
 *   **Running Results:** Never write simulation outputs directly to `results/raw/` or `results/figures/`. They must always be written by a runner script that logs the seed, parameters, and commit hash.
+*   **GitHub Actions Path Filters and Cleanup Commits:** If a commit deletes or reorganizes temp directories (e.g. `viz-temp/`, `temp_zip/`) without touching files under the `viz/**` path filter, the Pages deploy workflow will not trigger — even if the commit message says "updated viz." When a deploy appears stale after a cleanup commit, add a trivial change (e.g. a trailing newline in `viz/README.md`) to a file inside the watched path and push to force a re-trigger.
 
 ## 4. Multi-agent Orchestration & CLI Tooling
 

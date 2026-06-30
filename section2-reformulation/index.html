@@ -97,10 +97,11 @@
             </div>
 
             <div class="purpose-box">
-              A mathematically rigorous, self-contained rewrite of Section 2 (&ldquo;A Useful Reformulation&rdquo;) from
-              Janson, &#321;uczak, Turova &amp; Vallier (2012) adapted to incorporate a second, global
-              &ldquo;fear&rdquo; failure channel. The page is for study and reference. It presents the two-channel model
-              as the primary object.
+              We adopt the model setup of the preceding section and extend the sequential edge-exposure
+              framework of Janson, &#321;uczak, Turova &amp; Vallier (2012, &sect;2) to accommodate the
+              global fear channel. All model parameters ($n$, $p$, $r$, $a$, $\mu$, $\kappa$) are as
+              defined there. This page serves as a study and reference document; it presents the
+              two-channel model as the primary object.
             </div>
 
             <!-- Key: Shown only in Annotation Mode -->
@@ -197,12 +198,15 @@
 
             <div class="math-block" data-status="modified">
               <p>
-                <strong>Recurrence ($k \geq 1$):</strong> For generation $k \geq 1$, let the size of the generation be
-                $a_k := T_k - T_{k-1}$ (where $T_{-1} = 0$). The queue of vertices processed in generation $k$ is
-                defined by:
-                $$\mathcal{G}_k := \{u_t : T_{k-1} < t \leq T_k\}$$ We also define a generation tracker function $k(t)$
-                  for any time step $t$ as the unique index satisfying: $$T_{k(t)-1} < t \leq T_{k(t)} \quad (\text{with
-                  } k(t)=0 \text{ for } t \leq T_0)$$ </p>
+                <strong>Recurrence ($k \geq 1$):</strong> For generation $k \geq 1$, let $a_k$ denote the
+                number of newly activated vertices in generation $k$. Define the cumulative boundary step:
+                $$T_k := \sum_{j=0}^{k} a_j = T_{k-1} + a_k, \quad T_{-1} := 0.$$
+                The queue of vertices processed in generation $k$ is then:
+                $$\mathcal{G}_k := \{u_t : T_{k-1} < t \leq T_k\}.$$
+                We also define a generation tracker function $k(t)$ for any time step $t$ as the unique
+                index satisfying:
+                $$T_{k(t)-1} < t \leq T_{k(t)} \quad (\text{with } k(t)=0 \text{ for } t \leq T_0).$$
+              </p>
             </div>
 
             <div class="math-block" data-status="tier1">

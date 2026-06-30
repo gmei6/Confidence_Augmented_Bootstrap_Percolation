@@ -9,6 +9,8 @@ This repository houses the simulation environment and analytical tools for **A T
 
 👉 **[Section 2 Reformulation Study Site](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/section2-reformulation/)** — the two-channel Janson §2 reformulation with proofs, annotation mode, and audience mode.
 
+> 📌 **TODO (reminder):** Run a full validation pass with **Opus** over `section2-reformulation/index.html` — check the $B_k$ reformulation (definitions, fear field, Sequential Bridge), the newly added derivation `<details>` blocks, and the SVG figures for mathematical correctness before the next Pages deploy.
+
 ---
 
 ## 📖 Theoretical Overview

@@ -51,9 +51,13 @@
 
 | ID | Title | Touches | New `src/`? | Risk |
 |----|-------|---------|-------------|------|
-| [A](task_A_finite_size_nu.md) | Finite-size transition-width exponent $\nu$ | §6 Wk 6–7; informs Q3 | yes (`analysis.py`, `plotting.py`) | med |
-| [C](task_C_targeted_seeding.md) | Random vs. targeted seeding (negative result) | §3.1, Wk 9 | none likely | low |
-| [D](task_D_window_invariance.md) | Memory-window $X$-invariance (D-006) | §3.6, Wk 9 | small | low |
+| [A](old-tasks/task_A_finite_size_nu.md) | Finite-size transition-width exponent ν | §6 Wk 6–7; informs Q3 | yes (`analysis.py`, `plotting.py`) | med |
+| [C](old-tasks/task_C_targeted_seeding.md) | Random vs. targeted seeding (negative result) | §3.1, Wk 9 | none likely | low |
+| [D](old-tasks/task_D_window_invariance.md) | Memory-window $X$-invariance (D-006) | §3.6, Wk 9 | small | low |
+| [E](task_E_fear_trajectory_concentration.md) | Fear-field trajectory concentration | §4.1 conj, §4.3 | yes (`analysis.py`) | low |
+| [F](task_F_counting_process_law_binomial_test.md) | Counting-process $S(t)$ law & binomial test | §4.3 rows 9 & 11 | yes (`analysis.py`) | low |
+| [G](task_G_scaling_law_extended_validation.md) | Scaling-law extended validation | §4.4 conj | small | low |
+| [H](task_H_geometric_clock_collapse_bias.md) | Geometric clock-collapse bias | §4.1 note | small | low |
 
-**Suggested order:** D → C → A (heaviest, most valuable). (Task B done — S-027.)
+**Suggested order for new tasks:** E → F → H → G.
 Each task is independent; do them in any order, one full `/research-cycle` each.

@@ -565,6 +565,29 @@ body.advisor-mode .audience-label .label-advisor {
   display: inline;
 }
 
+/* Simulation evidence link — appears on simulation-confirmed Tier 2 blocks */
+.evidence-link {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7c3aed;
+  text-decoration: none;
+  border: 1px solid #ddd6fe;
+  background: #faf5ff;
+  padding: 0.2em 0.6em;
+  border-radius: 3px;
+  margin-top: 0.6em;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.evidence-link:hover {
+  background: #7c3aed;
+  color: #fff;
+  border-color: #7c3aed;
+}
+
 /* Proof styling */
 details.proof-block {
   font-size: 0.95rem;
@@ -629,6 +652,15 @@ details.proof-block summary.proof-title::after {
 
 details.proof-block[open] summary.proof-title::after {
   content: " (click to close)";
+}
+
+/* "Show steps" variant for approximation derivations */
+details.proof-block.steps summary.proof-title::after {
+  content: " (click to show steps)";
+}
+
+details.proof-block.steps[open] summary.proof-title::after {
+  content: " (click to hide)";
 }
 
 .proof-qed {

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulation Evidence — TwoCascade §2 Conjectures</title>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'ams'
+      },
+      chtml: { scale: 0.95 }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .btn-back {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #cbd5e1;
+      text-decoration: none;
+      border: 1px solid #475569;
+      padding: 0.3em 0.8em;
+      border-radius: 4px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-back:hover {
+      color: #f8fafc;
+      border-color: #94a3b8;
+    }
+    /* Override main-content-inner width to accommodate figure grids */
+    .main-content-inner {
+      max-width: 1040px !important;
+    }
+    .conj-section {
+      margin-bottom: 4.5rem;
+    }
+    .conj-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .section-backlink {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7c3aed;
+      text-decoration: none;
+      border: 1px solid #ddd6fe;
+      background: #faf5ff;
+      padding: 0.2em 0.55em;
+      border-radius: 3px;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .section-backlink:hover {
+      background: #7c3aed;
+      color: #fff;
+    }
+    .conj-claim {
+      background: #faf5ff;
+      border-left: 3px solid #7c3aed;
+      padding: 0.85rem 1.1rem;
+      margin-bottom: 1.25rem;
+      font-style: normal;
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+    .figure-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0 0;
+    }
+    .figure-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .figure-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .figure-caption {
+      padding: 0.7rem 0.85rem;
+      font-family: var(--font-serif);
+      font-size: 0.82em;
+      color: #475569;
+      line-height: 1.5;
+      border-top: 1px solid #f1f5f9;
+    }
+    .figure-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.78em;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.2em;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sticky Control Bar -->
+  <div id="control-bar">
+    <div class="controls-left">
+      <div class="logo-circle"></div>
+      <span class="logo-title">TwoCascade // MEI</span>
+    </div>
+    <div class="controls-right">
+      <a href="index.html" class="btn-back">← §2 Reformulation</a>
+    </div>
+  </div>
+
+  <div class="app-wrapper">
+    <div class="page-container">
+      <main class="main-content">
+        <div class="main-content-inner">
+
+          <header class="doc-header">
+            <h1>Simulation Evidence</h1>
+            <div class="doc-metadata">
+              <span><strong>Companion to:</strong> Two-Channel Reformulation of Janson §2</span>
+              <span><strong>Author:</strong> Gary Mei (Georgia Tech ISyE)</span>
+              <span><strong>Date:</strong> 2026-06-30</span>
+            </div>
+            <div class="purpose-box">
+              Numerical evidence supporting the two Tier-2 conjectures in the
+              <a href="index.html">Section 2 Reformulation</a>.
+              Results are Monte Carlo averages over the TwoCascade reference engine;
+              raw outputs live in <code>results/figures/</code>.
+              Each section header links back to the relevant conjecture in the main document.
+            </div>
+          </header>
+
+          <!-- ============================================================
+               C1 — Asymptotic Decoupling Conjecture
+               ============================================================ -->
+          <section id="conj-decoupling" class="conj-section">
+            <h2 class="conj-heading">
+              C1 — Asymptotic Decoupling
+              <a href="index.html#sec4-1" class="section-backlink">↑ §4.1</a>
+            </h2>
+
+            <div class="conj-claim">
+              <strong>Conjecture:</strong> As $n \to \infty$, the generation sizes $(a_k)$ concentrate tightly
+              around their deterministic mean-field trajectory, making the global fear fields $g_j$
+              asymptotically deterministic. Simulation confirms phase-boundary invariance within $\pm 0.03$.
+            </div>
+
+            <p>
+              The phase-diagram overlays below compare the empirical $P(\text{systemic})$ surface under the
+              fear model at varying $\mu$ against the pure bootstrap-percolation ($\mu = 0$) boundary.
+              Smooth, predictable deformation of the phase boundary with $\mu$ is the fingerprint of
+              an asymptotically deterministic fear field — which is exactly what the decoupling
+              conjecture predicts.
+            </p>
+
+            <div class="figure-grid">
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_phase_diagram_overlay_r2.png"
+                     alt="Phase diagram overlay, r = 2"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C1a — Phase diagram, r = 2</span>
+                  $P(\text{systemic})$ heat-map with the $\mu = 0$ phase boundary overlaid.
+                  The boundary shift with $\mu$ is smooth and consistent with the mean-field saddle-node prediction.
+                </div>
+              </div>
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_phase_diagram_overlay_r3.png"
+                     alt="Phase diagram overlay, r = 3"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C1b — Phase diagram, r = 3</span>
+                  Same layout for threshold $r = 3$.
+                  Boundary invariance within $\pm 0.03$ holds across the parameter sweep.
+                </div>
+              </div>
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_phase_diagram_overlay_r4.png"
+                     alt="Phase diagram overlay, r = 4"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C1c — Phase diagram, r = 4</span>
+                  Same layout for threshold $r = 4$.
+                  Higher threshold narrows the transition window, sharpening the boundary.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+               C2 — Critical Seed Scaling Law
+               ============================================================ -->
+          <section id="conj-scaling" class="conj-section">
+            <h2 class="conj-heading">
+              C2 — Critical Seed Scaling Law
+              <a href="index.html#sec4-4" class="section-backlink">↑ §4.4</a>
+            </h2>
+
+            <div class="conj-claim">
+              <strong>Conjecture:</strong>
+              $a_c(\mu) = (1-\mu)^{r/(r-1)} \, a_c(0)$.
+              Validated numerically at $n \in \{1000, 2000, 4000\}$;
+              empirical ratios $a_c(\mu)/a_c(0)$ match the $(1-\mu)^{r/(r-1)}$ trend.
+            </div>
+
+            <p>
+              The scaling validation plots show the empirical critical seed size $a_c(\mu)$
+              — the threshold seed at which $P(\text{systemic}) = 0.5$ — as a function of $\mu$,
+              normalized by $a_c(0)$, for $n \in \{1000, 2000, 4000\}$.
+              Each panel overlays the mean-field prediction $(1-\mu)^{r/(r-1)}$.
+              The exponent values are $r/(r-1) = 2$ for $r=2$,
+              $\tfrac{3}{2}$ for $r=3$, and $\tfrac{4}{3}$ for $r=4$.
+            </p>
+
+            <div class="figure-grid">
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_scaling_validation_r2.png"
+                     alt="Scaling validation, r = 2"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C2a — Scaling validation, r = 2</span>
+                  Empirical $a_c(\mu)/a_c(0)$ vs $\mu$ for three system sizes,
+                  overlaid with $(1-\mu)^{2}$.
+                </div>
+              </div>
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_scaling_validation_r3.png"
+                     alt="Scaling validation, r = 3"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C2b — Scaling validation, r = 3</span>
+                  Prediction curve $(1-\mu)^{3/2}$.
+                  Finite-$n$ curves converge toward the mean-field line as $n$ grows.
+                </div>
+              </div>
+              <div class="figure-card">
+                <img src="../results/figures/wk3_4_scaling_validation_r4.png"
+                     alt="Scaling validation, r = 4"
+                     loading="lazy">
+                <div class="figure-caption">
+                  <span class="figure-label">Fig C2c — Scaling validation, r = 4</span>
+                  Prediction curve $(1-\mu)^{4/3}$.
+                  Agreement is tightest at large $n$ and small $\mu$.
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+</body>
+</html>

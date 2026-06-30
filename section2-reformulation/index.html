@@ -162,26 +162,68 @@
 
             <div class="math-block" data-status="modified">
               <p>
-                Janson's original sequential formulation explicitly discards rounds (generations) to enable a clean
-                martingale analysis. In the two-channel model, however, the global fear field $g_k$ is intrinsically
-                round-indexed. To resolve this, we restore generations within the sequential edge-exposure process by
-                tracking active vertices using a First-In, First-Out (FIFO) queue structure. The equivalence between
-                this sequential queue-based exposure and the standard simultaneous (synchronous) model is not merely
-                assumed, but proved below via a Pathwise Equivalence Theorem.
+                Janson's original sequential formulation explicitly discards rounds to enable a clean
+                martingale analysis. In the two-channel model, the global fear field $g_k$ is
+                intrinsically round-indexed, so we restore them. This introduces two distinct clocks:
+                a fine-grained <strong>step index</strong> $t \geq 1$ tracking individual vertex
+                exposures, and a <strong>generation index</strong> $k \geq 0$ grouping steps into
+                rounds. Generation $k$ spans the steps $(T_{k-1}, T_k]$ and ends at boundary step
+                $T_k$, defined below. The equivalence between this sequential queue-based exposure and
+                the standard simultaneous model is not merely assumed, but proved via the Pathwise
+                Equivalence Theorem below.
               </p>
-            </div>
-
-            <div class="math-block" data-status="modified">
               <p>
-                We construct the random graph $G(n,p)$ sequentially on a node-by-node basis. Let $u_t$ denote the vertex
-                processed at Janson time step $t \geq 1$. We track three key vertex sets:
+                We construct $G(n,p)$ sequentially. Let $u_t$ denote the vertex processed at step $t$.
+                We track three key vertex sets:
               </p>
               <ul>
                 <li>$\mathcal{A}(t)$: Active (solvency- or fear-activated) vertices up to step $t$.</li>
                 <li>$Z(t) = \{u_1, \ldots, u_t\}$: The set of used/processed vertices up to step $t$, with $Z(0) =
                   \emptyset$.</li>
                 <li>$\mathcal{G}_k$: The queue of active vertices belonging to generation $k$.</li>
+                <li>$B_k := \bigcup_{j=0}^{k-1} \mathcal{G}_j$: The background set — all vertices activated strictly
+                  before generation $k$ begins, with $B_0 = \emptyset$.</li>
               </ul>
+            </div>
+
+            <div style="margin:1.5em 0;padding:1.25rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;text-align:center;">
+              <svg viewBox="0 0 700 105" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;" role="img" aria-label="Two-clock timeline showing step index t grouped into generation brackets k">
+                <!-- Top: g₁ and g₂ fire labels with downward arrows -->
+                <text x="190" y="14" text-anchor="middle" font-size="11" fill="#dc2626">g<tspan dy="4" font-size="8">1</tspan><tspan dy="-4"> fires</tspan></text>
+                <line x1="190" y1="17" x2="190" y2="33" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3"/>
+                <polygon points="186,33 190,40 194,33" fill="#dc2626"/>
+                <text x="400" y="14" text-anchor="middle" font-size="11" fill="#dc2626">g<tspan dy="4" font-size="8">2</tspan><tspan dy="-4"> fires</tspan></text>
+                <line x1="400" y1="17" x2="400" y2="33" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3"/>
+                <polygon points="396,33 400,40 404,33" fill="#dc2626"/>
+                <!-- Generation brackets -->
+                <rect x="58" y="43" width="128" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="122" y="58" text-anchor="middle" font-size="11" fill="#1d4ed8">k = 0 (seed)</text>
+                <rect x="193" y="43" width="205" height="22" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+                <text x="295" y="58" text-anchor="middle" font-size="11" fill="#065f46">k = 1</text>
+                <rect x="404" y="43" width="174" height="22" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                <text x="491" y="58" text-anchor="middle" font-size="11" fill="#92400e">k = 2</text>
+                <!-- Connectors bracket edges &#x2192; timeline -->
+                <line x1="60" y1="65" x2="60" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="186" y1="65" x2="186" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="194" y1="65" x2="194" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="398" y1="65" x2="398" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="405" y1="65" x2="405" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="578" y1="65" x2="578" y2="72" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+                <!-- Timeline axis -->
+                <line x1="50" y1="77" x2="628" y2="77" stroke="#374151" stroke-width="2"/>
+                <polygon points="628,71 642,77 628,83" fill="#374151"/>
+                <text x="650" y="82" font-size="14" fill="#374151" font-style="italic">t</text>
+                <!-- Boundary T&#x2080; -->
+                <line x1="190" y1="69" x2="190" y2="85" stroke="#1d4ed8" stroke-width="2"/>
+                <text x="190" y="98" text-anchor="middle" font-size="12" fill="#1d4ed8">T<tspan dy="4" font-size="9">0</tspan></text>
+                <!-- Boundary T&#x2081; -->
+                <line x1="400" y1="69" x2="400" y2="85" stroke="#059669" stroke-width="2"/>
+                <text x="400" y="98" text-anchor="middle" font-size="12" fill="#059669">T<tspan dy="4" font-size="9">1</tspan></text>
+                <!-- Boundary T&#x2082; -->
+                <line x1="580" y1="69" x2="580" y2="85" stroke="#d97706" stroke-width="2"/>
+                <text x="580" y="98" text-anchor="middle" font-size="12" fill="#d97706">T<tspan dy="4" font-size="9">2</tspan></text>
+              </svg>
+              <p style="font-size:0.82em;color:#6b7280;margin:0.4em 0 0;"><strong>Figure 1.</strong> Two-clock structure. The step index <em>t</em> runs continuously; generation <em>k</em> groups steps into brackets ending at T<sub>0</sub>, T<sub>1</sub>, T<sub>2</sub>, &#8230;. The fear field g<sub>k</sub> fires once per generation at each boundary.</p>
             </div>
 
             <div class="math-block" data-status="modified">
@@ -206,6 +248,8 @@
                 We also define a generation tracker function $k(t)$ for any time step $t$ as the unique
                 index satisfying:
                 $$T_{k(t)-1} < t \leq T_{k(t)} \quad (\text{with } k(t)=0 \text{ for } t \leq T_0).$$
+                The background set updates at each generation boundary:
+                $$B_{k+1} := B_k \cup \mathcal{G}_k.$$
               </p>
             </div>
 
@@ -327,9 +371,9 @@
 
             <div class="math-block" data-status="new">
               <p>
-                We introduce the global fear field $g_k$, which is determined at the generational boundary step
-                $T_{k-1}$ and represents the fraction of failed nodes in the completed generation $k-1$:
-                $$g_k := \frac{a_{k-1}}{n} = \frac{T_{k-1} - T_{k-2}}{n}$$
+                We introduce the global fear field $g_k$, which represents the incremental failure fraction
+                from generation $k-1$ — the fraction of nodes in $B_k \setminus B_{k-1}$:
+                $$g_k := \frac{|B_k \setminus B_{k-1}|}{n} = \frac{a_{k-1}}{n}$$
               </p>
             </div>
 
@@ -347,11 +391,60 @@
                   $$I_i^{\text{fear}}(j) := \mathbf{1}[U_{i,j} \lt f_i g_j]$$
                 </li>
                 <li>Define the solvency-activated and fear-activated sets for generation $k$:
-                  $$\mathcal{S}(k) := \{i \notin \mathcal{A}(T_{k-2}) : M_i(T_{k-1}) \geq r\}$$
-                  $$\mathcal{F}(k) := \{i \notin \mathcal{A}(T_{k-2}) \cup \mathcal{S}(k) : I_i^{\text{fear}}(k) = 1\}$$
+                  $$\mathcal{S}(k) := \{i \notin B_k : |N(i) \cap B_k| \geq r\}$$
+                  $$\mathcal{F}(k) := \{i \notin B_k \cup \mathcal{S}(k) : I_i^{\text{fear}}(k) = 1\}$$
                   The new generation queue is the union of both: $\mathcal{G}_k = \mathcal{S}(k) \cup \mathcal{F}(k)$.
                 </li>
               </ol>
+              <div class="note-callout">
+                <div class="note-title">Sequential Bridge</div>
+                Under the edge-exposure process, $B_k = Z(T_{k-1})$ and $|N(i) \cap B_k| = M_i(T_{k-1})$
+                exactly, so these definitions are pathwise equivalent to the $T_k$-indexed forms used in
+                the sequential analysis below.
+              </div>
+            </div>
+
+            <div style="margin:1.5em 0;padding:1.25rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;text-align:center;">
+              <svg viewBox="0 0 704 88" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;" role="img" aria-label="Generation-k cycle from background set Bk through solvency and fear scans to Gk">
+                <!-- B_k box -->
+                <rect x="8" y="22" width="72" height="40" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="44" y="43" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="bold">B<tspan dy="5" font-size="9">k</tspan></text>
+                <text x="44" y="57" text-anchor="middle" font-size="9" fill="#6b7280">(known)</text>
+                <!-- B_k &#x2192; solvency scan -->
+                <line x1="80" y1="42" x2="112" y2="42" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="112,37 124,42 112,47" fill="#374151"/>
+                <!-- Solvency scan box -->
+                <rect x="128" y="22" width="90" height="40" rx="5" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+                <text x="173" y="40" text-anchor="middle" font-size="11" fill="#374151">solvency</text>
+                <text x="173" y="54" text-anchor="middle" font-size="11" fill="#374151">scan</text>
+                <!-- solvency &#x2192; S(k) -->
+                <line x1="218" y1="42" x2="250" y2="42" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="250,37 262,42 250,47" fill="#374151"/>
+                <!-- S(k) box -->
+                <rect x="266" y="22" width="70" height="40" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+                <text x="301" y="47" text-anchor="middle" font-size="14" fill="#065f46" font-weight="bold">S(k)</text>
+                <!-- S(k) &#x2192; fear scan -->
+                <line x1="336" y1="42" x2="368" y2="42" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="368,37 380,42 368,47" fill="#374151"/>
+                <!-- Fear scan box -->
+                <rect x="384" y="22" width="78" height="40" rx="5" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+                <text x="423" y="40" text-anchor="middle" font-size="11" fill="#374151">fear</text>
+                <text x="423" y="54" text-anchor="middle" font-size="11" fill="#374151">scan</text>
+                <!-- fear scan &#x2192; F(k) -->
+                <line x1="462" y1="42" x2="494" y2="42" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="494,37 506,42 494,47" fill="#374151"/>
+                <!-- F(k) box -->
+                <rect x="510" y="22" width="70" height="40" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                <text x="545" y="47" text-anchor="middle" font-size="14" fill="#92400e" font-weight="bold">F(k)</text>
+                <!-- F(k) &#x2192; G_k -->
+                <line x1="580" y1="42" x2="612" y2="42" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="612,37 624,42 612,47" fill="#374151"/>
+                <!-- G_k (= B_{k+1}) box -->
+                <rect x="628" y="22" width="68" height="40" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="662" y="40" text-anchor="middle" font-size="13" fill="#5b21b6" font-weight="bold">G<tspan dy="5" font-size="9">k</tspan></text>
+                <text x="662" y="55" text-anchor="middle" font-size="9" fill="#6b7280">&#x2192; B<tspan dy="3" font-size="8">k+1</tspan></text>
+              </svg>
+              <p style="font-size:0.82em;color:#6b7280;margin:0.4em 0 0;"><strong>Figure 2.</strong> Generation-k cycle. Starting from B<sub>k</sub>, the solvency scan produces S(k) and the fear scan produces F(k); their union G<sub>k</sub> = S(k) &#x222A; F(k) becomes part of B<sub>k+1</sub> = B<sub>k</sub> &#x222A; G<sub>k</sub>.</p>
             </div>
           </section>
 
@@ -443,6 +536,7 @@
                   <span class="label-advisor">Tier 2 — Asymptotic Decoupling Conjecture: requires fear-field
                     concentration; simulation confirms phase-boundary invariance within ±0.03.</span>
                 </div>
+                <a href="conjecture_graphs.html#conj-decoupling" class="evidence-link">→ simulation evidence</a>
               </div>
 
               <div class="math-block" data-status="tier2">
@@ -452,6 +546,21 @@
                   $$\sum_{j=1}^{k(t)} g_j = \sum_{j=1}^{k(t)} \frac{a_{j-1}}{n} = \frac{T_{k(t)-1}}{n} \approx
                   \frac{t}{n}$$
                 </p>
+
+                <details class="proof-block steps">
+                  <summary class="proof-title">Derivation.</summary>
+                  <p>
+                    By definition $g_j = a_{j-1}/n$, so the partial sum telescopes:
+                    $$\sum_{j=1}^{k(t)} g_j = \frac{a_0 + a_1 + \cdots + a_{k(t)-1}}{n} = \frac{T_{k(t)-1}}{n}.$$
+                  </p>
+                  <p>
+                    The generation index $k(t)$ satisfies $T_{k(t)-1} < t \leq T_{k(t)}$ by definition, so
+                    $0 \leq t - T_{k(t)-1} \leq T_{k(t)} - T_{k(t)-1} = a_{k(t)}$. Under sub-macroscopic generations
+                    ($a_{k(t)} = o(n)$ w.h.p.) the relative gap vanishes:
+                    $$\left| \frac{T_{k(t)-1}}{n} - \frac{t}{n} \right| \leq \frac{a_{k(t)}}{n} = o(1),$$
+                    hence $\sum_{j=1}^{k(t)} g_j = T_{k(t)-1}/n \approx t/n$.
+                  </p>
+                </details>
               </div>
 
               <div class="math-block" data-status="tier2">
@@ -464,6 +573,34 @@
                   $$P\!\left(Y_i' > t \mid \mathbf{g}^{(-i)}, f_i\right) \approx P\!\left(\mathrm{Bin}(t,p) \lt r\right)
                   \left(1 - \frac{f_i}{n}\right)^t$$
                 </p>
+
+                <details class="proof-block steps">
+                  <summary class="proof-title">Derivation.</summary>
+                  <p>
+                    Start from the conditional survival, which is exact in the leave-one-out field (removing node
+                    $i$'s own feedback makes $\mathbf{g}^{(-i)}$ independent of $f_i$):
+                    $$P\!\left(Y_i' > t \mid \mathbf{g}^{(-i)}, f_i\right) = \underbrace{P(\mathrm{Bin}(t,p) \lt r)}_{\text{solvency survival}} \cdot \prod_{j=1}^{k(t)} \left(1 - f_i\, g_j\right).$$
+                  </p>
+                  <p>
+                    <strong>1. Take logs of the fear product.</strong>
+                    $$\log \prod_{j=1}^{k(t)} \left(1 - f_i\, g_j\right) = \sum_{j=1}^{k(t)} \log\!\left(1 - f_i\, g_j\right).$$
+                  </p>
+                  <p>
+                    <strong>2. Linearise.</strong> Generation sizes are sub-macroscopic, so $g_j = a_{j-1}/n = o(1)$ and
+                    $f_i\, g_j \leq g_j \to 0$. The expansion $\log(1-x) = -x - \tfrac{1}{2}x^2 - \cdots$ gives
+                    $$\sum_{j=1}^{k(t)} \log\!\left(1 - f_i\, g_j\right) = -f_i \sum_{j=1}^{k(t)} g_j + O\!\left(\sum_{j=1}^{k(t)} g_j^2\right),$$
+                    and the quadratic remainder is negligible since $\sum_j g_j^2 \leq \left(\max_j g_j\right)\sum_j g_j = o(1)\cdot O(t/n) \to 0$.
+                  </p>
+                  <p>
+                    <strong>3. Apply the clock collapse</strong> (&sect;4.1): $\sum_{j=1}^{k(t)} g_j = T_{k(t)-1}/n \approx t/n$, so
+                    $$\sum_{j=1}^{k(t)} \log\!\left(1 - f_i\, g_j\right) \approx -\frac{f_i\, t}{n}.$$
+                  </p>
+                  <p>
+                    <strong>4. Exponentiate</strong> and re-expand using $f_i/n \to 0$:
+                    $$\prod_{j=1}^{k(t)} \left(1 - f_i\, g_j\right) \approx e^{-f_i t/n} = \left(e^{-f_i/n}\right)^t \approx \left(1 - \frac{f_i}{n}\right)^t.$$
+                    Multiplying by the solvency factor $P(\mathrm{Bin}(t,p) \lt r)$ yields the stated geometric-clock form.
+                  </p>
+                </details>
 
                 <div class="note-callout">
                   <div class="note-title">Step-vs-Generation Clock Note</div>
@@ -653,17 +790,39 @@
 
               <div class="math-block" data-status="modified">
                 <p>
-                  Applying Jensen's inequality to the population average:
+                  Averaging the single-node survival over the fear population:
                   $$P(Y_1 > t) = P\!\left(\mathrm{Bin}(t, p) \lt r\right) \mathbb{E}_f\!\left[\left(1 -
                   \frac{f}{n}\right)^t\right]$$
                   Near the threshold, in the regime where the failed fraction $\varphi = t/n \to 0$ as $n \to \infty$,
-                  we expand via Jensen's inequality:
+                  we expand the cumulant generating function to second order:
                   $$\mathbb{E}_f\!\left[\left(1 - \frac{f}{n}\right)^t\right] \approx e^{-\mu\varphi +
                   \frac{1}{2}\mathrm{Var}(f)\varphi^2}$$
                   This reveals that population heterogeneity (the variance of $f$) enters only as a second-order
                   correction; the first-order mean fear susceptibility $\mu = \mathbb{E}[f]$ dominates the leading-order
                   behavior.
                 </p>
+
+                <details class="proof-block steps">
+                  <summary class="proof-title">Derivation.</summary>
+                  <p>
+                    Write $\varphi = t/n$ and expand the inner power for a fixed susceptibility $f$:
+                    $$\left(1 - \frac{f}{n}\right)^t = e^{\,t \log(1 - f/n)} = e^{\,t\left(-f/n - f^2/2n^2 - \cdots\right)} = e^{-f\varphi}\, e^{-O(f^2 \varphi / n)} \approx e^{-f\varphi},$$
+                    where the correction is dropped because $f^2\varphi/n \to 0$.
+                  </p>
+                  <p>
+                    Now average over $f$. The quantity $\mathbb{E}_f[e^{-f\varphi}]$ is the moment generating function of
+                    $f$ evaluated at $-\varphi$; its logarithm is the cumulant generating function, expanded to second order
+                    with first cumulant $\mathbb{E}[f] = \mu$ and second cumulant $\mathrm{Var}(f)$:
+                    $$\log \mathbb{E}_f\!\left[e^{-f\varphi}\right] = -\mu\varphi + \tfrac{1}{2}\mathrm{Var}(f)\,\varphi^2 - \cdots.$$
+                    Exponentiating gives
+                    $$\mathbb{E}_f\!\left[\left(1 - \frac{f}{n}\right)^t\right] \approx e^{-\mu\varphi + \frac{1}{2}\mathrm{Var}(f)\varphi^2}.$$
+                  </p>
+                  <p>
+                    Jensen's inequality recovers only the leading term as a one-sided check,
+                    $\mathbb{E}_f[e^{-f\varphi}] \geq e^{-\mu\varphi}$ (equality iff $f$ is degenerate); the
+                    $\tfrac{1}{2}\mathrm{Var}(f)\varphi^2$ term is the second-order cumulant correction it cannot see.
+                  </p>
+                </details>
               </div>
 
               <div class="math-block" data-status="modified">
@@ -674,6 +833,29 @@
                   At the mean-field equilibrium where $\mathbb{E}[A(t)] = t$ (with $\varphi = t/n$), this simplifies to:
                   $$(1-\mu)\varphi \approx \frac{a}{n} + \frac{(np\varphi)^r}{r!}$$
                 </p>
+
+                <details class="proof-block steps">
+                  <summary class="proof-title">Derivation.</summary>
+                  <p>
+                    Let $\Pi := P(\mathrm{Bin}(t,p) \lt r)\, e^{-\mu\varphi}$ be the single-node survival probability, so
+                    $\mathbb{E}[A(t)] \approx a + (n-a)(1 - \Pi)$. Impose the mean-field fixed point
+                    $\mathbb{E}[A(t)] = t = n\varphi$:
+                    $$n\varphi = a + (n-a)(1 - \Pi) = n - (n-a)\Pi \;\;\Longrightarrow\;\; \Pi = \frac{n(1-\varphi)}{n-a} = \frac{1 - \varphi}{1 - a/n}.$$
+                    The corresponding failure probability is, to leading order in $a/n \to 0$,
+                    $$1 - \Pi = \frac{\varphi - a/n}{1 - a/n} \approx \varphi - \frac{a}{n}.$$
+                  </p>
+                  <p>
+                    Independently, expand $\Pi$ for small $\varphi$. In the Janson regime the solvency tail is
+                    $P(\mathrm{Bin}(t,p) \geq r) \approx \binom{t}{r} p^r \approx \frac{(tp)^r}{r!} = \frac{(np\varphi)^r}{r!}$
+                    (using $t = n\varphi$), and $e^{-\mu\varphi} \approx 1 - \mu\varphi$, so
+                    $$1 - \Pi \approx 1 - \left(1 - \frac{(np\varphi)^r}{r!}\right)(1 - \mu\varphi) \approx \mu\varphi + \frac{(np\varphi)^r}{r!},$$
+                    dropping the cross term $\mu\varphi \cdot (np\varphi)^r/r!$.
+                  </p>
+                  <p>
+                    Equating the two expressions for $1 - \Pi$:
+                    $$\varphi - \frac{a}{n} \approx \mu\varphi + \frac{(np\varphi)^r}{r!} \;\;\Longrightarrow\;\; (1-\mu)\varphi \approx \frac{a}{n} + \frac{(np\varphi)^r}{r!}.$$
+                  </p>
+                </details>
               </div>
 
               <div class="math-block" data-status="tier2">
@@ -682,6 +864,28 @@
                   self-consistent map yields a scaling relationship for the critical seed size:
                   $$a_c(\mu) = (1-\mu)^{r/(r-1)} \, a_c(0)$$
                 </p>
+
+                <details class="proof-block steps">
+                  <summary class="proof-title">Derivation.</summary>
+                  <p>
+                    Treat the seed equation above as a balance $G(\varphi) = a/n$, where
+                    $$G(\varphi) := (1-\mu)\varphi - \frac{(np)^r}{r!}\varphi^r.$$
+                    For $r \geq 2$, $G$ rises then falls; the largest seed for which a sub-macroscopic fixed point still
+                    exists is the interior maximum &mdash; the saddle-node tangency. Setting $G'(\varphi) = 0$:
+                    $$G'(\varphi) = (1-\mu) - \frac{(np)^r}{(r-1)!}\varphi^{r-1} = 0 \;\;\Longrightarrow\;\; \varphi_\ast = \left(\frac{(1-\mu)\,(r-1)!}{(np)^r}\right)^{1/(r-1)}.$$
+                  </p>
+                  <p>
+                    Evaluate $G$ at the tangency. Substituting $\varphi_\ast^{r-1}$ from above gives
+                    $\frac{(np)^r}{r!}\varphi_\ast^{r} = \frac{1-\mu}{r}\varphi_\ast$, so
+                    $$\frac{a_c(\mu)}{n} = G(\varphi_\ast) = (1-\mu)\varphi_\ast - \frac{1-\mu}{r}\varphi_\ast = \frac{r-1}{r}(1-\mu)\,\varphi_\ast.$$
+                  </p>
+                  <p>
+                    Finally substitute $\varphi_\ast \propto (1-\mu)^{1/(r-1)}$ and collect powers of $(1-\mu)$:
+                    $$\frac{a_c(\mu)}{n} = \frac{r-1}{r}(1-\mu)^{\,1 + \frac{1}{r-1}}\left(\frac{(r-1)!}{(np)^r}\right)^{1/(r-1)} = \frac{r-1}{r}(1-\mu)^{r/(r-1)}\left(\frac{(r-1)!}{(np)^r}\right)^{1/(r-1)}.$$
+                    The $\mu$-independent prefactor is exactly $a_c(0)/n$ (set $\mu = 0$), so the $(np)$-dependence cancels in
+                    the ratio, leaving $a_c(\mu) = (1-\mu)^{r/(r-1)}\, a_c(0)$.
+                  </p>
+                </details>
                 <div class="audience-label">
                   <span class="label-raw">TIER 2 CONJECTURE — derived from mean-field saddle-node;
                     simulation-confirmed.</span>
@@ -689,6 +893,46 @@
                     numerically at $n \in \{1000, 2000, 4000\}$, ratios match $(1-\mu)^{r/(r-1)} &middot; a_c(0)$
                     trend.</span>
                 </div>
+                <a href="conjecture_graphs.html#conj-scaling" class="evidence-link">→ simulation evidence</a>
+              </div>
+
+              <div style="margin:1.5em 0;padding:1.25rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;text-align:center;">
+                <svg viewBox="0 0 640 88" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;" role="img" aria-label="Fear feedback chain: each generation queue sets the next fear field">
+                  <!-- G_{k-1} box -->
+                  <rect x="8" y="22" width="84" height="40" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                  <text x="50" y="47" text-anchor="middle" font-size="13" fill="#5b21b6" font-weight="bold">G<tspan dy="5" font-size="9">k&#x2212;1</tspan></text>
+                  <!-- arrow |&#x22C5;|/n -->
+                  <line x1="92" y1="42" x2="126" y2="42" stroke="#374151" stroke-width="1.5"/>
+                  <polygon points="126,37 138,42 126,47" fill="#374151"/>
+                  <text x="116" y="34" text-anchor="middle" font-size="10" fill="#6b7280">|&#x22C5;|/n</text>
+                  <!-- g_k box -->
+                  <rect x="142" y="22" width="68" height="40" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+                  <text x="176" y="47" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="bold">g<tspan dy="5" font-size="9">k</tspan></text>
+                  <!-- arrow fear -->
+                  <line x1="210" y1="42" x2="244" y2="42" stroke="#374151" stroke-width="1.5"/>
+                  <polygon points="244,37 256,42 244,47" fill="#374151"/>
+                  <text x="233" y="34" text-anchor="middle" font-size="10" fill="#6b7280">fear</text>
+                  <!-- F(k) box -->
+                  <rect x="260" y="22" width="70" height="40" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="295" y="47" text-anchor="middle" font-size="14" fill="#92400e" font-weight="bold">F(k)</text>
+                  <!-- arrow &#x222A;S(k) -->
+                  <line x1="330" y1="42" x2="364" y2="42" stroke="#374151" stroke-width="1.5"/>
+                  <polygon points="364,37 376,42 364,47" fill="#374151"/>
+                  <text x="353" y="34" text-anchor="middle" font-size="10" fill="#6b7280">&#x222A;S(k)</text>
+                  <!-- G_k box -->
+                  <rect x="380" y="22" width="68" height="40" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                  <text x="414" y="47" text-anchor="middle" font-size="13" fill="#5b21b6" font-weight="bold">G<tspan dy="5" font-size="9">k</tspan></text>
+                  <!-- arrow |&#x22C5;|/n -->
+                  <line x1="448" y1="42" x2="482" y2="42" stroke="#374151" stroke-width="1.5"/>
+                  <polygon points="482,37 494,42 482,47" fill="#374151"/>
+                  <text x="471" y="34" text-anchor="middle" font-size="10" fill="#6b7280">|&#x22C5;|/n</text>
+                  <!-- g_{k+1} box -->
+                  <rect x="498" y="22" width="88" height="40" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+                  <text x="542" y="47" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">g<tspan dy="5" font-size="9">k+1</tspan></text>
+                  <!-- continuation -->
+                  <text x="600" y="49" font-size="18" fill="#374151">&#x2192;&#x22EF;</text>
+                </svg>
+                <p style="font-size:0.82em;color:#6b7280;margin:0.4em 0 0;"><strong>Figure 3.</strong> Fear feedback chain. Each generation queue G<sub>k&#x2212;1</sub> sets g<sub>k</sub> = |G<sub>k&#x2212;1</sub>|/n; g<sub>k</sub> drives fear activations F(k); together with solvency activations S(k) these form G<sub>k</sub>, perpetuating the loop.</p>
               </div>
             </section>
           </section>

@@ -31,29 +31,38 @@ agentArgsOverride:
 
 ## 3. How to Run the Queue
 
-Execute the following bash loop from the root of your project directory (`CABP_copy_for_antigravity`):
+Execute the following steps from the root of your project directory (`CABP_copy_for_antigravity`):
 
-```bash
-for task_file in docs/antigravity_queue/task_*.md; do
-  task_name=$(basename "$task_file" .md)
-  report_file="docs/antigravity_queue/reports/\${task_name}_report.md"
-  
-  if [ -f "\$report_file" ]; then
-    echo "Task \$task_name is already completed. Skipping."
-    continue
-  fi
-  
-  echo "========================================="
-  echo "Starting Task: \$task_name"
-  echo "========================================="
-  
-  # Prefixing the prompt with the task name guarantees a unique branch slug/name
-  gnhf "\${task_name}: Run the task specified in \$task_file following the /research-cycle workflow."
-done
-```
+1. **Switch to your base branch** (mandatory before using worktrees):
+   ```bash
+   git checkout antigravity
+   ```
 
-### Options:
-- **Baseline Isolation**: If the pending tasks modify Python code in `src/` or C++ code in `cpp/src/`, add the `--worktree` flag to your command to avoid corrupting your active branch:
-  ```bash
-  gnhf --worktree "\${task_name}: Run the task specified in \$task_file following the /research-cycle workflow."
-  ```
+2. **Clean up any lingering background processes** to avoid session lock errors:
+   ```bash
+   pkill -f pytest
+   pkill -f /versions/
+   ```
+
+3. **Run the sequential loop** (uses a single-line command prompt and a `sleep 5` safety buffer):
+   ```bash
+   for task_file in docs/antigravity_queue/task_*.md; do
+     task_name=$(basename "$task_file" .md)
+     task_letter=$(echo "$task_name" | cut -d'_' -f2 | tr '[:upper:]' '[:lower:]')
+     report_file="docs/antigravity_queue/reports/task_${task_letter}_report.md"
+     
+     if [ -f "$report_file" ]; then
+       echo "Task $task_name is already completed. Skipping."
+       continue
+     fi
+     
+     echo "========================================="
+     echo "Starting Task: $task_name"
+     echo "========================================="
+     
+     node /Users/garymei/Downloads/projects/gnhf-test/dist/cli.mjs --worktree "${task_name}: Run the task specified in $task_file following the /research-cycle workflow."
+     
+     echo "Waiting 5 seconds for daemon release..."
+     sleep 5
+   done
+   ```

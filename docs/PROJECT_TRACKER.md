@@ -4,7 +4,7 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-06-29 — Session 36 (section2-reformulation deployed to Pages; README updated; stale branches pruned)
+- **Last updated:** 2026-07-01 — Session 37 (first advisor meeting held; five extension directions logged, D-028)
 - **File version:** v1.12
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
@@ -403,7 +403,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 ## §8 — Current Status 🟢 *(overwrite each session)*
 
-- **Phase:** Pre-advisor-meeting consolidation. All four antigravity queue tasks complete. First advisor meeting 2026-07-01 at 2:00pm.
+- **Phase:** Post-first-advisor-meeting. First advisor meeting held 2026-07-01 2:00pm with Prof. Dhara; five extension directions logged (D-028) — degree-heterogeneous (power-law configuration model) graphs, geometric graphs (random geometric graphs → geometric inhomogeneous random graphs), the combination of the two, an optional recovery/healing phase, and weighted edges. Next meeting 2026-07-15; advisor wants simulation results emailed beforehand.
 - **Task A — Finite-size ν (S-035, preliminary):** ν≈8.39±1.57 at μ=0.0 (R²=0.83); ν≈5.33±0.51 at μ=0.3 (R²=0.97). Fear materially accelerates boundary sharpening. Figure: `results/figures/finite_size_scaling_r2.png` (watermarked "Preliminary, pending advisor alignment"). New code: `estimate_transition_width` + `fit_finite_size_exponent` in `src/twocascade/analysis.py`; unit tests in `tests/test_analysis.py`; scripts: `scripts/run_finite_size_sweeps.py`, `scripts/plot_finite_size_scaling.py`.
 - **Task C — Targeted seeding (S-035):** Confirmed deliberate negative result. Boundary shift 0.13% at n=1000 shrinks to 0.08% at n=2000 — vanishes in scaling limit on $G(n,p)$. Research doc: `docs/research/targeted_seeding_negative_result.md`. Figure: `results/figures/targeted_seeding_comparison.png`.
 - **Task D — Window invariance (S-035):** Max $|\Delta P|=0.0146\le0.03$ ✓; duration grows monotonically with $X$ ✓. C++ cross-language validation at X=4: Z-test p=0.83, KS p=1.00 ✓. Figures: `results/figures/window_r2_invariance.png`, `results/figures/window_r2_duration.png`. New test: `tests/test_cpp_window_validation.py`.
@@ -416,17 +416,22 @@ heuristic mean-field threshold** showing qualitative agreement.
 
 - **Blockers:** None.
 - **Active Constraints & Warnings:** Cross-reference D-018 platform limitations (macOS Debug = UBSan only; ASan deferred to Linux/PACE).
-- **Q1 follow-up:** Asymptotic Decoupling Conjecture remains open (S-029). Whether to pursue a direct fear-field-concentration proof or scope it out in the write-up is an open design question for the advisor meeting.
-- **Q2 (advisor):** stay on $G(n,p)$ or move to a configuration model?
-- **Q3 (advisor):** is a critical-window width-exponent framing of interest? Preliminary ν estimates available (Task A): μ=0.0 → ν≈8.39, μ=0.3 → ν≈5.33; fear accelerates sharpening. CIs wide at 3 n values; n=10000 on PACE would tighten.
+- **Q1 follow-up:** Asymptotic Decoupling Conjecture remains open (S-029). Whether to pursue a direct fear-field-concentration proof or scope it out in the write-up is still open.
+- **Q2 (advisor, RESOLVED 2026-07-01 → D-028):** advisor directed a move toward configuration-model graphs (power-law degree sequence), superseding the open "$G(n,p)$ vs. configuration model" framing. $G(n,p)$/Janson-baseline work stands as completed; new modeling work targets the configuration model.
+- **Q3 (advisor):** critical-window width-exponent framing still of interest. Preliminary ν estimates available (Task A): μ=0.0 → ν≈8.39, μ=0.3 → ν≈5.33; fear accelerates sharpening. CIs wide at 3 n values; n=10000 on PACE would tighten.
+- **Q4 (new, D-028):** degree-dependent fear factor on a power-law configuration model — advisor explicitly requested this simulation.
+- **Q5 (new, D-028):** geometric effects on cascade locality — random geometric graphs first, then the more general geometric inhomogeneous random graphs (GIRGs); does the panic field stay spatially local, or does the cascade still percolate across "continents"?
+- **Q6 (new, D-028):** combine Q4 + Q5 — degree heterogeneity on a geometric (GIRG) graph.
+- **Q7 (new, D-028, lower priority):** optional recovery/healing phase (SIR-style) as a model variant, vs. the current permanent-activation assumption.
+- **Q8 (new, D-028, lower priority):** weighted-edge / supply-capacity variant (edges as economic "supply," nodes need a threshold amount) — cascade behavior depends on edge weight, not just topology.
 - **Engineering (minor):** AppleClang 17 `-mcpu=native` build flag failure.
-- **Logistics:** Briefing packet not yet sent. PACE access and scope to be raised at the 2026-07-01 2:00pm meeting.
+- **Logistics:** First advisor meeting held 2026-07-01 2:00pm. Next meeting **2026-07-15**. Advisor wants simulation results emailed for comment before that meeting. Two possible publication routes flagged: empirical (real network data, e.g. SNAP datasets, plus the fear channel, aiming for a counterintuitive finding) vs. theoretical (simplified model + proof) — either needs a genuinely novel result.
 
 ## §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Send advisor packet** before 2026-07-01 2:00pm — brief at `docs/research/other/advisor_brief_2026_07_01.md`; include viz site URL.
-2. Prepare Q2 / Q3 / PACE access discussion points; bring Task A preliminary ν figures.
-3. Post-meeting: update roadmap and open new tasks based on advisor direction (Q2 config model, Q3 critical-window scope, n=10000 on PACE to tighten ν CI).
+1. Prioritize and scope the Q4–Q6 extension simulations (degree-heterogeneous / geometric / combined graphs with the fear channel); start with whichever is fastest to stand up on the existing reference engine.
+2. Formulate a falsifiable conjecture (e.g., "low fear → cascades stay small regardless of degree tail; high fear → even a small initial failure set eventually reaches a large fraction") and test for a phase transition in μ via simulation.
+3. Email simulation results to Prof. Dhara for comment ahead of the 2026-07-15 meeting.
 
 ---
 
@@ -463,6 +468,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-025 | 2026-06-25 | Proved exact conditional i.i.d. structure for joint decoupling using a leave-m-out construction (new §5.1 in janson_reformulation_with_fear.md). | Establishes exact conditional independence of activation times Y_i' given the leave-m-out fear field at finite n (Tier 1), for any fixed m-tuple, sharpening the Asymptotic Decoupling Conjecture (Tier 2) into two distinct sub-questions — fear-field concentration and leave-out field equivalence — rather than one diffuse claim. An earlier discrepancy-bound approach to the same goal was found false (unbounded cascading effects near the saddle-node tangency) and was withdrawn pre-commit; this result replaces it and was independently re-derived by the orchestrator, not accepted on the auditor's PASS alone. | §2 (D-009), §5.1, §8, §11`
 - `D-026 | 2026-06-25 | Adds a Python-only diagnostic side-channel (track_nodes/tracked_failure_rounds) in reference.py as a backward-compatible, observational extension; exempts it from §5.4 C++ parity. | The change is strictly additive, observational, backward-compatible, and does not alter cascade dynamics. Exemption is bounded as it does not change the core verification criteria of §5.4 (engine-logic identity at μ=0, statistical agreement of P(systemic) / |A*|/n). Any future reference.py change requires a new standalone instruction. | §5.3, §5.4`
 - `D-027 | 2026-06-29 | Expanded viz/ section 3 into Part A (μ=0, seed={1,4}) and Part B (μ=0.85, seed={1}) dual walkthroughs. Part A establishes co-existence with Janson; Part B shows fear enabling full systemic collapse from a single seed via trace F(0)={2,6}, S(1)={5}, F(1)={3}, S(2)={4,7}, halt — |A*|/n=1.0. Bernoulli outcomes are pre-determined for reproducibility. Illustrative only; §5.4/§5.6 do not apply. | viz/ only`
+- `D-028 | 2026-07-01 | First advisor meeting (Prof. Dhara): directed five extension tracks for the confidence-cascade model. (1) Configuration-model graphs with power-law degree sequences, with the fear factor made degree-dependent (advisor explicitly requested this simulation; his forthcoming book covers configuration models for general degree distributions). (2) Geometric graphs — random geometric graphs (connect within distance r) first, generalizing to distance-decaying connection probability, then to geometric inhomogeneous random graphs (GIRGs, which combine degree heterogeneity and geometry) — motivated by locality (a local power-grid failure shouldn't cascade to another continent); study whether the panic field stays spatially local or the cascade still percolates globally. (3) Combine (1)+(2): degree heterogeneity on a geometric/GIRG graph. (4) Lower-priority: optional recovery/healing phase (SIR-style) replacing permanent activation. (5) Lower-priority: weighted edges (economic "supply" framing — nodes need a threshold amount of product) so cascade propagation depends on edge weight, not just topology. Adopted workflow: build realistic models → simulate → form a falsifiable conjecture (e.g., a fear-dependent threshold: low fear keeps cascades small regardless of degree tail, high fear lets even a small failure set eventually reach a large fraction) → test for a phase transition in simulation → attempt a proof. Two possible publication routes flagged: empirical (real network data, e.g. SNAP datasets at https://snap.stanford.edu/data/, with the fear channel added, aiming for a counterintuitive finding) or theoretical (stay with a simplified model and prove a theorem); either route needs a genuinely novel result to be publishable. | The advisor's steer moves the project past the $G(n,p)$/Janson baseline (§2 North Star) toward richer, more realistic graph structure, directly resolving Q2 (config-model direction) and giving concrete shape to future work; the heavy-tailed-degree motivating question (can a small failure set still cascade widely under a fat-tailed degree distribution?) is the paper's central "why this model" hook on either the empirical or theoretical publication path. Next meeting 2026-07-15; results to be emailed beforehand. | §2, §9, §10`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -499,6 +505,8 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-034 | 2026-06-29 | v1.12 | Specced and built a static personal-study website presenting the two-channel Janson §2 reformulation. Wrote build spec to docs/research/understanding_my_work/section2_website_spec.md; audited AI Studio output (React/Vite boilerplate wrapping a clean static HTML core); fixed 3 math bugs in index.html (two mangled < in set-builder notation, a_c(1-μ) → a_c(μ), broken LaTeX in §4.2 lemma); placed clean section2-reformulation/ (index.html + style.css + script.js) at project root alongside viz/. No frozen edits, no new decisions. | §8, §12`
 - `S-035 | 2026-06-29 | v1.12 | Recorded completion of Antigravity queue tasks A/C/D (committed 2026-06-29). Task A: preliminary ν estimates (μ=0.0 → 8.39±1.57, μ=0.3 → 5.33±0.51) added to §8 and §9 Q3 note; §6 Wk-5 and Wk-6/7 ticked. Task C: targeted-seeding negative result recorded in §8; §6 Wk-9 remaining sub-items ticked. Task D: window X-invariance and C++ windowed cross-validation recorded in §8; Wk-9 ticked. §10 rewritten to remove completed A/C/D action; post-meeting actions added. No new decisions. | §6, §8, §9, §10, §12`
 - `S-036 | 2026-06-29 | v1.12 | Deployed section2-reformulation/ to GitHub Pages alongside viz/ (pages.yml updated to build combined _site/; path trigger extended). Updated README.md: added section2 badge and link, Key Validated Results table, full repo layout, C++ build instructions, sweep usage. Pruned two stale local branches (subagent-Python-Simulation-Agent-self-2ed9f165 and task-pairwise-decoupling) and their worktrees. §8 corrected: section2 now live on Pages, not file:// only. No frozen edits, no new decisions. | §8, §12`
+- `S-037 | 2026-07-01 | v1.12 | Logged the first advisor meeting outcome. Appended D-028 (five extension directions: degree-heterogeneous configuration-model graphs with degree-dependent fear, geometric graphs up to GIRGs, the combination of the two, an optional recovery/healing phase, and weighted edges; adopted simulate-then-conjecture-then-prove workflow; two publication routes flagged). Live updates: §8 (phase now post-first-meeting, next meeting 2026-07-15), §9 (Q2 marked resolved toward configuration model, Q4–Q8 added for the new extension tracks, logistics updated), §10 (next actions rewritten around scoping the extension simulations and emailing results before the next meeting). No frozen edits — the extensions are logged as directions, not yet adopted into the §2/§3 model definition. | §8, §9, §10, §11, §12`
+- `S-038 | 2026-07-01 | v1.12 | ERRATA — correction of record for D-028. That entry described the config-model reference as "his forthcoming book"; Gary clarified it is Remco van der Hofstad's *Random Graphs and Complex Networks*, Volume I — an existing, already-cited reference (§13), not a new/unpublished work. §13's van der Hofstad entry annotated to note it is the book referenced at the 2026-07-01 meeting. D-028 itself is append-only and left unedited per §11 protocol; this entry is the correction of record. No new decision; no frozen edits. | §13, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"
@@ -523,7 +531,9 @@ heuristic mean-field threshold** showing qualitative agreement.
   arXiv:1506.00251. *Threshold model + immune nodes + external driving (nearest relative to the global
   field — but exogenous, not self-referential).*
 - **van der Hofstad** — *Random Graphs and Complex Networks*, Vol. 1 (free online). *Bridge text:
-  branching-process approximations, local tree-likeness; the advisor's lineage.*
+  branching-process approximations, local tree-likeness; the advisor's lineage. This is the book
+  Prof. Dhara referenced at the 2026-07-01 meeting (D-028) for configuration-model methods on
+  general degree distributions.*
 - **Dhara, van der Hofstad, van Leeuwaarden & Sen (2017)** — "Critical window for the configuration
   model: finite third moment degrees," *EJP* 22(16). arXiv:1605.02868. *Advisor's critical-window
   framing.*

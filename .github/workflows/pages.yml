@@ -9,6 +9,7 @@ on:
     paths:
       - "viz/**"
       - "section2-reformulation/**"
+      - "results/figures/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -42,6 +43,8 @@ jobs:
           mkdir -p _site
           cp -r viz/. _site/
           cp -r section2-reformulation _site/section2-reformulation
+          mkdir -p _site/results/figures
+          cp -r results/figures/. _site/results/figures/
       - name: Upload site as Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

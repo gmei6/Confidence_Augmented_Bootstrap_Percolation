@@ -706,6 +706,77 @@
                     \prod_{i \in S} P\!\left(Y_i' > t \;\middle|\; \mathbf{g}^{(-S)}, f_i\right)$$
                   </li>
                 </ul>
+
+                <details class="proof-block">
+                  <summary class="proof-title">Proof (generalizing the $m=2$ argument above).</summary>
+                  <p>
+                    <strong>Proof of (I1).</strong> The argument is identical in structure to the Pathwise
+                    Equivalence Lemma proved above for $\{i,j\}$; nothing there used $|S|=2$, only that $S$ is a
+                    fixed finite set disjoint from the seed and never activated by step $t$. We repeat it with $S$
+                    in place of $\{i,j\}$ for completeness.
+                  </p>
+                  <p>
+                    Since $\bigcap_{i \in S} \{Y_i' > t\}$ guarantees no node in $S$ has activated up to step $t$,
+                    no node in $S$ has activated by solvency or fear up to generation $k(t)$ (since $T_{k(t)}
+                    \leq t$).
+                  </p>
+                  <p>
+                    <em>Base case</em> ($k=1$): since $S \cap \mathcal{A}(0) = \emptyset$, we have $a_0 =
+                    a_0^{(-S)}$ and $g_1 = g_1^{(-S)}$.
+                  </p>
+                  <p>
+                    <em>Inductive step:</em> suppose the cascades agree through generation $k-1$ — the set of
+                    processed vertices matches ($Z(T_{k-1}) = Z^{(-S)}(T_{k-1})$) and all generation sizes match.
+                    In generation $k$:
+                  </p>
+                  <ul>
+                    <li><strong>Solvency.</strong> For any $\ell \notin S$: the solvency counter
+                      $M_\ell(T_{k-1})$ counts exposed edges from $Z(T_{k-1})$ to $\ell$. Under our coupling, the
+                      edge indicators $I_\ell(s)$ are identical across both systems for all $s \le T_{k-1}$. Since
+                      $Z(T_{k-1}) = Z^{(-S)}(T_{k-1})$ by the inductive hypothesis, and $S \cap Z(T_{k-1}) =
+                      \emptyset$, the mark counts are pathwise identical: $M_\ell(T_{k-1}) =
+                      M_\ell^{(-S)}(T_{k-1})$. Since $t \ge T_{k(t)} \ge T_k$, the survival event guarantees $S
+                      \cap \mathcal{S}(k) = \emptyset$, so the set of newly solvency-activated nodes satisfies
+                      $\mathcal{S}^{(-S)}(k) = \mathcal{S}(k)$.</li>
+                    <li><strong>Fear.</strong> The field $g_k = g_k^{(-S)}$ by the inductive hypothesis. For any
+                      $\ell \notin S$: under the coupling, the uniform draw $U_{\ell,k}$ is identical in both
+                      systems. Thus the fear indicator $I_\ell^{\text{fear}}(k) = \mathbf{1}[U_{\ell,k} \lt
+                      f_\ell g_k]$ is pathwise identical. The survival event guarantees $S \cap \mathcal{F}(k) =
+                      \emptyset$, so the set of newly fear-activated nodes satisfies $\mathcal{F}^{(-S)}(k) =
+                      \mathcal{F}(k)$.</li>
+                  </ul>
+                  <p>
+                    Therefore the active queue members in generation $k$ are identical ($\mathcal{G}_k^{(-S)} =
+                    \mathcal{G}_k$), giving $a_k^{(-S)} = a_k$ and $g_{k+1}^{(-S)} = g_{k+1}$. By induction,
+                    pathwise equivalence holds for all $k \le k(t)$. The converse — that the survival event in the
+                    actual system coincides with the survival event in the leave-$S$-out system — follows exactly
+                    as in the $m=2$ case: since no node in $S$ ever activates, no discrepancy between systems is
+                    ever triggered.
+                  </p>
+                  <p>
+                    <strong>Proof of (I2).</strong> By construction, the leave-$S$-out field $\mathbf{g}^{(-S)}$
+                    is built entirely from the edges among $[n] \setminus S$ and the fear draws
+                    $(f_\ell, U_{\ell,\cdot})_{\ell \notin S}$. By the model's construction (§3.3), these are
+                    drawn independently of the private randomness $(f_i, U_{i,\cdot})_{i \in S}$ of nodes in $S$.
+                    Hence $\mathbf{g}^{(-S)}$ is strictly independent of that private randomness, for every finite
+                    $S$ — the argument does not depend on $|S|$.
+                  </p>
+                  <p>
+                    <strong>Proof of (I3).</strong> Condition on $\mathbf{g}^{(-S)} = \mathbf{g}$ and
+                    $(f_i)_{i \in S}$. By (I1), each event $\{Y_i' > t\}$ ($i \in S$) is pathwise identical to
+                    $\{Y_i'^{(-S)} > t\}$ in the leave-$S$-out system, which is a deterministic function of the
+                    now-fixed field $\mathbf{g}$, the fixed susceptibility $f_i$, and node $i$'s own private
+                    edge/fear randomness only — never that of another node $j \in S$, $j \neq i$ (node $i$'s
+                    solvency counter and fear draws involve only its own incident edges and its own uniform
+                    sequence). Since the model draws edges and fear uniforms independently across distinct nodes,
+                    the private randomness streams of the nodes in $S$ are mutually independent. Conditioning on
+                    the field and on $(f_i)_{i \in S}$ therefore leaves $\{Y_i'^{(-S)} > t\}_{i \in S}$ as a
+                    family of events depending on mutually independent randomness, so the joint conditional
+                    probability factors into the product of the marginals, as claimed — the same argument as the
+                    $m=2$ Conditional Factorisation above, applied term-by-term across $S$.
+                  </p>
+                  <div class="proof-qed">&#9633;</div>
+                </details>
               </div>
 
               <div class="math-block" data-status="tier1">

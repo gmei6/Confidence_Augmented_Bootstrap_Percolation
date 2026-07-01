@@ -585,10 +585,10 @@
                     $$\log \prod_{j=1}^{k(t)} \left(1 - f_i\, g_j\right) = \sum_{j=1}^{k(t)} \log\!\left(1 - f_i\, g_j\right).$$
                   </p>
                   <p>
-                    <strong>2. Linearise.</strong> Generation sizes are sub-macroscopic, so $g_j = a_{j-1}/n = o(1)$ and
-                    $f_i\, g_j \leq g_j \to 0$. The expansion $\log(1-x) = -x - \tfrac{1}{2}x^2 - \cdots$ gives
+                    <strong>2. Linearise (first-order Taylor expansion).</strong> Generation sizes are sub-macroscopic, so $g_j = a_{j-1}/n = o(1)$ and
+                    $f_i\, g_j \leq g_j \to 0$. Taylor-expanding $\log(1-x) = -x - \tfrac{1}{2}x^2 - \cdots$ around $x=0$ and keeping the linear term
                     $$\sum_{j=1}^{k(t)} \log\!\left(1 - f_i\, g_j\right) = -f_i \sum_{j=1}^{k(t)} g_j + O\!\left(\sum_{j=1}^{k(t)} g_j^2\right),$$
-                    and the quadratic remainder is negligible since $\sum_j g_j^2 \leq \left(\max_j g_j\right)\sum_j g_j = o(1)\cdot O(t/n) \to 0$.
+                    and the quadratic remainder is negligible in aggregate across all $k(t)$ generations (not merely pointwise) since $\sum_j g_j^2 \leq \left(\max_j g_j\right)\sum_j g_j = o(1)\cdot O(t/n) \to 0$.
                   </p>
                   <p>
                     <strong>3. Apply the clock collapse</strong> (&sect;4.1): $\sum_{j=1}^{k(t)} g_j = T_{k(t)-1}/n \approx t/n$, so

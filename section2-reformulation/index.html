@@ -391,16 +391,15 @@
                   $$I_i^{\text{fear}}(j) := \mathbf{1}[U_{i,j} \lt f_i g_j]$$
                 </li>
                 <li>Define the solvency-activated and fear-activated sets for generation $k$:
-                  $$\mathcal{S}(k) := \{i \notin B_k : |N(i) \cap B_k| \geq r\}$$
+                  $$\mathcal{S}(k) := \{i \notin B_k : M_i(T_{k-1}) \geq r\}$$
                   $$\mathcal{F}(k) := \{i \notin B_k \cup \mathcal{S}(k) : I_i^{\text{fear}}(k) = 1\}$$
                   The new generation queue is the union of both: $\mathcal{G}_k = \mathcal{S}(k) \cup \mathcal{F}(k)$.
                 </li>
               </ol>
               <div class="note-callout">
                 <div class="note-title">Sequential Bridge</div>
-                Under the edge-exposure process, $B_k = Z(T_{k-1})$ and $|N(i) \cap B_k| = M_i(T_{k-1})$
-                exactly, so these definitions are pathwise equivalent to the $T_k$-indexed forms used in
-                the sequential analysis below.
+                Under the edge-exposure process, $B_k = Z(T_{k-1})$ exactly, ensuring these definitions 
+                are pathwise equivalent to the $T_k$-indexed forms used in the sequential analysis below.
               </div>
             </div>
 

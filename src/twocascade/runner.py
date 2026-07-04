@@ -115,7 +115,10 @@ def run_single_trial(args) -> tuple[float, int]:
     (n, p, r, mu, kappa, a, target_high_degree, window_len, weights, graph_cfg, fear_cfg, seed_layout, child_seed) = args
     
     # Strict RNG discipline: separate streams for degrees/geometry, pairing, fears, cascades
-    ss = np.random.SeedSequence(child_seed)
+    if isinstance(child_seed, np.random.SeedSequence):
+        ss = child_seed
+    else:
+        ss = np.random.SeedSequence(child_seed)
     child_seeds = ss.spawn(4)
     rng_graph = np.random.default_rng(child_seeds[0])
     rng_pair = np.random.default_rng(child_seeds[1])

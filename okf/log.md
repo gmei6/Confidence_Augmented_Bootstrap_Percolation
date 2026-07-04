@@ -5,6 +5,7 @@ type: log
 
 # Log
 
+- 2026-07-04: [S-045 Antigravity-to-Claude Handoff](changes/s-045-claude-handoff.md)
 - 2026-07-04: [S-044 Analysis of Extension Tracks (Tasks H, N, O, P)](changes/s-044-analysis-of-extension-tracks.md)
 - 2026-07-04: [S-043 Tasks H, N, O, P Completed](changes/s-043-tasks-hnop-completed.md)
 - 2026-07-04: [S-042 Tasks N, O, P Drafted and Task H Dispatched](changes/s-042-tasks-nop-drafted.md)

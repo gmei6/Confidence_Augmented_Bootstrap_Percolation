@@ -643,5 +643,169 @@ def evaluate_binomial_dispersion(
         "dispersion_ratio": dispersion_ratio,
         "ci": (lo, hi),
         "n_trials": len(s)
+def _fit_log_ratio_through_origin(x: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
+    """
+    Least-squares fit of y = gamma * x through the origin.
+
+    The origin constraint encodes the scaling-law normalization a_c(0)/a_c(0) = 1,
+    i.e. log-ratio 0 at log(1-mu) = 0 exactly, so a free intercept would only
+    absorb noise from the mu=0 baseline that is already divided out.
+
+    Returns:
+        Dict with "gamma", "gamma_err" (None if fewer than 2 points), and
+        "r_squared" (through-origin definition, 1 - SS_res / sum(y^2)).
+    """
+    sxx = float(np.sum(x * x))
+    if sxx == 0.0:
+        raise ValueError("Cannot fit scaling exponent: all log(1-mu) values are zero.")
+    gamma = float(np.sum(x * y) / sxx)
+    residuals = y - gamma * x
+    ss_res = float(np.sum(residuals ** 2))
+    ss_tot = float(np.sum(y ** 2))
+    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0.0 else 1.0
+    if len(x) >= 2:
+        gamma_err = float(np.sqrt(ss_res / (len(x) - 1) / sxx))
+    else:
+        gamma_err = None
+    return {"gamma": gamma, "gamma_err": gamma_err, "r_squared": r_squared}
+
+
+def fit_scaling_exponent(analyzed_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Fit the scaling-law exponent gamma in a_c(mu) = (1-mu)^gamma * a_c(0).
+
+    Regresses log(a_emp(mu)/a_emp(0)) = gamma * log(1-mu) (through the origin)
+    over the empirical 0.5-crossings of one analyzed sweep, and compares gamma
+    against the Conjecture 2 prediction r/(r-1).
+
+    Clamping filter (D-021/D-023): a crossing sitting at the minimum swept seed
+    size is a lower bound, not a resolved threshold, so rows with
+    a_emp <= grid_floor (strict inequality required to survive) are excluded
+    from the fit but still reported in the points table with is_clamped=True.
+
+    Args:
+        analyzed_data: Dictionary returned by analyze_sweep.
+
+    Returns:
+        Dict containing:
+            - r, n: Model parameters from metadata.
+            - gamma: Fitted exponent (None if no usable points).
+            - gamma_err: Standard error of gamma (None if < 2 usable points).
+            - gamma_theory: The predicted exponent r/(r-1).
+            - r_squared: Through-origin R^2 of the fit (None if no usable points).
+            - n_points: Number of non-clamped mu > 0 points used.
+            - a_emp_0: Empirical threshold at mu = 0.
+            - grid_floor: Minimum swept seed size used by the clamping filter.
+            - points: Per-mu table with mu, a_emp, ratio, is_clamped.
+
+    Raises:
+        ValueError: If the mu=0 baseline is missing, NaN, or itself clamped at
+            the grid floor (no valid normalization exists in either case).
+    """
+    meta = analyzed_data["metadata"]
+    r = meta["r"]
+    n = meta["n"]
+
+    grid_floor = min(cell["seed_size"] for cell in analyzed_data["processed_cells"])
+
+    thresholds = []
+    for mu_str, a_emp in analyzed_data["empirical_thresholds"].items():
+        if a_emp is not None and not np.isnan(a_emp):
+            thresholds.append((float(mu_str), float(a_emp)))
+    thresholds.sort()
+
+    if not thresholds or abs(thresholds[0][0]) > 1e-9:
+        raise ValueError("CRITICAL: mu=0 baseline is missing or invalid in the selected grid layout.")
+    a_emp_0 = thresholds[0][1]
+    if a_emp_0 <= grid_floor:
+        raise ValueError(
+            f"CRITICAL: mu=0 baseline a_emp={a_emp_0} is clamped at the grid floor "
+            f"({grid_floor}); no valid normalization for the scaling fit."
+        )
+
+    points = []
+    x_vals = []
+    y_vals = []
+    for mu, a_emp in thresholds:
+        is_clamped = a_emp <= grid_floor
+        ratio = a_emp / a_emp_0
+        points.append({
+            "mu": mu,
+            "a_emp": a_emp,
+            "ratio": None if is_clamped else ratio,
+            "is_clamped": is_clamped
+        })
+        if not is_clamped and mu > 1e-9 and mu < 1.0:
+            x_vals.append(np.log1p(-mu))
+            y_vals.append(np.log(ratio))
+
+    if x_vals:
+        fit = _fit_log_ratio_through_origin(np.array(x_vals), np.array(y_vals))
+        gamma, gamma_err, r_squared = fit["gamma"], fit["gamma_err"], fit["r_squared"]
+    else:
+        gamma, gamma_err, r_squared = None, None, None
+
+    return {
+        "r": r,
+        "n": n,
+        "gamma": gamma,
+        "gamma_err": gamma_err,
+        "gamma_theory": r / (r - 1.0),
+        "r_squared": r_squared,
+        "n_points": len(x_vals),
+        "a_emp_0": a_emp_0,
+        "grid_floor": grid_floor,
+        "points": points
+    }
+
+
+def pool_scaling_exponent_fits(fits: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Pool the usable (log(1-mu), log-ratio) points from several fit_scaling_exponent
+    results at the same r (e.g. across system sizes n) and refit a single gamma.
+
+    Each dataset's ratios stay normalized by its own a_emp(0), so points from
+    different n are directly comparable and the pooled regression is still
+    through the origin.
+
+    Args:
+        fits: List of dicts returned by fit_scaling_exponent, all with the same r.
+
+    Returns:
+        Dict with r, gamma, gamma_err, gamma_theory, r_squared, n_points, and
+        n_values (sorted system sizes contributing points).
+
+    Raises:
+        ValueError: If fits is empty, mixes different r, or has no usable points.
+    """
+    if not fits:
+        raise ValueError("pool_scaling_exponent_fits requires at least one fit.")
+    r_values = {fit["r"] for fit in fits}
+    if len(r_values) != 1:
+        raise ValueError(f"Cannot pool fits across different r values: {sorted(r_values)}")
+    r = fits[0]["r"]
+
+    x_vals = []
+    y_vals = []
+    n_values = set()
+    for fit in fits:
+        for point in fit["points"]:
+            if not point["is_clamped"] and point["mu"] > 1e-9 and point["mu"] < 1.0:
+                x_vals.append(np.log1p(-point["mu"]))
+                y_vals.append(np.log(point["ratio"]))
+                n_values.add(fit["n"])
+
+    if not x_vals:
+        raise ValueError(f"No non-clamped mu > 0 points available to pool for r={r}.")
+
+    pooled = _fit_log_ratio_through_origin(np.array(x_vals), np.array(y_vals))
+    return {
+        "r": r,
+        "gamma": pooled["gamma"],
+        "gamma_err": pooled["gamma_err"],
+        "gamma_theory": r / (r - 1.0),
+        "r_squared": pooled["r_squared"],
+        "n_points": len(x_vals),
+        "n_values": sorted(n_values)
     }
 

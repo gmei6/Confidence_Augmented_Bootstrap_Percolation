@@ -518,6 +518,66 @@ def plot_fear_field_concentration(concentration: Dict[str, Any], output_dir: str
 
     fig.suptitle("Fear-Field Trajectory Concentration ($r=2$): Relative Variance vs. $n$")
 
+def plot_extended_scaling_validation(fits_by_r: Dict[int, list], output_dir: str, filename: str = "extended_scaling_validation.png") -> None:
+    """
+    Plot empirical threshold ratio vs mu for r in {2, 3, 4} and overlay theoretical scaling law.
+    
+    Args:
+        fits_by_r: Dictionary mapping r to a list of fit dicts (as returned by fit_scaling_exponent).
+        output_dir: Output directory.
+        filename: Output filename.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    if not isinstance(axes, np.ndarray):
+        axes = [axes]
+        
+    r_values = sorted(fits_by_r.keys())
+    
+    mu_dense = np.linspace(0.0, 0.9, 200)
+    
+    for i, r in enumerate(r_values):
+        ax = axes[i]
+        fits = fits_by_r[r]
+        
+        # Plot theoretical curve
+        gamma_theory = r / (r - 1.0)
+        ratio_theory = (1.0 - mu_dense) ** gamma_theory
+        ax.plot(mu_dense, ratio_theory, "--", color="black", label=f"Theory $(1-\\mu)^{{{r}/({r}-1)}}$", linewidth=2.5)
+        
+        # Collect points across all system sizes
+        n_values = sorted({fit["n"] for fit in fits})
+        colors = plt.cm.plasma(np.linspace(0.1, 0.9, len(n_values)))
+        
+        for idx, n in enumerate(n_values):
+            # Find the fit for this n
+            fit = next((f for f in fits if f["n"] == n), None)
+            if fit is None:
+                continue
+            
+            mu_vals = []
+            ratio_vals = []
+            
+            for pt in fit["points"]:
+                if not pt["is_clamped"] and pt["ratio"] is not None:
+                    mu_vals.append(pt["mu"])
+                    ratio_vals.append(pt["ratio"])
+                    
+            if mu_vals:
+                ax.plot(mu_vals, ratio_vals, "o", color=colors[idx], label=f"N={n}", markersize=6, alpha=0.8)
+                
+        ax.set_title(f"$r={r}$ (Theory $\\gamma={gamma_theory:.2f}$)")
+        ax.set_xlabel("Mean Global Fear ($\\mu$)")
+        if i == 0:
+            ax.set_ylabel("Threshold Ratio $a_c(\\mu)/a_c(0)$")
+            
+        ax.set_xlim(-0.02, 0.92)
+        ax.set_ylim(-0.05, 1.05)
+        ax.legend()
+        
+    plt.tight_layout()
     filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()

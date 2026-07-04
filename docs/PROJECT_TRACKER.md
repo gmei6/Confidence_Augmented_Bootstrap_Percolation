@@ -4,8 +4,8 @@
 > Paste this whole file into a fresh LLM conversation before working, and ask the LLM to
 > return the whole updated file at the end (see **§14 — LLM Update Protocol**).
 
-- **Last updated:** 2026-07-01 — Session 37 (first advisor meeting held; five extension directions logged, D-028)
-- **File version:** v1.12
+- **Last updated:** 2026-07-02 — Session 38 (fixed a §4 markdown rendering bug — multi-line $$ block)
+- **File version:** v1.13
 - **Owner:** Gary Mei (Georgia Tech ISyE, SURS) · **Advisor:** Prof. Souvik Dhara
 
 ---
@@ -182,9 +182,13 @@ $\mu=0$ case of this project **is** their model; reproducing their threshold is 
 test (Week 1).**
 
 **Critical quantities (their eqs. 3.1–3.2, 3.12), fixed $r\ge2$:**
-$$t_c := \left(\frac{(r-1)!}{n p^{r}}\right)^{1/(r-1)},\qquad
+
+$$
+t_c := \left(\frac{(r-1)!}{n p^{r}}\right)^{1/(r-1)},\qquad
 a_c := \left(1-\frac1r\right) t_c,\qquad
-p_c := \left(\frac{(r-1)^{r-1}(r-1)!}{r^{r-1}}\right)^{1/r}\!\!\left(n\,a^{r-1}\right)^{-1/r}.$$
+p_c := \left(\frac{(r-1)^{r-1}(r-1)!}{r^{r-1}}\right)^{1/r}\!\!\left(n\,a^{r-1}\right)^{-1/r}.
+$$
+
 For $r=2$: $\;t_c = 1/(np^2)$, $\;a_c = 1/(2np^2)$.
 
 **The dichotomy:** for $n^{-1}\ll p\ll n^{-1/r}$, w.h.p. the final active set is either $o(n)$
@@ -469,6 +473,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `D-026 | 2026-06-25 | Adds a Python-only diagnostic side-channel (track_nodes/tracked_failure_rounds) in reference.py as a backward-compatible, observational extension; exempts it from §5.4 C++ parity. | The change is strictly additive, observational, backward-compatible, and does not alter cascade dynamics. Exemption is bounded as it does not change the core verification criteria of §5.4 (engine-logic identity at μ=0, statistical agreement of P(systemic) / |A*|/n). Any future reference.py change requires a new standalone instruction. | §5.3, §5.4`
 - `D-027 | 2026-06-29 | Expanded viz/ section 3 into Part A (μ=0, seed={1,4}) and Part B (μ=0.85, seed={1}) dual walkthroughs. Part A establishes co-existence with Janson; Part B shows fear enabling full systemic collapse from a single seed via trace F(0)={2,6}, S(1)={5}, F(1)={3}, S(2)={4,7}, halt — |A*|/n=1.0. Bernoulli outcomes are pre-determined for reproducibility. Illustrative only; §5.4/§5.6 do not apply. | viz/ only`
 - `D-028 | 2026-07-01 | First advisor meeting (Prof. Dhara): directed five extension tracks for the confidence-cascade model. (1) Configuration-model graphs with power-law degree sequences, with the fear factor made degree-dependent (advisor explicitly requested this simulation; his forthcoming book covers configuration models for general degree distributions). (2) Geometric graphs — random geometric graphs (connect within distance r) first, generalizing to distance-decaying connection probability, then to geometric inhomogeneous random graphs (GIRGs, which combine degree heterogeneity and geometry) — motivated by locality (a local power-grid failure shouldn't cascade to another continent); study whether the panic field stays spatially local or the cascade still percolates globally. (3) Combine (1)+(2): degree heterogeneity on a geometric/GIRG graph. (4) Lower-priority: optional recovery/healing phase (SIR-style) replacing permanent activation. (5) Lower-priority: weighted edges (economic "supply" framing — nodes need a threshold amount of product) so cascade propagation depends on edge weight, not just topology. Adopted workflow: build realistic models → simulate → form a falsifiable conjecture (e.g., a fear-dependent threshold: low fear keeps cascades small regardless of degree tail, high fear lets even a small failure set eventually reach a large fraction) → test for a phase transition in simulation → attempt a proof. Two possible publication routes flagged: empirical (real network data, e.g. SNAP datasets at https://snap.stanford.edu/data/, with the fear channel added, aiming for a counterintuitive finding) or theoretical (stay with a simplified model and prove a theorem); either route needs a genuinely novel result to be publishable. | The advisor's steer moves the project past the $G(n,p)$/Janson baseline (§2 North Star) toward richer, more realistic graph structure, directly resolving Q2 (config-model direction) and giving concrete shape to future work; the heavy-tailed-degree motivating question (can a small failure set still cascade widely under a fat-tailed degree distribution?) is the paper's central "why this model" hook on either the empirical or theoretical publication path. Next meeting 2026-07-15; results to be emailed beforehand. | §2, §9, §10`
+- `D-029 | 2026-07-02 | Reformatted the §4 critical-quantities display-math block (t_c, a_c, p_c) as a standalone $$ ... $$ block (blank line before/after, delimiters alone on their own lines); no mathematical content changed. | The block previously opened $$ mid-paragraph on the same line as preceding prose, continued for two more lines with no $ delimiters at all on the middle line, and closed with $$ on the third — unlike every other $$ block in the file (§3.2 line 103, §3.3 line 111), which is self-contained on one line. Because no blank line separated the block from the preceding sentence, it was parsed as one soft-wrapped paragraph rather than a distinct math block, so several renderers (including GitHub's) failed to recognize it and rendered the raw LaTeX as literal text. Logged per §14 rule 4 as a minimal edit to a 🔒 section, even though it is formatting-only (cf. D-018's precedent for minimal frozen-section edits). | §4`
 
 
 ## §12 — Session Changelog 📜 *(APPEND-ONLY — what changed in the file each session)*
@@ -507,6 +512,7 @@ heuristic mean-field threshold** showing qualitative agreement.
 - `S-036 | 2026-06-29 | v1.12 | Deployed section2-reformulation/ to GitHub Pages alongside viz/ (pages.yml updated to build combined _site/; path trigger extended). Updated README.md: added section2 badge and link, Key Validated Results table, full repo layout, C++ build instructions, sweep usage. Pruned two stale local branches (subagent-Python-Simulation-Agent-self-2ed9f165 and task-pairwise-decoupling) and their worktrees. §8 corrected: section2 now live on Pages, not file:// only. No frozen edits, no new decisions. | §8, §12`
 - `S-037 | 2026-07-01 | v1.12 | Logged the first advisor meeting outcome. Appended D-028 (five extension directions: degree-heterogeneous configuration-model graphs with degree-dependent fear, geometric graphs up to GIRGs, the combination of the two, an optional recovery/healing phase, and weighted edges; adopted simulate-then-conjecture-then-prove workflow; two publication routes flagged). Live updates: §8 (phase now post-first-meeting, next meeting 2026-07-15), §9 (Q2 marked resolved toward configuration model, Q4–Q8 added for the new extension tracks, logistics updated), §10 (next actions rewritten around scoping the extension simulations and emailing results before the next meeting). No frozen edits — the extensions are logged as directions, not yet adopted into the §2/§3 model definition. | §8, §9, §10, §11, §12`
 - `S-038 | 2026-07-01 | v1.12 | ERRATA — correction of record for D-028. That entry described the config-model reference as "his forthcoming book"; Gary clarified it is Remco van der Hofstad's *Random Graphs and Complex Networks*, Volume I — an existing, already-cited reference (§13), not a new/unpublished work. §13's van der Hofstad entry annotated to note it is the book referenced at the 2026-07-01 meeting. D-028 itself is append-only and left unedited per §11 protocol; this entry is the correction of record. No new decision; no frozen edits. | §13, §12`
+- `S-039 | 2026-07-02 | v1.13 | Fixed a §4 markdown rendering bug (D-029): the critical-quantities display-math block ($t_c$, $a_c$, $p_c$) opened `$$` mid-paragraph with no blank line separating it from the preceding sentence, and its middle line (`a_c := ...`) had no `$` delimiters at all — unlike every other $$ block in the file, which is self-contained on one line. Reformatted as a standalone block (blank line before/after, `$$` alone on its own opening/closing line); no mathematical content changed. Frozen edit to §4, minimal per §14 rule 4, logged as D-029. | §4, §11, §12`
 
 ## §13 — Key References
 - **Janson, Łuczak, Turova & Vallier (2012)** — "Bootstrap percolation on the random graph $G(n,p)$,"

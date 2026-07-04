@@ -1,0 +1,26 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 2000,
+    "r": 2,
+    "concentration": 50.0,
+    "theta": 0.5,
+    "window_len": 1,
+    "weights": null,
+    "target_high_degree": false
+  },
+  "scaling": {
+    "n_ref": 1000,
+    "target_mean_degree": 8.0,
+    "alpha": 0.7
+  },
+  "sweep": {
+    "mean_fear_grid": [0.3, 0.5],
+    "seed_multiples": [0.8, 1.1],
+    "trials_per_cell": 1000,
+    "base_seed": 202607042
+  },
+  "output": {
+    "raw_filepath": "results/raw/fear_concentration_n2000.json"
+  }
+}

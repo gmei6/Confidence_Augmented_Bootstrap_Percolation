@@ -238,3 +238,65 @@ def test_fit_finite_size_exponent():
     assert np.isclose(res["r_squared"], 1.0)
     assert np.isclose(res["slope_err"], 0.0, atol=1e-7)
 
+def test_analyze_fear_field_concentration():
+    """Verify analyze_fear_field_concentration extracts relative variance correctly and handles degenerate cases."""
+    from twocascade.analysis import analyze_fear_field_concentration
+
+    raw_by_n = {
+        1000: {
+            "results": [
+                {
+                    "mean_fear_idx": 0, "seed_multiple_idx": 0,
+                    "mean_fear": 0.5, "seed_multiple": 1.1,
+                    # trials: [rc=2, rc=1, rc=0]
+                    # hist 0: [10, 20, 30] -> round 1: (20-10)/1000 = 0.01; round 2: (30-20)/1000 = 0.01
+                    # hist 1: [10, 30] -> round 1: (30-10)/1000 = 0.02
+                    # hist 2: [10] -> round 0 only
+                    "histories": [[10, 20, 30], [10, 30], [10]],
+                    "rounds_completed": [2, 1, 0]
+                }
+            ]
+        },
+        2000: {
+            "results": [
+                {
+                    "mean_fear_idx": 0, "seed_multiple_idx": 0,
+                    "mean_fear": 0.5, "seed_multiple": 1.1,
+                    # trials: [rc=1, rc=1]
+                    # hist 0: [20, 40] -> round 1: (40-20)/2000 = 0.01
+                    # hist 1: [20, 60] -> round 1: (60-20)/2000 = 0.02
+                    "histories": [[20, 40], [20, 60]],
+                    "rounds_completed": [1, 1]
+                }
+            ]
+        }
+    }
+
+    res = analyze_fear_field_concentration(raw_by_n, rounds=[1, 2], min_trials=2)
+
+    assert res["n_values"] == [1000, 2000]
+    assert res["rounds"] == [1, 2]
+    
+    cell = res["cells"][0]
+    assert cell["mean_fear"] == 0.5
+    assert cell["seed_multiple"] == 1.1
+    
+    # round 1
+    r1 = cell["per_round"][0]
+    assert r1["round"] == 1
+    # n=1000: g1 = [0.01, 0.02], mean = 0.015, var = 0.00005 (sample var ddof=1)
+    # n=2000: g1 = [0.01, 0.02], mean = 0.015, var = 0.00005
+    assert np.isclose(r1["mean_g"][0], 0.015)
+    assert np.isclose(r1["var_g"][0], 0.00005)
+    assert r1["trials_included"] == [2, 2]
+    
+    # round 2
+    r2 = cell["per_round"][1]
+    assert r2["round"] == 2
+    # n=1000: only 1 trial reaches rc=2 -> trials=1 < min_trials=2 -> None
+    # n=2000: 0 trials reach rc=2 -> None
+    assert r2["trials_included"] == [1, 0]
+    assert r2["mean_g"][0] is None
+    assert r2["var_g"][0] is None
+
+

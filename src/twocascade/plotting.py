@@ -396,3 +396,70 @@ def plot_kappa_robustness(analyzed_sweeps_by_kappa: Dict[str, Dict[str, Any]], o
     plt.savefig(filepath, dpi=300)
     plt.close()
 
+
+def plot_fear_field_concentration(concentration: Dict[str, Any], output_dir: str, filename: str = "fear_concentration_relvar_r2.png") -> None:
+    """
+    Plot the across-trial relative variance of the fear field g_k vs. system size n
+    on log-log axes (Task E), one panel per (mean_fear, seed_multiple) cell, one
+    series per active round k, annotated with the fitted decay rate gamma from
+    log(rel var) ~ -gamma log(n). Expects the output of
+    analyze_fear_field_concentration.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+
+    cells = concentration["cells"]
+    n_values = np.array(concentration["n_values"], dtype=float)
+
+    ncols = 2
+    nrows = int(np.ceil(len(cells) / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5.0 * ncols, 4.0 * nrows), sharex=True, sharey=True)
+    axes = np.atleast_1d(axes).ravel()
+
+    # Okabe-Ito colorblind-safe hues, fixed order per round; marker shape as secondary encoding.
+    round_colors = ["#0072B2", "#E69F00", "#009E73"]
+    round_markers = ["o", "s", "^"]
+
+    guide_anchor = None
+    for ax, cell in zip(axes, cells):
+        for idx, entry in enumerate(cell["per_round"]):
+            k = entry["round"]
+            pts = [(n, rv) for n, rv in zip(n_values, entry["rel_var"]) if rv is not None and rv > 0.0]
+            if not pts:
+                continue
+            xs = np.array([n for n, _ in pts])
+            ys = np.array([rv for _, rv in pts])
+            fit = entry["fit"]
+            if fit is not None and fit["gamma_err"] is not None:
+                label = f"$k={k}$ ($\\hat\\gamma = {fit['gamma']:.2f} \\pm {fit['gamma_err']:.2f}$)"
+            elif fit is not None:
+                label = f"$k={k}$ ($\\hat\\gamma = {fit['gamma']:.2f}$)"
+            else:
+                label = f"$k={k}$"
+            ax.plot(xs, ys, linestyle="-", marker=round_markers[idx % len(round_markers)],
+                    color=round_colors[idx % len(round_colors)], linewidth=2, markersize=6, label=label)
+            if guide_anchor is None:
+                guide_anchor = (xs[0], ys[0])
+
+        # 1/n reference guide (slope -1 in log-log), anchored to the first plotted point.
+        if guide_anchor is not None:
+            ax.plot(n_values, guide_anchor[1] * guide_anchor[0] / n_values,
+                    linestyle=":", color="gray", linewidth=1.5, label="$\\propto 1/n$")
+
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title(f"$\\mu = {cell['mean_fear']}$, $a = {cell['seed_multiple']}\\,a_c$")
+        ax.legend(fontsize=9)
+
+    for ax in axes[len(cells):]:
+        ax.set_visible(False)
+    for ax in axes.reshape(nrows, ncols)[-1, :]:
+        ax.set_xlabel("System Size ($n$)")
+    for ax in axes.reshape(nrows, ncols)[:, 0]:
+        ax.set_ylabel("$\\mathrm{Var}(g_k) / \\mathbb{E}[g_k]^2$")
+
+    fig.suptitle("Fear-Field Trajectory Concentration ($r=2$): Relative Variance vs. $n$")
+
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()

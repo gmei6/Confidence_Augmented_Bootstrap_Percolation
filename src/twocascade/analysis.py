@@ -416,3 +416,139 @@ def fit_finite_size_exponent(
         "r_squared": float(r_squared)
     }
 
+
+def analyze_fear_field_concentration(
+    raw_by_n: Dict[int, Dict[str, Any]],
+    rounds: Optional[List[int]] = None,
+    min_trials: int = 2
+) -> Dict[str, Any]:
+    """
+    Measure how the across-trial variance of the fear-field trajectory decays as
+    the system size n grows (Task E, empirical concentration characterization).
+
+    Conventions (window_len = 1): the raw histories are cumulative failed counts
+    with history[0] = seed size, so the generation size of active round k >= 1 is
+    a_k = history[k] - history[k-1], and g_k = a_k / n is the fear field that
+    round k's failures exert on round k+1. Since g_0 = a_0 / n is deterministic
+    given the config, rounds (1, 2, 3) are the first three stochastic fear-field
+    values.
+
+    For each cell (mean_fear, seed_multiple), each round k, and each n: across
+    the trials whose cascade reached round k (rounds_completed >= k), compute the
+    empirical mean E[g_k], variance Var(g_k), and relative variance
+    Var(g_k) / E[g_k]^2, then fit log(rel var) = -gamma * log(n) + c across n to
+    estimate the concentration decay rate gamma.
+
+    Args:
+        raw_by_n: Mapping from system size n to the loaded raw sweep JSON. Each
+            raw dict must carry per-cell "histories" (list of per-trial cumulative
+            histories) alongside "rounds_completed"; all sizes must share the same
+            sweep grid.
+        rounds: Active rounds k to analyze. Defaults to [1, 2, 3].
+        min_trials: Minimum trials reaching round k for the cell stats to count
+            (needs >= 2 for a sample variance).
+
+    Returns:
+        Dict with "rounds", "n_values", and "cells"; each cell carries
+        "mean_fear", "seed_multiple", and "per_round" entries holding aligned
+        lists over n ("mean_g", "var_g", "rel_var", "trials_included"; None where
+        fewer than min_trials trials reached round k) plus the log-log "fit"
+        ({"gamma", "gamma_err", "intercept", "r_squared", "n_points"}, or None if
+        fewer than 2 sizes yield a valid relative variance).
+    """
+    if rounds is None:
+        rounds = [1, 2, 3]
+    if min_trials < 2:
+        raise ValueError("min_trials must be >= 2 to compute a sample variance")
+    if not raw_by_n:
+        raise ValueError("raw_by_n must contain at least one system size")
+
+    n_values = sorted(raw_by_n.keys())
+
+    # Index cells by grid coordinates (never float keys) and check grid alignment.
+    cells_by_n = {}
+    for n in n_values:
+        cells_by_n[n] = {
+            (cell["mean_fear_idx"], cell["seed_multiple_idx"]): cell
+            for cell in raw_by_n[n]["results"]
+        }
+    grid_keys = sorted(cells_by_n[n_values[0]].keys())
+    for n in n_values[1:]:
+        if sorted(cells_by_n[n].keys()) != grid_keys:
+            raise ValueError(f"Sweep grid for n={n} does not match n={n_values[0]}")
+        for key in grid_keys:
+            ref, cur = cells_by_n[n_values[0]][key], cells_by_n[n][key]
+            if (ref["mean_fear"], ref["seed_multiple"]) != (cur["mean_fear"], cur["seed_multiple"]):
+                raise ValueError(f"Cell {key} parameters differ between n={n_values[0]} and n={n}")
+
+    out_cells = []
+    for key in grid_keys:
+        ref_cell = cells_by_n[n_values[0]][key]
+        per_round = []
+        for k in rounds:
+            mean_g, var_g, rel_var, trials_included = [], [], [], []
+            for n in n_values:
+                cell = cells_by_n[n][key]
+                g_vals = [
+                    (hist[k] - hist[k - 1]) / n
+                    for hist, rc in zip(cell["histories"], cell["rounds_completed"])
+                    if rc >= k
+                ]
+                trials_included.append(len(g_vals))
+                if len(g_vals) >= min_trials:
+                    g_arr = np.asarray(g_vals, dtype=float)
+                    m = float(np.mean(g_arr))
+                    v = float(np.var(g_arr, ddof=1))
+                    mean_g.append(m)
+                    var_g.append(v)
+                    rel_var.append(v / m**2 if m > 0.0 else None)
+                else:
+                    mean_g.append(None)
+                    var_g.append(None)
+                    rel_var.append(None)
+
+            valid = [(n, rv) for n, rv in zip(n_values, rel_var) if rv is not None and rv > 0.0]
+            if len(valid) >= 2:
+                x = np.log(np.array([n for n, _ in valid], dtype=float))
+                y = np.log(np.array([rv for _, rv in valid], dtype=float))
+                slope, intercept = np.polyfit(x, y, 1)
+                y_pred = slope * x + intercept
+                ss_res = float(np.sum((y - y_pred) ** 2))
+                ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+                # OLS slope standard error; undefined without residual dof.
+                if len(valid) > 2:
+                    sxx = float(np.sum((x - np.mean(x)) ** 2))
+                    gamma_err = float(np.sqrt((ss_res / (len(valid) - 2)) / sxx))
+                else:
+                    gamma_err = None
+                fit = {
+                    "gamma": float(-slope),
+                    "gamma_err": gamma_err,
+                    "intercept": float(intercept),
+                    "r_squared": 1.0 - ss_res / ss_tot if ss_tot > 0.0 else 1.0,
+                    "n_points": len(valid)
+                }
+            else:
+                fit = None
+
+            per_round.append({
+                "round": k,
+                "mean_g": mean_g,
+                "var_g": var_g,
+                "rel_var": rel_var,
+                "trials_included": trials_included,
+                "fit": fit
+            })
+
+        out_cells.append({
+            "mean_fear": ref_cell["mean_fear"],
+            "seed_multiple": ref_cell["seed_multiple"],
+            "per_round": per_round
+        })
+
+    return {
+        "rounds": list(rounds),
+        "n_values": [int(n) for n in n_values],
+        "cells": out_cells
+    }
+

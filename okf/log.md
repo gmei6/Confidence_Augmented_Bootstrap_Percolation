@@ -1,0 +1,41 @@
+---
+mutability: append-only
+type: log
+---
+
+# Log
+
+- 2026-07-04: [S-040 OKF migration (tracker + lessons → okf/)](changes/s-040-okf-migration.md)
+- 2026-07-02: [S-039 §4 math-block rendering fixed (D-029)](changes/s-039-benchmark-math-fix.md)
+- 2026-07-01: [S-038 ERRATA: D-028 book reference corrected](changes/s-038-errata-d028-book.md)
+- 2026-07-01: [S-037 First advisor meeting logged (D-028)](changes/s-037-first-advisor-meeting.md)
+- 2026-06-29: [S-036 section2 deployed to Pages; README updated](changes/s-036-section2-pages-readme.md)
+- 2026-06-29: [S-035 Antigravity tasks A/C/D recorded](changes/s-035-tasks-a-c-d-recorded.md)
+- 2026-06-29: [S-034 Section-2 static study website built](changes/s-034-section2-study-website.md)
+- 2026-06-29: [S-033 viz tests 17/17; advisor brief drafted](changes/s-033-viz-tests-advisor-brief.md)
+- 2026-06-29: [S-032 GitHub Pages path-filter deploy fix](changes/s-032-pages-deploy-fix.md)
+- 2026-06-29: [S-031 viz/ Part A/B walkthroughs (D-027)](changes/s-031-viz-part-a-b.md)
+- 2026-06-28: [S-030 Interactive teaching website built](changes/s-030-viz-teaching-website.md)
+- 2026-06-25: [S-029 Pairwise decoupling finalized; D-026](changes/s-029-pairwise-decoupling-finalized.md)
+- 2026-06-25: [S-028 Joint-decoupling parallel sessions](changes/s-028-joint-decoupling-sessions.md)
+- 2026-06-24: [S-027 Task B (θ/κ robustness) verified](changes/s-027-task-b-theta-kappa.md)
+- 2026-06-24: [S-026 First advisor meeting scheduled](changes/s-026-advisor-meeting-scheduled.md)
+- 2026-06-16: [S-025 Advisor briefing hardened](changes/s-025-advisor-brief-hardening.md)
+- 2026-06-16: [S-024 Wk-5 overlays; provenance decoupled](changes/s-024-wk5-overlays-provenance.md)
+- 2026-06-15: [S-023 Scaling analysis hardened; results/analysis/ added](changes/s-023-scaling-analysis-hardening.md)
+- 2026-06-11: [S-022 C++ engine integrated into runner sweeps](changes/s-022-cpp-runner-integration.md)
+- 2026-06-11: [S-021 §5.4 cross-language validation completed](changes/s-021-cross-language-validation.md)
+- 2026-06-11: [S-020 Core C++ engine files written](changes/s-020-cpp-engine-files.md)
+- 2026-06-08: [S-019 Janson §2 reformulation completed](changes/s-019-section2-reformulation-proof.md)
+- 2026-06-04 – 2026-06-08: entries S-011 – S-018 were already elided in the source tracker (a literal `- ...` line in §12); their content is not recoverable from `docs/PROJECT_TRACKER.md` and no `changes/` files exist for them.
+- 2026-06-04: [S-010 Fork F2 resolved (marks dropped)](changes/s-010-f2-marks-dropped.md)
+- 2026-06-03: [S-009 Survivor-hazard removed](changes/s-009-survivor-hazard-removed.md)
+- 2026-06-03: [S-008 Fork F1 resolved; memory-window adopted](changes/s-008-f1-incremental-window.md)
+- 2026-06-03: [S-007 ERRATA: p-scaling / finite-size corrections](changes/s-007-errata-p-scaling.md)
+- 2026-06-03: [S-006 Threshold-offset wording corrected](changes/s-006-threshold-offset-correction.md)
+- 2026-06-03: [S-005 Fork F4 resolved; Wk-1 validation passes](changes/s-005-janson-regime-wk1-pass.md)
+- 2026-06-03: [S-004 Fork E1 resolved (file I/O boundary)](changes/s-004-e1-file-boundary.md)
+- 2026-06-03: [S-003 Repo scaffold + reference engine](changes/s-003-repo-scaffold-reference-engine.md)
+- 2026-06-02: [S-002 Fork F3 resolved (Beta fear)](changes/s-002-beta-fear-resolved.md)
+- 2026-06-01: [S-001 C++ core + Python orchestration adopted](changes/s-001-cpp-python-split.md)
+- 2026-06-01: [S-000 Initial tracker built](changes/s-000-initial-tracker.md)

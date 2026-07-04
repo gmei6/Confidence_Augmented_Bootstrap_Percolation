@@ -19,6 +19,13 @@ from twocascade.reference import (
     choose_seed,
     run_cascade
 )
+from twocascade.geometry import (
+    sample_torus_points,
+    build_rgg_adjacency,
+    build_soft_rgg_adjacency,
+    build_fear_adjacency,
+    run_cascade_local_fear
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CPP_BIN = REPO_ROOT / "cpp" / "build" / "twocascade_run"
@@ -100,21 +107,62 @@ def run_single_cell_cpp(args) -> List[tuple[float, int]]:
 
 def run_single_trial(args) -> tuple[float, int]:
     """Worker task to run a single simulation realization."""
-    (n, p, r, mu, kappa, a, target_high_degree, window_len, weights, child_seed) = args
+    (n, p, r, mu, kappa, a, target_high_degree, window_len, weights, child_seed, graph_cfg, fear_cfg, seed_layout) = args
     
     rng = np.random.default_rng(child_seed)
-    
-    adj = sample_gnp_adjacency(n, p, rng)
     fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng)
-    
     nodes = make_nodes(fears)
-    seeds = choose_seed(n, a, adj, rng, target_high_degree)
     
-    res = run_cascade(
-        adjacency=adj, nodes=nodes, r=r, seed_indices=seeds,
-        rng=rng, record_history=False,
-        window_len=window_len, weights=weights
-    )
+    graph_type = graph_cfg.get("type", "gnp")
+    points = None
+    if graph_type == "gnp":
+        adj = sample_gnp_adjacency(n, p, rng)
+    else:
+        points = sample_torus_points(n, rng)
+        c = graph_cfg.get("mean_degree_c", 2.0)
+        r_n = np.sqrt(c * np.log(n) / (np.pi * n))
+        if graph_type == "rgg":
+            adj = build_rgg_adjacency(points, r_n)
+        elif graph_type == "soft_rgg":
+            alpha_g = graph_cfg.get("alpha_g", 3.0)
+            adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng)
+        else:
+            raise ValueError(f"Unknown graph type: {graph_type}")
+            
+    if seed_layout == "disc":
+        if points is None:
+            raise ValueError("disc seeding requires a geometric graph")
+        center = sample_torus_points(1, rng)[0]
+        diff = np.abs(points - center)
+        diff = np.minimum(diff, 1.0 - diff)
+        dists = np.sum(diff**2, axis=1)
+        seeds = np.argsort(dists)[:a].tolist()
+    else:
+        seeds = choose_seed(n, a, adj, rng, target_high_degree)
+        
+    fear_type = fear_cfg.get("type", "global")
+    if fear_type == "global":
+        res = run_cascade(
+            adjacency=adj, nodes=nodes, r=r, seed_indices=seeds,
+            rng=rng, record_history=False,
+            window_len=window_len, weights=weights
+        )
+    elif fear_type == "local":
+        if points is None:
+            raise ValueError("local fear requires a geometric graph")
+        ell_over_rn = fear_cfg.get("ell_over_rn", 1.0)
+        if ell_over_rn == float('inf') or ell_over_rn == "inf":
+            ell = 2.0
+        else:
+            ell = r_n * float(ell_over_rn)
+        fear_adj = build_fear_adjacency(points, ell)
+        res = run_cascade_local_fear(
+            adjacency=adj, fear_adjacency=fear_adj, nodes=nodes, r=r, seed_indices=seeds,
+            rng=rng, record_history=False,
+            window_len=window_len, weights=weights
+        )
+    else:
+        raise ValueError(f"Unknown fear field type: {fear_type}")
     
     return res.final_failed_fraction, res.rounds_completed
 
@@ -138,6 +186,10 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
     weights = pinned["weights"]
     target_high_degree = pinned["target_high_degree"]
     
+    graph_cfg = cfg.get("graph", {"type": "gnp"})
+    fear_cfg = cfg.get("fear_field", {"type": "global"})
+    seed_layout = cfg.get("seed_layout", "uniform")
+    
     # Engine resolution precedence: parameter override -> root-level config key -> auto-detect
     engine_requested = engine or cfg.get("engine")
     if engine_requested is not None:
@@ -150,7 +202,10 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         else:
             raise ValueError(f"Unknown engine '{engine_requested}'. Must be 'cpp' or 'python'.")
     else:
-        resolved_engine = "cpp" if CPP_BIN.exists() else "python"
+        if graph_cfg.get("type", "gnp") != "gnp" or fear_cfg.get("type", "global") != "global":
+            resolved_engine = "python"
+        else:
+            resolved_engine = "cpp" if CPP_BIN.exists() else "python"
 
     print(f"==================================================")
     print(f"USING SIMULATION ENGINE: {resolved_engine.upper()}")
@@ -243,7 +298,8 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
                 seed_idx += 1
                 tasks.append((
                     n, p, r, mu, kappa, a, target_high_degree,
-                    window_len, weights, child_seed
+                    window_len, weights, child_seed,
+                    graph_cfg, fear_cfg, seed_layout
                 ))
                 
         print(f"Starting sweep simulation (Python) with {len(tasks)} tasks...")

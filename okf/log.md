@@ -5,6 +5,7 @@ type: log
 
 # Log
 
+- 2026-07-04: [S-043 Tasks H, N, O, P Completed](changes/s-043-tasks-hnop-completed.md)
 - 2026-07-04: [S-042 Tasks N, O, P Drafted and Task H Dispatched](changes/s-042-tasks-nop-drafted.md)
 - 2026-07-04: [S-041 Tasks E, F, and G completed](changes/s-041-tasks-e-f-g-completed.md)
 - 2026-07-04: [S-040 OKF migration (tracker + lessons → okf/)](changes/s-040-okf-migration.md)

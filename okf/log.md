@@ -5,6 +5,7 @@ type: log
 
 # Log
 
+- 2026-07-04: [S-041 Tasks E, F, and G completed](changes/s-041-tasks-e-f-g-completed.md)
 - 2026-07-04: [S-040 OKF migration (tracker + lessons → okf/)](changes/s-040-okf-migration.md)
 - 2026-07-02: [S-039 §4 math-block rendering fixed (D-029)](changes/s-039-benchmark-math-fix.md)
 - 2026-07-01: [S-038 ERRATA: D-028 book reference corrected](changes/s-038-errata-d028-book.md)

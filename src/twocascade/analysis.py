@@ -550,6 +550,8 @@ def analyze_fear_field_concentration(
         "rounds": list(rounds),
         "n_values": [int(n) for n in n_values],
         "cells": out_cells
+    }
+
 def evaluate_binomial_dispersion(
     failures_at_t: List[int],
     seed_size: int,
@@ -643,6 +645,8 @@ def evaluate_binomial_dispersion(
         "dispersion_ratio": dispersion_ratio,
         "ci": (lo, hi),
         "n_trials": len(s)
+    }
+
 def _fit_log_ratio_through_origin(x: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
     """
     Least-squares fit of y = gamma * x through the origin.
@@ -809,3 +813,60 @@ def pool_scaling_exponent_fits(fits: List[Dict[str, Any]]) -> Dict[str, Any]:
         "n_values": sorted(n_values)
     }
 
+
+def analyze_clock_collapse_bias(raw_by_n: Dict[int, Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
+    """
+    Verify the finite-n step-vs-generation survival bias of the fear-only channel,
+    and confirm that the generational survival probability converges to the step-level 
+    geometric clock limit as a_k = o(n).
+    
+    Args:
+        raw_by_n: Mapping from system size n to the loaded raw sweep JSON. Each
+            raw dict must carry per-cell "histories".
+    
+    Returns:
+        Dict mapping n to a dictionary with:
+            - 'ratios': List of unique ratio a_{k-1}/n
+            - 'mean_bias': List of mean delta P for each ratio
+            - 'max_bias': List of max delta P for each ratio
+    """
+    results_by_n = {}
+    for n_val, raw_data in raw_by_n.items():
+        n = float(n_val)
+        bias_by_a = {}
+        
+        for cell in raw_data["results"]:
+            mu = float(cell["mean_fear"])
+            for hist in cell["histories"]:
+                for k in range(1, len(hist) + 1):
+                    if k == 1:
+                        a_prev = hist[0]
+                    else:
+                        a_prev = hist[k-1] - hist[k-2]
+                        
+                    if a_prev > 0:
+                        p_step = (1.0 - mu / n) ** a_prev
+                        p_gen = 1.0 - mu * a_prev / n
+                        delta_p = p_step - p_gen
+                        
+                        if a_prev not in bias_by_a:
+                            bias_by_a[a_prev] = []
+                        bias_by_a[a_prev].append(delta_p)
+        
+        ratios = []
+        mean_biases = []
+        max_biases = []
+        
+        for a_prev in sorted(bias_by_a.keys()):
+            biases = bias_by_a[a_prev]
+            ratios.append(a_prev / n)
+            mean_biases.append(float(np.mean(biases)))
+            max_biases.append(float(np.max(biases)))
+            
+        results_by_n[int(n_val)] = {
+            "ratios": ratios,
+            "mean_bias": mean_biases,
+            "max_bias": max_biases
+        }
+        
+    return results_by_n

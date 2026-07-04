@@ -337,3 +337,25 @@ def test_evaluate_binomial_dispersion():
     with pytest.raises(ValueError, match="Need at least 2 trials"):
         evaluate_binomial_dispersion([10], seed_size=1, n=10)
 
+
+def test_analyze_clock_collapse_bias():
+    from twocascade.analysis import analyze_clock_collapse_bias
+    raw_by_n = {
+        1000: {
+            "results": [
+                {
+                    "mean_fear": 0.5,
+                    "histories": [[10, 15]] 
+                }
+            ]
+        }
+    }
+    res = analyze_clock_collapse_bias(raw_by_n)
+    assert 1000 in res
+    ratios = res[1000]["ratios"]
+    assert len(ratios) == 2
+    assert 5/1000.0 in ratios
+    assert 10/1000.0 in ratios
+    
+    assert len(res[1000]["mean_bias"]) == 2
+    assert len(res[1000]["max_bias"]) == 2

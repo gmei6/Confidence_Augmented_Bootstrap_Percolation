@@ -581,3 +581,40 @@ def plot_extended_scaling_validation(fits_by_r: Dict[int, list], output_dir: str
     filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()
+
+
+def plot_clock_collapse_bias(bias_results: Dict[int, Dict[str, Any]], output_dir: str, filename: str = "clock_collapse_bias.png") -> None:
+    r"""
+    Plot the average and maximum clock-collapse bias E[\Delta P] vs a_{k-1}/n.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+    
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    n_values = sorted(bias_results.keys())
+    colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(n_values)))
+    
+    for idx, n in enumerate(n_values):
+        res = bias_results[n]
+        ratios = res["ratios"]
+        if not ratios:
+            continue
+            
+        axes[0].plot(ratios, res["mean_bias"], "o", color=colors[idx], label=f"$n={n}$", markersize=4, alpha=0.7)
+        axes[1].plot(ratios, res["max_bias"], "s", color=colors[idx], label=f"$n={n}$", markersize=4, alpha=0.7)
+        
+    axes[0].set_title("Average Bias $\\mathbb{E}[\\Delta P]$")
+    axes[0].set_ylabel("$\\Delta P = P_{\\text{step}} - P_{\\text{gen}}$")
+    axes[1].set_title("Maximum Bias $\\max(\\Delta P)$")
+    
+    for ax in axes:
+        ax.set_xlabel("Generation Size Ratio ($a_{k-1}/n$)")
+        ax.axhline(0, color="black", linestyle="--", alpha=0.5)
+        ax.legend()
+        
+    fig.suptitle("Geometric Clock Collapse Bias ($P_{\\text{step}}$ vs $P_{\\text{gen}}$)")
+    
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()

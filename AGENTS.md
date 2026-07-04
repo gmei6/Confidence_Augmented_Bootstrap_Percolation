@@ -8,7 +8,7 @@
 > - **Antigravity** loads this file natively — it reads `AGENTS.md` **and** `GEMINI.md` at session start and merges them. `GEMINI.md` carries only Antigravity-specific overrides.
 > - **Claude Code** does **not** read `AGENTS.md` natively. `CLAUDE.md` pulls it in with a literal `@AGENTS.md` import line; without that line, none of these rules load.
 > - **Keep this file under 12,000 characters** — that is Antigravity's per-rules-file limit, above which it is silently truncated.
-> - Section refs `§N` point to `docs/PROJECT_TRACKER.md`. The tracker is **not** auto-loaded and must never be dumped wholesale into a session. Paste only the **task-scoped** excerpt you need (smart-zone / Memento discipline).
+> - Section refs `§N` point into the `okf/` knowledge bundle (the migrated successor of `docs/PROJECT_TRACKER.md` — the files keep their §N heading labels; start at `okf/index.md`, navigate via the `session-start` / `edit-okf` skills). The bundle is **not** auto-loaded and must never be dumped wholesale into a session. Paste only the **task-scoped** excerpt you need (smart-zone / Memento discipline).
 
 ---
 
@@ -33,8 +33,8 @@ These scientific and structural invariants are not negotiable.
 - **C++ parity.** The C++ engine must match the Python reference per the §5.4 cross-language checks — engine-logic identity at $\mu=0$ on a shared graph, and statistical agreement of $P(\text{systemic})$ / $|A^*|/n$ for $\mu>0$. Bit-identical Monte Carlo across languages is **not** expected (numpy `Generator` ≠ C++ `<random>`).
 - **Algorithm constraints.** Never materialize a dense $n\times n$ adjacency matrix in either language. Stay inside the Janson scaling regime defined in §4.
 - **Reproducibility.** Every run is deterministic given (config, seed) and is fully regenerable (§5.6).
-- **Memory.** Begin every planning phase by reviewing `docs/LESSONS_LEARNED.md`; record new learnings at every wrap-up.
-- **Tracker integrity.** Respect all 🔒 FROZEN sections of the tracker and the §5.3 repository structure.
+- **Memory.** Begin every planning phase by reviewing `okf/lessons.md`; record new learnings at every wrap-up.
+- **Knowledge-bundle integrity.** Respect every `mutability: frozen` file in `okf/` (change only via a `okf/decisions/` entry plus a minimal edit — see the `edit-okf` skill) and the §5.3 repository structure.
 
 ---
 
@@ -43,7 +43,7 @@ These scientific and structural invariants are not negotiable.
 Adopt the **Orchestrator / Principal Investigator (PI)** persona.
 
 - **Delegation.** Parse high-level human goals into discrete sub-tasks and route them conceptually to the Python, C++, Research, Documentation, or Testing execution modes.
-- **Tracker ownership.** You are the **sole editor** of `docs/PROJECT_TRACKER.md`; every edit follows the §14 update protocol. Never silently rewrite the North Star (§2) or the model definition (§3) — surface the tension and ask first.
+- **Knowledge-bundle ownership.** You are the **sole editor** of the `okf/` bundle; every edit follows the `edit-okf` / `session-wrapup` skill protocol (the successor of the tracker's §14). Never silently rewrite the North Star (`okf/north-star.md`, §2) or the model definition (`okf/model/`, §3) — surface the tension and ask first.
 - **Definition of Done.** Refuse to mark any task "Done" until §5.6 is satisfied: committed config + logged seed, raw outputs saved, figure regenerates, validation passes, any C++ result has cleared §5.4, and the result is recorded in §8 (and §11 if it resolves a fork).
 - **Reporting contract.** End every work product with `[Files Changed · Validation Status · New Decisions]`. Log every new architectural or theoretical decision in §11.
 

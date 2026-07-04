@@ -58,11 +58,18 @@
 | [F](task_F_counting_process_law_binomial_test.md) | Counting-process $S(t)$ law & binomial test | §4.3 rows 9 & 11 | yes (`analysis.py`) | low |
 | [G](task_G_scaling_law_extended_validation.md) | Scaling-law extended validation | §4.4 conj | small | low |
 | [H](task_H_geometric_clock_collapse_bias.md) | Geometric clock-collapse bias | §4.1 note | small | low |
-| [I](task_I_okf_migration.md) | OKF knowledge-bundle migration (PROJECT_TRACKER/LESSONS_LEARNED → `okf/`) | `docs/PROJECT_TRACKER.md`, `docs/LESSONS_LEARNED.md`, `AGENTS.md`, `CLAUDE.md` (pointer), new `okf/` tree, new `.agents/skills/{edit-okf,session-start,session-wrapup}/` | none | low |
-| [J](task_J_config_model_fear_scoping.md) | Scoping doc: degree-dependent fear on a configuration-model graph (Q4) | new `docs/research/q4_config_model_scoping.md` | none | low |
-| [K](task_K_geometric_graph_scoping.md) | Scoping doc: panic-field locality on geometric graphs (Q5) | new `docs/research/q5_geometric_graph_scoping.md` | none | low |
-| [L](task_L_q1_decoupling_followup.md) | Q1 follow-up: path forward for the Asymptotic Decoupling Conjecture | new `docs/research/q1_decoupling_path_forward.md` | none | low |
-| [M](task_M_q7_recovery_phase_scoping.md) | Scoping doc: optional recovery/healing phase (Q7) | new `docs/research/q7_recovery_phase_scoping.md` | none | low |
+| [I](old-tasks/task_I_okf_migration.md) | OKF knowledge-bundle migration (PROJECT_TRACKER/LESSONS_LEARNED → `okf/`) | `docs/PROJECT_TRACKER.md`, `docs/LESSONS_LEARNED.md`, `AGENTS.md`, `CLAUDE.md` (pointer), new `okf/` tree, new `.agents/skills/{edit-okf,session-start,session-wrapup}/` | none | low |
+| [J](old-tasks/task_J_config_model_fear_scoping.md) | Scoping doc: degree-dependent fear on a configuration-model graph (Q4) | new `docs/research/q4_config_model_scoping.md` | none | low |
+| [K](old-tasks/task_K_geometric_graph_scoping.md) | Scoping doc: panic-field locality on geometric graphs (Q5) | new `docs/research/q5_geometric_graph_scoping.md` | none | low |
+| [L](old-tasks/task_L_q1_decoupling_followup.md) | Q1 follow-up: path forward for the Asymptotic Decoupling Conjecture | new `docs/research/q1_decoupling_path_forward.md` | none | low |
+| [M](old-tasks/task_M_q7_recovery_phase_scoping.md) | Scoping doc: optional recovery/healing phase (Q7) | new `docs/research/q7_recovery_phase_scoping.md` | none | low |
 
 **Suggested order for new tasks:** E → F → H → G → I → J → K → L → M.
 Each task is independent; do them in any order, one full `/research-cycle` each.
+
+**Status after the 2026-07-04 overnight run (see `run.log` and `reports/`):**
+I, J, K, L, M are **done** (moved to `old-tasks/`, reports in `reports/task_{i,j,k,l,m}_report.md`).
+E, F, G, H are **BLOCKED on the sandbox environment** (no numpy/matplotlib/pytest, no pip, no
+network; the committed C++ binary is macOS-only) — task files left in place, diagnosis and exact
+resume points in `reports/task_{e,f,g,h}_BLOCKED.md`. They need a machine with the scientific
+Python stack (and, for E/F/H, the runner history-capture extension described in the E report).

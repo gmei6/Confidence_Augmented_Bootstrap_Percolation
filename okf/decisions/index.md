@@ -1,0 +1,38 @@
+---
+mutability: live
+type: index
+---
+
+# Decisions (§11 — Decision Log)
+
+- [d-000-tracker-and-notation](d-000-tracker-and-notation.md)
+- [d-001-two-language-architecture](d-001-two-language-architecture.md)
+- [d-002-beta-fear-distribution](d-002-beta-fear-distribution.md)
+- [d-003-cpp-python-file-boundary](d-003-cpp-python-file-boundary.md)
+- [d-004-janson-regime-scaling](d-004-janson-regime-scaling.md)
+- [d-005-incremental-fear-field](d-005-incremental-fear-field.md)
+- [d-006-memory-window-family](d-006-memory-window-family.md)
+- [d-007-drop-survivor-hazard](d-007-drop-survivor-hazard.md)
+- [d-008-drop-fear-marks](d-008-drop-fear-marks.md)
+- [d-009-tiered-rigor-stance](d-009-tiered-rigor-stance.md)
+- [d-010-window-len-reference-engine](d-010-window-len-reference-engine.md)
+- [d-011-repo-structure-deps](d-011-repo-structure-deps.md)
+- [d-012-scaling-law-validated](d-012-scaling-law-validated.md)
+- [d-013-pyproject-packaging](d-013-pyproject-packaging.md)
+- [d-014-sweep-seeding-protocol](d-014-sweep-seeding-protocol.md)
+- [d-015-meanfield-refactor](d-015-meanfield-refactor.md)
+- [d-016-blind-verify-agents](d-016-blind-verify-agents.md)
+- [d-017-cpp-port-hardening](d-017-cpp-port-hardening.md)
+- [d-018-macos-ubsan-only](d-018-macos-ubsan-only.md)
+- [d-019-cpp-cell-level-sweeps](d-019-cpp-cell-level-sweeps.md)
+- [d-020-results-analysis-dir](d-020-results-analysis-dir.md)
+- [d-021-empirical-threshold-clamping](d-021-empirical-threshold-clamping.md)
+- [d-022-write-analysis-flag](d-022-write-analysis-flag.md)
+- [d-023-finite-size-factor-residual](d-023-finite-size-factor-residual.md)
+- [d-024-pvalue-parity-threshold](d-024-pvalue-parity-threshold.md)
+- [d-025-leave-m-out-conditional-iid](d-025-leave-m-out-conditional-iid.md)
+- [d-026-track-nodes-side-channel](d-026-track-nodes-side-channel.md)
+- [d-027-viz-part-a-b-walkthroughs](d-027-viz-part-a-b-walkthroughs.md)
+- [d-028-advisor-extension-tracks](d-028-advisor-extension-tracks.md)
+- [d-029-benchmark-math-block-fix](d-029-benchmark-math-block-fix.md)
+- [d-030-okf-migration](d-030-okf-migration.md)

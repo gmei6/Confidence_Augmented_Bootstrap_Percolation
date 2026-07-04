@@ -2,7 +2,7 @@
 
 # CLAUDE.md — Claude Code Entry Point
 
-> The `@AGENTS.md` line above imports the shared constitution (invariants, persona, guardrails, the **§0 canary protocol**, and every `§N` reference into `docs/PROJECT_TRACKER.md`). Claude Code does **not** read `AGENTS.md` natively, so that import line is what loads it — keep it as the first line of this file. **Put shared rules in `AGENTS.md`, not here.** This file holds only Claude-Code-specific mechanisms.
+> The `@AGENTS.md` line above imports the shared constitution (invariants, persona, guardrails, the **§0 canary protocol**, and every `§N` reference into the `okf/` knowledge bundle). Claude Code does **not** read `AGENTS.md` natively, so that import line is what loads it — keep it as the first line of this file. **Put shared rules in `AGENTS.md`, not here.** This file holds only Claude-Code-specific mechanisms.
 
 ---
 

@@ -26,6 +26,11 @@ from twocascade.geometry import (
     build_fear_adjacency,
     run_cascade_local_fear
 )
+from twocascade.graphs import (
+    sample_powerlaw_degrees,
+    sample_configuration_model,
+    sample_degree_dependent_fears
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CPP_BIN = REPO_ROOT / "cpp" / "build" / "twocascade_run"
@@ -107,44 +112,61 @@ def run_single_cell_cpp(args) -> List[tuple[float, int]]:
 
 def run_single_trial(args) -> tuple[float, int]:
     """Worker task to run a single simulation realization."""
-    (n, p, r, mu, kappa, a, target_high_degree, window_len, weights, child_seed, graph_cfg, fear_cfg, seed_layout) = args
+    (n, p, r, mu, kappa, a, target_high_degree, window_len, weights, graph_cfg, fear_cfg, seed_layout, child_seed) = args
     
-    rng = np.random.default_rng(child_seed)
-    fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng)
-    nodes = make_nodes(fears)
+    # Strict RNG discipline: separate streams for degrees/geometry, pairing, fears, cascades
+    ss = np.random.SeedSequence(child_seed)
+    child_seeds = ss.spawn(4)
+    rng_graph = np.random.default_rng(child_seeds[0])
+    rng_pair = np.random.default_rng(child_seeds[1])
+    rng_fear = np.random.default_rng(child_seeds[2])
+    rng_casc = np.random.default_rng(child_seeds[3])
     
     graph_type = graph_cfg.get("type", "gnp")
     points = None
-    if graph_type == "gnp":
-        adj = sample_gnp_adjacency(n, p, rng)
+    
+    if graph_type == "configuration_model":
+        tau = graph_cfg["tau"]
+        d_min = graph_cfg["d_min"]
+        degrees = sample_powerlaw_degrees(n, tau, d_min, rng_graph)
+        adj = sample_configuration_model(degrees, rng_pair)
+        
+        gamma = fear_cfg.get("gamma", 0.0)
+        fears, stats = sample_degree_dependent_fears(degrees, mu, gamma, kappa, rng_fear)
     else:
-        points = sample_torus_points(n, rng)
-        c = graph_cfg.get("mean_degree_c", 2.0)
-        r_n = np.sqrt(c * np.log(n) / (np.pi * n))
-        if graph_type == "rgg":
-            adj = build_rgg_adjacency(points, r_n)
-        elif graph_type == "soft_rgg":
-            alpha_g = graph_cfg.get("alpha_g", 3.0)
-            adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng)
+        fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
+        if graph_type == "gnp":
+            adj = sample_gnp_adjacency(n, p, rng_pair)
         else:
-            raise ValueError(f"Unknown graph type: {graph_type}")
-            
+            points = sample_torus_points(n, rng_graph)
+            c = graph_cfg.get("mean_degree_c", 2.0)
+            r_n = np.sqrt(c * np.log(n) / (np.pi * n))
+            if graph_type == "rgg":
+                adj = build_rgg_adjacency(points, r_n)
+            elif graph_type == "soft_rgg":
+                alpha_g = graph_cfg.get("alpha_g", 3.0)
+                adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng_pair)
+            else:
+                raise ValueError(f"Unknown graph type: {graph_type}")
+                
+    nodes = make_nodes(fears)
+    
     if seed_layout == "disc":
         if points is None:
             raise ValueError("disc seeding requires a geometric graph")
-        center = sample_torus_points(1, rng)[0]
+        center = sample_torus_points(1, rng_casc)[0]
         diff = np.abs(points - center)
         diff = np.minimum(diff, 1.0 - diff)
         dists = np.sum(diff**2, axis=1)
         seeds = np.argsort(dists)[:a].tolist()
     else:
-        seeds = choose_seed(n, a, adj, rng, target_high_degree)
+        seeds = choose_seed(n, a, adj, rng_casc, target_high_degree)
         
     fear_type = fear_cfg.get("type", "global")
     if fear_type == "global":
         res = run_cascade(
             adjacency=adj, nodes=nodes, r=r, seed_indices=seeds,
-            rng=rng, record_history=False,
+            rng=rng_casc, record_history=False,
             window_len=window_len, weights=weights
         )
     elif fear_type == "local":
@@ -158,7 +180,7 @@ def run_single_trial(args) -> tuple[float, int]:
         fear_adj = build_fear_adjacency(points, ell)
         res = run_cascade_local_fear(
             adjacency=adj, fear_adjacency=fear_adj, nodes=nodes, r=r, seed_indices=seeds,
-            rng=rng, record_history=False,
+            rng=rng_casc, record_history=False,
             window_len=window_len, weights=weights
         )
     else:
@@ -186,8 +208,8 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
     weights = pinned["weights"]
     target_high_degree = pinned["target_high_degree"]
     
-    graph_cfg = cfg.get("graph", {"type": "gnp"})
-    fear_cfg = cfg.get("fear_field", {"type": "global"})
+    graph_cfg = cfg.get("graph", pinned.get("graph", {"type": "gnp"}))
+    fear_cfg = cfg.get("fear_field", pinned.get("fear", {"type": "global"}))
     seed_layout = cfg.get("seed_layout", "uniform")
     
     # Engine resolution precedence: parameter override -> root-level config key -> auto-detect
@@ -298,8 +320,7 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
                 seed_idx += 1
                 tasks.append((
                     n, p, r, mu, kappa, a, target_high_degree,
-                    window_len, weights, child_seed,
-                    graph_cfg, fear_cfg, seed_layout
+                    window_len, weights, graph_cfg, fear_cfg, seed_layout, child_seed
                 ))
                 
         print(f"Starting sweep simulation (Python) with {len(tasks)} tasks...")

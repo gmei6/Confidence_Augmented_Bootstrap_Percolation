@@ -550,5 +550,98 @@ def analyze_fear_field_concentration(
         "rounds": list(rounds),
         "n_values": [int(n) for n in n_values],
         "cells": out_cells
+def evaluate_binomial_dispersion(
+    failures_at_t: List[int],
+    seed_size: int,
+    n: int,
+    bootstrap_reps: int = 2000,
+    conf_level: float = 0.95,
+    seed: int = 20260704
+) -> Dict[str, Any]:
+    """
+    Test the cumulative failure count S(t) at a fixed round against the i.i.d.
+    binomial benchmark S(t) - a ~ Bin(n - a, pi(t)).
+
+    Computes the empirical mean fraction pi(t) = E[S(t) - a] / (n - a), the
+    empirical variance Var(S(t)), and the overdispersion ratio
+    D_t = Var(S(t)) / [(n - a) * pi(t) * (1 - pi(t))], with a percentile
+    bootstrap confidence interval for D_t (trials resampled with replacement).
+
+    Args:
+        failures_at_t: Per-trial cumulative failure counts S(t) at the fixed
+            round t, INCLUDING the a seed nodes.
+        seed_size: Initial seed size a.
+        n: System size.
+        bootstrap_reps: Number of bootstrap resamples for the CI.
+        conf_level: Confidence level for the bootstrap interval (default 0.95).
+        seed: Random seed for bootstrap reproducibility.
+
+    Returns:
+        Dict containing:
+            "pi_t": Empirical mean failed fraction of the susceptible pool.
+            "var_empirical": Empirical variance of S(t) (ddof=1).
+            "var_binomial": Binomial benchmark variance (n-a)*pi*(1-pi).
+            "dispersion_ratio": D_t, or NaN if the benchmark variance is zero
+                (pi(t) degenerate at 0 or 1).
+            "ci": Tuple (lower, upper) percentile bootstrap CI for D_t
+                (NaN, NaN if degenerate).
+            "n_trials": Number of trials used.
+
+    Raises:
+        ValueError: If seed_size >= n, or fewer than 2 trials are supplied.
+    """
+    if seed_size >= n:
+        raise ValueError(f"seed_size ({seed_size}) must be smaller than n ({n})")
+    s = np.asarray(failures_at_t, dtype=float)
+    if len(s) < 2:
+        raise ValueError("Need at least 2 trials to estimate a variance")
+
+    m = n - seed_size  # susceptible pool size
+
+    def _dispersion(vals: np.ndarray) -> float:
+        pi = float(np.mean(vals - seed_size)) / m
+        var_binom = m * pi * (1.0 - pi)
+        if var_binom <= 0.0:
+            return float("nan")
+        return float(np.var(vals, ddof=1)) / var_binom
+
+    pi_t = float(np.mean(s - seed_size)) / m
+    var_empirical = float(np.var(s, ddof=1))
+    var_binomial = m * pi_t * (1.0 - pi_t)
+    dispersion_ratio = _dispersion(s)
+
+    if np.isnan(dispersion_ratio):
+        return {
+            "pi_t": pi_t,
+            "var_empirical": var_empirical,
+            "var_binomial": var_binomial,
+            "dispersion_ratio": float("nan"),
+            "ci": (float("nan"), float("nan")),
+            "n_trials": len(s)
+        }
+
+    rng = np.random.default_rng(seed)
+    boot_ratios = []
+    for _ in range(bootstrap_reps):
+        resample = rng.choice(s, size=len(s), replace=True)
+        d_b = _dispersion(resample)
+        if np.isfinite(d_b):
+            boot_ratios.append(d_b)
+
+    if len(boot_ratios) > 0:
+        boot_ratios = np.array(boot_ratios)
+        alpha_err = 100.0 * (1.0 - conf_level)
+        lo = float(np.percentile(boot_ratios, alpha_err / 2.0))
+        hi = float(np.percentile(boot_ratios, 100.0 - alpha_err / 2.0))
+    else:
+        lo, hi = float("nan"), float("nan")
+
+    return {
+        "pi_t": pi_t,
+        "var_empirical": var_empirical,
+        "var_binomial": var_binomial,
+        "dispersion_ratio": dispersion_ratio,
+        "ci": (lo, hi),
+        "n_trials": len(s)
     }
 

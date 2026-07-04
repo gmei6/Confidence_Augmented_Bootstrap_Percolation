@@ -391,7 +391,65 @@ def plot_kappa_robustness(analyzed_sweeps_by_kappa: Dict[str, Dict[str, Any]], o
     ax.set_title(f"Boundary Sensitivity to Heterogeneity $\\kappa$ ($N={n}, r={r}$)")
     ax.set_xlim(-0.02, 0.92)
     ax.legend(title="Beta Concentration")
-    
+
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()
+
+
+def plot_overdispersion_ratio(dispersion_rows: list, t_round: int, r: int, output_dir: str,
+                              filename: str = "counting_process_overdispersion_r2.png") -> None:
+    """
+    Plot the overdispersion ratio D_t at a fixed round t vs system size n,
+    one curve per mean fear mu, one panel per seed multiple (log-log axes).
+
+    Args:
+        dispersion_rows: List of dicts, one per (n, mu, seed_multiple) cell, each with keys
+            "n", "mean_fear", "seed_multiple", "dispersion_ratio", "ci_low", "ci_high".
+        t_round: The fixed round t the dispersion was evaluated at (title/label only).
+        r: Solvency threshold (title only).
+        output_dir: Directory to save the generated plot.
+        filename: Output image filename.
+    """
+    apply_plot_style()
+    os.makedirs(output_dir, exist_ok=True)
+
+    multiples = sorted(set(row["seed_multiple"] for row in dispersion_rows))
+    mus = sorted(set(row["mean_fear"] for row in dispersion_rows))
+    colors = plt.cm.plasma(np.linspace(0.1, 0.75, len(mus)))
+
+    fig, axes = plt.subplots(1, len(multiples), figsize=(6 * len(multiples), 5), sharey=True)
+    if len(multiples) == 1:
+        axes = [axes]
+
+    for ax, mult in zip(axes, multiples):
+        for mu, color in zip(mus, colors):
+            rows = sorted(
+                (row for row in dispersion_rows
+                 if row["seed_multiple"] == mult and row["mean_fear"] == mu
+                 and np.isfinite(row["dispersion_ratio"])),
+                key=lambda row: row["n"]
+            )
+            if not rows:
+                continue
+            n_vals = np.array([row["n"] for row in rows], dtype=float)
+            d_vals = np.array([row["dispersion_ratio"] for row in rows])
+            err_lo = d_vals - np.array([row["ci_low"] for row in rows])
+            err_hi = np.array([row["ci_high"] for row in rows]) - d_vals
+            ax.errorbar(n_vals, d_vals, yerr=[np.clip(err_lo, 0, None), np.clip(err_hi, 0, None)],
+                        fmt="o-", color=color, linewidth=2, markersize=6, capsize=4,
+                        label=f"$\\mu = {mu}$")
+
+        ax.axhline(1.0, color="gray", linestyle=":", linewidth=1.5, label="Binomial ($D_t = 1$)")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("System Size ($n$)")
+        ax.set_title(f"$a = {mult}\\,a_c(0)$")
+        ax.legend()
+
+    axes[0].set_ylabel(f"Overdispersion Ratio $D_{{t={t_round}}}$")
+    fig.suptitle(f"Counting-Process Overdispersion vs Binomial Benchmark ($t = {t_round}$, $r = {r}$)")
+
     filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath, dpi=300)
     plt.close()

@@ -300,3 +300,40 @@ def test_analyze_fear_field_concentration():
     assert r2["var_g"][0] is None
 
 
+def test_evaluate_binomial_dispersion():
+    from twocascade.analysis import evaluate_binomial_dispersion
+    
+    # Setup parameters
+    n = 1000
+    seed_size = 10
+    m = n - seed_size
+    pi = 0.2
+    
+    # Case 1: Pure binomial data
+    rng = np.random.default_rng(42)
+    binomial_trials = rng.binomial(m, pi, size=5000)
+    s_binomial = binomial_trials + seed_size  # S(t) includes the seed
+    
+    res_binom = evaluate_binomial_dispersion(s_binomial.tolist(), seed_size=seed_size, n=n, seed=42)
+    assert np.isclose(res_binom["pi_t"], pi, atol=0.01)
+    assert np.isclose(res_binom["dispersion_ratio"], 1.0, atol=0.1)
+    assert res_binom["ci"][0] <= res_binom["dispersion_ratio"] <= res_binom["ci"][1]
+    
+    # Case 2: Overdispersed data (beta-binomial or simply mixture of two binomials)
+    trials_1 = rng.binomial(m, 0.1, size=2500)
+    trials_2 = rng.binomial(m, 0.3, size=2500)
+    overdispersed_trials = np.concatenate([trials_1, trials_2])
+    s_overdispersed = overdispersed_trials + seed_size
+    
+    res_over = evaluate_binomial_dispersion(s_overdispersed.tolist(), seed_size=seed_size, n=n, seed=42)
+    assert np.isclose(res_over["pi_t"], pi, atol=0.01)
+    # Variance of mixture is much larger than binomial with p=0.2
+    assert res_over["dispersion_ratio"] > 1.5
+    
+    # Case 3: Error handling
+    with pytest.raises(ValueError, match="seed_size .* must be smaller than n"):
+        evaluate_binomial_dispersion([10, 10], seed_size=10, n=10)
+        
+    with pytest.raises(ValueError, match="Need at least 2 trials"):
+        evaluate_binomial_dispersion([10], seed_size=1, n=10)
+

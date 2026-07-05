@@ -142,13 +142,24 @@ def build_soft_rgg_adjacency(points: np.ndarray, r_n: float, alpha_g: float, rng
                     
     return adjacency
 
-def run_cascade_local_fear(adjacency: List[List[int]], fear_adjacency: List[List[int]], 
-                           nodes: List[Node], r: int, seed_indices: List[int], 
+def run_cascade_local_fear(adjacency: List[List[int]], fear_adjacency: Optional[List[List[int]]],
+                           nodes: List[Node], r: int, seed_indices: List[int],
                            rng: np.random.Generator, record_history: bool,
-                           window_len: int = 1, weights: Optional[List[float]] = None) -> CascadeResult:
+                           window_len: int = 1, weights: Optional[List[float]] = None,
+                           round_log: Optional[List[Set[int]]] = None) -> CascadeResult:
     """
     EXPERIMENTAL VARIANT ENGINE
     Runs the two channel cascade with a LOCAL fear field.
+
+    fear_adjacency=None means the GLOBAL fear field: equivalent to a fear ball
+    covering the whole torus (ell >= diameter, where the ball is all n nodes and
+    count_in_ball reduces to |failed_set_t|), but O(1) per node per round
+    instead of iterating an n-sized neighbor list.
+
+    round_log, when a list is passed, receives one Set[int] per completed round:
+    the indices that newly failed in that round (seeds are not appended; they
+    are the caller's round 0). Purely additive instrumentation for the Q5
+    locality statistics; passing None (default) changes nothing.
     """
     if window_len < 1:
         raise ValueError("window_len must be >= 1")
@@ -176,7 +187,23 @@ def run_cascade_local_fear(adjacency: List[List[int]], fear_adjacency: List[List
     history = [total_failed] if record_history else []
     
     failures_per_round = deque([set(seed_indices)], maxlen=window_len)
-    
+
+    def _scatter_counts(failed_set: Set[int]) -> Optional[List[int]]:
+        """Per-node count of fear-ball members in failed_set, computed once per
+        round by scattering from the failed nodes over the symmetric fear
+        adjacency - exactly sum(1 for j in fear_adjacency[i] if j in failed_set)
+        for every i, without the per-node ball scan."""
+        if fear_adjacency is None:
+            return None
+        counts = [0] * n
+        for j in failed_set:
+            for i in fear_adjacency[j]:
+                counts[i] += 1
+        return counts
+
+    # Count arrays aligned 1:1 with failures_per_round (same deque discipline).
+    counts_per_round = deque([_scatter_counts(failures_per_round[0])], maxlen=window_len)
+
     while any(len(fs) > 0 for fs in failures_per_round):
         if total_failed == n:
             break
@@ -185,21 +212,29 @@ def run_cascade_local_fear(adjacency: List[List[int]], fear_adjacency: List[List
         for node in nodes:
             if node.failed:
                 continue
-            
+
             effective_failed_neighbor_count = node.failed_neighbor_count
             fails_by_solvency = effective_failed_neighbor_count >= r
 
             # Local fear calculation
             local_fear = 0.0
-            fear_ball_size = len(fear_adjacency[node.index]) + 1
-            for k in range(1, window_len + 1):
-                if k <= len(failures_per_round):
-                    failed_set_t = failures_per_round[-k]
-                    # Count how many in fear_adjacency + self failed at t
-                    # (self can't fail at t if it's currently being evaluated, but we include it in denominator)
-                    count_in_ball = sum(1 for j in fear_adjacency[node.index] if j in failed_set_t)
-                    local_fear += weights[k - 1] * (count_in_ball / fear_ball_size)
-            
+            if fear_adjacency is None:
+                # Global field: the fear ball is all n nodes; an unfailed node is
+                # never in failed_set_t, so count_in_ball == len(failed_set_t).
+                fear_ball_size = n
+                for k in range(1, window_len + 1):
+                    if k <= len(failures_per_round):
+                        local_fear += weights[k - 1] * (len(failures_per_round[-k]) / fear_ball_size)
+            else:
+                # Count of fear_adjacency members failed at t, precomputed per
+                # round (self can't fail at t if it's currently being evaluated,
+                # but we include it in the denominator).
+                fear_ball_size = len(fear_adjacency[node.index]) + 1
+                for k in range(1, window_len + 1):
+                    if k <= len(counts_per_round):
+                        count_in_ball = counts_per_round[-k][node.index]
+                        local_fear += weights[k - 1] * (count_in_ball / fear_ball_size)
+
             fear_failure_probability = node.individual_fear * local_fear
             fails_by_fear = (fear_failure_probability > 0.0 and rng.random() < fear_failure_probability)
 
@@ -214,6 +249,9 @@ def run_cascade_local_fear(adjacency: List[List[int]], fear_adjacency: List[List
                 nodes[neighbor_index].failed_neighbor_count += 1
 
         failures_per_round.append(new_failures_this_round)
+        counts_per_round.append(_scatter_counts(new_failures_this_round))
+        if round_log is not None:
+            round_log.append(new_failures_this_round)
 
         if len(failures_per_round) == window_len and all(len(fs) == 0 for fs in failures_per_round):
             break

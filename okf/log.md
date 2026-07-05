@@ -44,3 +44,5 @@ type: log
 - 2026-06-02: [S-002 Fork F3 resolved (Beta fear)](changes/s-002-beta-fear-resolved.md)
 - 2026-06-01: [S-001 C++ core + Python orchestration adopted](changes/s-001-cpp-python-split.md)
 - 2026-06-01: [S-000 Initial tracker built](changes/s-000-initial-tracker.md)
+- [S-046](changes/s-046-q4-q5-analysis-and-track-decision.md) — 2026-07-04 — Q4 tilt-monotonicity analysis (Phase 1b small-seed sweep; cap-free pair passes 7/7), Q5 locality sweep (homogenization supported, nucleation law honest negative), D-031 discards Tracks 4/5.
+- [S-047](changes/s-047-overnight-batch-handoff.md) — 2026-07-04 — Overnight batch queued and handed off (Q5 duration n-sweep, Q4 ignition gates + n=10000 tilt grid + tau=3.5, Task E regen + Task H, Q3 nu at n=10000); driver scripts/run_overnight_s047.py.

@@ -41,7 +41,8 @@ def test_prong_a():
     nodes = make_nodes(fears)
     seeds = choose_seed(n, a, adj, rng, False)
     
-    res = run_cascade(adjacency=adj, nodes=nodes, r=r, seed_indices=seeds, rng=rng)
+    res = run_cascade(adjacency=adj, nodes=nodes, r=r, seed_indices=seeds, rng=rng,
+                      record_history=False)
     
     with tempfile.TemporaryDirectory() as tmpdir:
         graph_file = Path(tmpdir) / "graph.txt"

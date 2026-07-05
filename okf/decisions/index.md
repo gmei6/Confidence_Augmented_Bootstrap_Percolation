@@ -36,3 +36,4 @@ type: index
 - [d-028-advisor-extension-tracks](d-028-advisor-extension-tracks.md)
 - [d-029-benchmark-math-block-fix](d-029-benchmark-math-block-fix.md)
 - [d-030-okf-migration](d-030-okf-migration.md)
+- [d-031-discard-tracks-4-5](d-031-discard-tracks-4-5.md)

@@ -1,0 +1,34 @@
+{
+  "pinned_params": {
+    "n": 4000,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [0.2, 0.2, 0.2, 0.2, 0.2],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.5,
+      "d_min": 2
+    },
+    "fear": {
+      "gamma": 0.0
+    }
+  },
+  "scaling": {
+    "target_mean_degree": 4.0,
+    "n_ref": 10000,
+    "alpha": 0.6
+  },
+  "sweep": {
+    "mean_fear_grid": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+    "seed_multiples": [0.007687, 0.011531, 0.015374, 0.023062, 0.030749, 0.046123, 0.061498, 0.092246, 0.122995],
+    "trials_per_cell": 200,
+    "base_seed": 42
+  },
+  "output": {
+    "raw_filepath": "results/q4_phase1b_gamma0_raw.json"
+  },
+  "engine": "python"
+}

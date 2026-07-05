@@ -45,3 +45,4 @@ type: index
 - [s-045-claude-handoff](s-045-claude-handoff.md)
 - [s-046-q4-q5-analysis-and-track-decision](s-046-q4-q5-analysis-and-track-decision.md)
 - [s-047-overnight-batch-handoff](s-047-overnight-batch-handoff.md)
+- [s-048-overnight-batch-executed](s-048-overnight-batch-executed.md)

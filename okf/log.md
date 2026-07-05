@@ -46,3 +46,4 @@ type: log
 - 2026-06-01: [S-000 Initial tracker built](changes/s-000-initial-tracker.md)
 - [S-046](changes/s-046-q4-q5-analysis-and-track-decision.md) — 2026-07-04 — Q4 tilt-monotonicity analysis (Phase 1b small-seed sweep; cap-free pair passes 7/7), Q5 locality sweep (homogenization supported, nucleation law honest negative), D-031 discards Tracks 4/5.
 - [S-047](changes/s-047-overnight-batch-handoff.md) — 2026-07-04 — Overnight batch queued and handed off (Q5 duration n-sweep, Q4 ignition gates + n=10000 tilt grid + tau=3.5, Task E regen + Task H, Q3 nu at n=10000); driver scripts/run_overnight_s047.py.
+- [S-048](changes/s-048-overnight-batch-executed.md) — 2026-07-05 — S-047 overnight batch executed in the sandbox copy: 5/5 steps OK; C-Q5(ii) supported (C-Q5 complete), C-Q4(iii) gate holds, C-Q4(i) reproduced at n=10000 + tau=3.5 total gate, Task H unblocked/confirmed, nu tightened (4.54±0.26 at mu=0.3); plotting savefig defect flagged.

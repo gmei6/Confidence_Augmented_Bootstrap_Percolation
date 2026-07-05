@@ -1,0 +1,108 @@
+Q5 duration sweep: 20 cells x 30 trials = 600 trials
+Wrote results/q5_duration_raw.json
+
+=== STEP: q5-duration (C-Q5(ii)) ===
+  RUN  scripts/run_task_o_duration.py
+
+=== STEP: q4-ignition tau=2.5/3.5 x n (C-Q4(iii)) ===
+  RUN  configs/q4_ignition_tau25_n4000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau25_n4000_raw.json
+  RUN  configs/q4_ignition_tau25_n10000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau25_n10000_raw.json
+  RUN  configs/q4_ignition_tau25_n20000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau25_n20000_raw.json
+  RUN  configs/q4_ignition_tau35_n4000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau35_n4000_raw.json
+  RUN  configs/q4_ignition_tau35_n10000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau35_n10000_raw.json
+  RUN  configs/q4_ignition_tau35_n20000.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 1000 tasks...
+Running sweep for fear_concentration_n1000.json with history...
+Starting sweep simulation (Python with history) with 4000 tasks...
+Sweep simulation complete. Raw results saved to /Users/garymei/.treehouse/CABP_copy_for_antigravity_copy-bc0fd0/1/CABP_copy_for_antigravity_copy/results/raw/fear_concentration_n1000.json
+Running sweep for fear_concentration_n2000.json with history...
+Starting sweep simulation (Python with history) with 4000 tasks...
+Sweep simulation complete. Raw results saved to /Users/garymei/.treehouse/CABP_copy_for_antigravity_copy-bc0fd0/1/CABP_copy_for_antigravity_copy/results/raw/fear_concentration_n2000.json
+Running sweep for fear_concentration_n4000.json with history...
+Starting sweep simulation (Python with history) with 4000 tasks...
+Sweep simulation complete. Raw results saved to /Users/garymei/.treehouse/CABP_copy_for_antigravity_copy-bc0fd0/1/CABP_copy_for_antigravity_copy/results/raw/fear_concentration_n4000.json
+Running sweep for fear_concentration_n8000.json with history...
+Starting sweep simulation (Python with history) with 4000 tasks...
+Sweep simulation complete. Raw results saved to /Users/garymei/.treehouse/CABP_copy_for_antigravity_copy-bc0fd0/1/CABP_copy_for_antigravity_copy/results/raw/fear_concentration_n8000.json
+
+=== Step 2: Analyzing Results ===
+Done!
+Loading raw results...
+Analyzing clock collapse bias...
+Plotting bias and saving to /Users/garymei/.treehouse/CABP_copy_for_antigravity_copy-bc0fd0/1/CABP_copy_for_antigravity_copy/results/figures...
+Task H complete!
+Sweep simulation complete. Raw results saved to results/q4_ignition_tau35_n20000_raw.json
+
+=== STEP: task-e history regen + task-h clock bias ===
+  RUN  scripts/run_task_e.py
+  RUN  scripts/run_task_h.py
+
+=== STEP: q4-phase2 tilt grid n=10000 + tau=3.5 gate ===
+  RUN  configs/q4_phase2_n10000_gammaneg1.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 16000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_phase2_n10000_gammaneg1_raw.json
+  RUN  configs/q4_phase2_n10000_gamma0.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 16000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_phase2_n10000_gamma0_raw.json
+  RUN  configs/q4_phase2_n10000_gammapos1.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 16000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_phase2_n10000_gammapos1_raw.json
+  RUN  configs/q4_phase2_n10000_tau35_gamma0.json
+==================================================
+USING SIMULATION ENGINE: PYTHON
+==================================================
+Starting sweep simulation (Python) with 16000 tasks...
+Sweep simulation complete. Raw results saved to results/q4_phase2_n10000_tau35_gamma0_raw.json
+
+=== STEP: q3 finite-size nu n=10000 (cpp) ===
+  RUN  configs/finite_size_r2_n10000.json
+==================================================
+USING SIMULATION ENGINE: CPP
+==================================================
+Starting sweep simulation (C++) with 34 cell tasks...
+Sweep simulation complete. Raw results saved to results/raw/finite_size_r2_n10000.json
+
+=== OVERNIGHT SUMMARY ===
+  [    OK] q5-duration (C-Q5(ii)) (2.0 min)
+  [    OK] q4-ignition tau=2.5/3.5 x n (C-Q4(iii)) (0.7 min)
+  [    OK] task-e history regen + task-h clock bias (0.8 min)
+  [    OK] q4-phase2 tilt grid n=10000 + tau=3.5 gate (9.3 min)
+  [    OK] q3 finite-size nu n=10000 (cpp) (0.4 min)
+5/5 steps succeeded

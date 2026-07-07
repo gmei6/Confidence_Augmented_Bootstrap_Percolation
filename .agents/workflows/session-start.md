@@ -8,10 +8,10 @@ description: Run at the start of every new conversation to load project memory. 
 The tracker is the project's memory across conversations (§0). Load it before doing anything.
 
 ## Steps
-1. Read `docs/PROJECT_TRACKER.md` in this order: §2 North Star → §8 Current Status →
-   §9 Open Questions/Blockers → §10 Next Actions. Then read `docs/LESSONS_LEARNED.md`.
-2. Read the 🔒 sections relevant to today's likely task (usually §3 Model and/or §5 Coding
-   Standards) only as needed.
+1. Read okf/north-star.md (§2) then okf/status.md (§8), then
+   okf/open-questions.md (§9) and okf/next-actions.md (§10). Then review okf/lessons.md.
+2. Read the 🔒 sections relevant to today's likely task (usually okf/model/ for §3 or okf/architecture/ for §5
+   only as needed.
 3. Report a short orientation:
    - The North Star in one sentence (confirm it is intact).
    - Current phase and the latest validated result.

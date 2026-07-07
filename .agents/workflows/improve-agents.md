@@ -5,15 +5,15 @@ description: End-of-session agent tuning. Audits which skills/workflows were use
 # Improve Agents
 
 Make the agent definitions a little better after every session. Where `/wrapup` synchronizes
-*project* memory (§8–§12, `docs/LESSONS_LEARNED.md`), this synchronizes *agent* memory — the
+*project* memory (§8–§12, `okf/lessons.md`), this synchronizes *agent* memory — the
 `.agents/skills/<skill>/SKILL.md` files, and `.agents/workflows/<flow>.md` when relevant.
-Honor all guardrails in GEMINI.md and AGENTS.md. Propose-don't-write throughout: this workflow
+Honor all guardrails in AGENTS.md. Propose-don't-write throughout: this workflow
 drafts edits and writes nothing until Gary approves each diff.
 
 ## Scope
 - **In scope:** `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`.
-- **Out of scope:** never touches `src/`, `cpp/`, `results/`, `reference.py`,
-  `docs/PROJECT_TRACKER.md`, or any frozen section. Project-memory updates remain `/wrapup`'s job.
+- **Out of scope:** never touches `src/`, `cpp/`, `okf/results/`, `reference.py`,
+  `okf/north-star.md`, or any frozen section. Project-memory updates remain `/wrapup`'s job.
 
 ## Step 1 — Identify what was used
 List every `.agents` skill and workflow actually exercised this session — invoked by name,

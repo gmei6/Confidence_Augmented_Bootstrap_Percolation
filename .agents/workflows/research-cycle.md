@@ -6,12 +6,12 @@ description: Primary entry point for the TwoCascade project. Runs one full Plan 
 # Research Cycle
 
 The standard loop for any change to the TwoCascade project. Run this for every
-non-trivial task. Honor all guardrails in GEMINI.md and AGENTS.md throughout.
+non-trivial task. Honor all guardrails in AGENTS.md throughout.
 
 ## Step 0 — Context load (always)
-1. Read `docs/PROJECT_TRACKER.md` — §2 North Star, §8 Status, §9 Open Questions,
-   §10 Next Actions, plus the §3/§5 sections relevant to the task.
-2. Read `docs/LESSONS_LEARNED.md` and cross-reference the task against known pitfalls.
+1. Read okf/north-star.md (§2), okf/status.md (§8), okf/open-questions.md (§9),
+   okf/next-actions.md (§10), plus okf/model/ (§3) and okf/architecture/ (§5) relevant to the task.
+2. Review okf/lessons.md and cross-reference the task against known pitfalls.
 3. Restate the task in one line and name the research question (Q#) or conjecture (F#/D#)
    it touches. If the task conflicts with the North Star or a prior decision, STOP and
    surface the tension before going further.

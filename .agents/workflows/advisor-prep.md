@@ -5,11 +5,11 @@ description: Assemble an advisor-meeting packet. Use before a meeting with Prof.
 
 # Advisor Prep
 
-Produce a meeting packet for the ~monthly advisor check-in. Honor GEMINI.md and AGENTS.md.
+Produce a meeting packet for the ~monthly advisor check-in. Honor AGENTS.md.
 
 ## Steps
-1. Read `docs/PROJECT_TRACKER.md` §2, §8 (latest validated results), §9 (open questions —
-   especially Q2/Q3 flagged for the advisor), §10, and the relevant `docs/research/` files.
+1. Read okf/north-star.md (§2), okf/status.md (§8, latest validated results), okf/open-questions.md (§9,
+   especially Q2/Q3 flagged for the advisor), okf/next-actions.md (§10), and the relevant `docs/research/` files.
 2. Have `research-analysis` draft a concise briefing in `docs/research/` (e.g.
    `advisor_brief_<date>.md`) containing:
    - One-paragraph status against the North Star and roadmap (§6).

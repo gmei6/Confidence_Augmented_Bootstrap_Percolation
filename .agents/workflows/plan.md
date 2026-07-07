@@ -6,12 +6,12 @@ description: Iterative plan-refinement loop. Draft and red-team an implementatio
 # Plan
 
 Refine a technical plan for the task through a draft → red-team → revise loop. Honor all
-guardrails in GEMINI.md and AGENTS.md. This workflow proposes only — it NEVER edits the
+guardrails in AGENTS.md. This workflow proposes only — it NEVER edits the
 tracker or source files.
 
 ## Step 0 — Context
-1. Read `docs/PROJECT_TRACKER.md` (§2, §8–§10, plus §3/§5 relevant to the task) and
-   `docs/LESSONS_LEARNED.md`. Cross-reference the task against recorded pitfalls.
+1. Read okf/north-star.md (§2), okf/status.md (§8), okf/next-actions.md (§10), plus okf/model/ (§3) and okf/architecture/ (§5) relevant to the task;
+   review okf/lessons.md and cross-reference the task against recorded pitfalls.
 2. State the task in one line and name the Q#/F#/D# it touches.
 
 ## Step 1 — Loop (max 5 rounds; stop on sign-off)

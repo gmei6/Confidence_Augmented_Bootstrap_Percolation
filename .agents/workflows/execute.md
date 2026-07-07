@@ -5,7 +5,7 @@ description: Execution workflow after a plan is approved: implement the changes,
 
 # Execute
 
-Implement a pre-approved plan. Honor all guardrails in GEMINI.md and AGENTS.md.
+Implement a pre-approved plan. Honor all guardrails in AGENTS.md.
 
 ## Steps
 1. **Context:** re-read the approved plan and the relevant tracker sections.

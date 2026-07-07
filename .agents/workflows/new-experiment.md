@@ -5,8 +5,8 @@ description: Scaffold and run a new simulation experiment reproducibly: create a
 
 # New Experiment
 
-Stand up a new experiment so it is reproducible from the start (§5.4–§5.6). Honor GEMINI.md
-and AGENTS.md.
+Stand up a new experiment so it is reproducible from the start (§5.4–§5.6). Honor
+AGENTS.md.
 
 ## Steps
 1. **Define:** state the question, the parameter grid (`r, μ, n, seed_size, θ, ...`), and the

@@ -6,7 +6,7 @@ description: Context-preservation protocol for long runs. When the orchestrator'
 # Self-Succession
 
 Adapted from the Antigravity teamwork-preview "self-succession" trick, constrained for a
-human-in-the-loop research repo. Honor all guardrails in GEMINI.md and AGENTS.md. This
+human-in-the-loop research repo. Honor all guardrails in AGENTS.md. This
 protocol writes only to `.agents/<role>/handoff.md` scratch files — never to `src/`,
 `cpp/`, `results/`, the tracker, or `reference.py`.
 

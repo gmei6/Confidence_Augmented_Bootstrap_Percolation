@@ -5,7 +5,7 @@ description: End-of-session wrap-up. Audits the session and drafts live-state (�
 
 # Wrap-up
 
-Synchronize project memory at end of session. Honor GEMINI.md and AGENTS.md.
+Synchronize project memory at end of session. Honor AGENTS.md.
 
 ## Steps
 1. **Audit** everything done this session: files changed, validation results, milestones.
@@ -15,7 +15,7 @@ Synchronize project memory at end of session. Honor GEMINI.md and AGENTS.md.
    and milestones.
 4. **Live state (§8–§10):** draft updates so current phase, status, open questions, and the
    next few concrete actions reflect reality. Be truthful — don't mark unfinished work done.
-5. **Lessons:** draft any new `docs/LESSONS_LEARNED.md` entry for bugs, traps, or forks
+5. **Lessons:** draft any new `okf/lessons.md` entry for bugs, traps, or forks
    resolved this session.
 6. **Handoff:** outline immediate next steps, open threads, and blockers for the next session.
 

@@ -6,15 +6,15 @@ description: Bounded review-and-fix loop for one existing target. Triggered when
 # Harden
 
 Iteratively hardens a TARGET the user names in the prompt. Honor all guardrails in
-GEMINI.md and AGENTS.md throughout. This loop edits real files, so it runs isolated
+AGENTS.md throughout. This loop edits real files, so it runs isolated
 and converges to a single approval — it does NOT ask for approval every round.
 
 ## Triggering Rule
 - **Mandatory Trigger**: If the user specifies `/harden` or explicitly requests to "harden <target>" (or similar phrasing referencing hardening a target), you **must** immediately launch this workflow from Step 0. Do not make manual edits directly or perform standard planning cycles outside of this workflow structure.
 
 ## Step 0 — Setup
-1. Read `docs/PROJECT_TRACKER.md` (§2 North Star, §8 Status, plus the §3/§5 sections
-   relevant to the TARGET) and `docs/LESSONS_LEARNED.md`.
+1. Read okf/north-star.md (§2, North Star) and okf/status.md (§8, Status), plus okf/model/ (§3) and okf/architecture/ (§5)
+   relevant to the TARGET; review okf/lessons.md.
 2. Confirm the TARGET in one line and name the Q#/F#/D# it touches. If the TARGET is
    `reference.py`, a 🔒 frozen tracker section, or anything under `results/`, STOP —
    those require a standalone, explicitly approved instruction, not this loop.

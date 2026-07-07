@@ -5,8 +5,8 @@
 
 > **This is the single source of truth for every AI agent on this repo** (Claude Code, Antigravity/Gemini, Codex, Cursor, …). Tool-specific files only *add* mechanisms; they never restate or weaken what is here.
 >
-> - **Antigravity** loads this file natively — it reads `AGENTS.md` **and** `GEMINI.md` at session start and merges them. `GEMINI.md` carries only Antigravity-specific overrides.
-> - **Claude Code** does **not** read `AGENTS.md` natively. `CLAUDE.md` pulls it in with a literal `@AGENTS.md` import line; without that line, none of these rules load.
+> - **Antigravity** loads this file natively.
+> - **Claude Code** does **not** read `AGENTS.md` natively; `CLAUDE.md` is a symlink to this file so Claude Code picks it up automatically.
 > - **Keep this file under 12,000 characters** — that is Antigravity's per-rules-file limit, above which it is silently truncated.
 > - Section refs `§N` point into the `okf/` knowledge bundle (the migrated successor of `docs/PROJECT_TRACKER.md` — the files keep their §N heading labels; start at `okf/index.md`, navigate via the `session-start` / `edit-okf` skills). The bundle is **not** auto-loaded and must never be dumped wholesale into a session. Paste only the **task-scoped** excerpt you need (smart-zone / Memento discipline).
 
@@ -56,9 +56,21 @@ Adopt the **Orchestrator / Principal Investigator (PI)** persona.
 - **Results integrity.** Never write to `results/raw/` or `results/figures/` directly. The runner script owns all output and stamps each file with seed, parameter tuple, and git commit hash. If asked to write results directly, flag the provenance concern and redirect to the runner.
 - **Research-document edits.** Before editing any file in `docs/research/`, state which research question (Q#) or falsifiable conjecture (F#) the change affects and summarize what is being revised. These are auditable artifacts, not living notes.
 - **Test semantics.** Before modifying any test in `tests/`, state explicitly whether (a) the test was wrong and is being corrected, or (b) a code change broke a previously valid test. These demand different responses and must never be conflated.
-- **Baseline isolation.** Any change to `src/` or `cpp/src/` must be developed in isolation from the known-good validation baseline, so experiments cannot corrupt cross-validation. (The per-tool isolation mechanism — worktree mode — is specified in `GEMINI.md` / `CLAUDE.md`.) Documentation, config, and clearly-scoped single-file fixes may be edited in place.
+- **Baseline isolation.** Any change to `src/` or `cpp/src/` must be developed in isolation from the known-good validation baseline, so experiments cannot corrupt cross-validation. (The per-tool isolation mechanism — worktree mode — is specified below under Tool-specific mechanisms.) Documentation, config, and clearly-scoped single-file fixes may be edited in place.
 
-### Permission policy (enforced via each tool's own mechanism — see `GEMINI.md` / `CLAUDE.md`)
+### Tool-specific mechanisms
+
+- **Claude Code** — baseline isolation via `git worktree add ../tc-work <branch>` for
+  any change to `src/` or `cpp/src/`. Permissions enforced via `.claude/settings.json`.
+- **Antigravity** — baseline isolation via **New Worktree Mode** for `src/`/`cpp/src/`
+  changes, **Local Mode** otherwise. Permissions configured in **Agent Manager →
+  Additional Options → Customizations → Permissions**, not in a file. "Propose, don't
+  write" binds specifically to `write_to_file`, `replace_file_content`, and
+  `multi_replace_file_content`. Primary workflow entry: `/research-cycle`
+  (`.agents/workflows/research-cycle.md`); `/verify` runs the reviewer→critic→auditor
+  gate (§IV).
+
+### Permission policy
 
 - **Always ask before:** `git commit`, `git push`, any file deletion.
 - **Always deny:** `git push --force`, `rm -rf`, any direct write to `results/`.
@@ -73,4 +85,4 @@ Run the standard **Plan → Execute → Verify** loop with these mandated, resea
 - **`implementation_plan.md`** — parity scope made **explicit**: for any C++ change, whether the Python reference needs a parallel update and why; for any Python change, whether C++ parity is in scope this session. Never leave this implicit.
 - **`walkthrough.md`** — the proof of work. For any simulation-relevant change it must include the cross-validation result: Python reference vs C++ engine on an **identical seed and parameter set**, with outputs confirmed to agree (§5.4).
 
-**Verification gate (mandatory before any result is marked done).** A result is committed only after the blind verification gate passes: `reviewer → critic → auditor`, each spawned **blind**, each fed the `walkthrough.md` from the implementation session as input context. The `auditor` returns a binary **AUDIT PASS / FAIL**; a FAIL blocks the commit. (Tool-specific invocation — e.g. the Antigravity `/verify` workflow — is defined in `GEMINI.md`.)
+**Verification gate (mandatory before any result is marked done).** A result is committed only after the blind verification gate passes: `reviewer → critic → auditor`, each spawned **blind**, each fed the `walkthrough.md` from the implementation session as input context. The `auditor` returns a binary **AUDIT PASS / FAIL**; a FAIL blocks the commit. (Tool-specific invocation — e.g. the Antigravity `/verify` workflow — is at `.agents/workflows/verify.md`.)

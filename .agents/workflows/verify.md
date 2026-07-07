@@ -5,8 +5,8 @@ description: Three-agent verification gate: Reviewer (design), Critic (adversari
 # Verify
 
 The three-agent verification gate for the TwoCascade project. Includes **design** (reviewer),
-**robustness** (critic), and **integrity** (auditor). Honor all guardrails in GEMINI.md
-and AGENTS.md throughout. This workflow proposes and validates; it does not apply
+**robustness** (critic), and **integrity** (auditor). Honor all guardrails in AGENTS.md
+throughout. This workflow proposes and validates; it does not apply
 tracker edits (that is the PI via §14).
 
 **Input:** the `walkthrough.md` and the diff from the preceding `/execute` or `/harden`
@@ -14,8 +14,8 @@ session (plus the plan/spec the change claims to satisfy), OR an auditable resea
 artifact (e.g., a research note) for documentation/theoretical verification.
 
 ## Step 0 — Context
-Read `docs/PROJECT_TRACKER.md` (§2, §5.4, §5.6, plus the §3/§5 sections relevant to the
-change) and `docs/LESSONS_LEARNED.md`. Restate the change in one line and name the
+Read okf/north-star.md (§2), okf/architecture/reproducibility.md (§5.4, §5.6), plus okf/model/ (§3) and okf/architecture/ (§5) relevant to
+the change; review okf/lessons.md. Restate the change in one line and name the
 Q#/F#/D# it touches.
 
 ## Step 1 — Reviewer (design & contracts)

@@ -24,14 +24,22 @@ build*/
 *.a
 .cache/
 
-# Results — raw per-realization outcomes are large and regenerable
+# Results — all simulation outputs are large and regenerable
 # from (config, seed, commit). Keep the dir, ignore its contents.
 results/raw/*
 results/figures/*
 results/analysis/*
+results/processed/*
+results/*.json
+results/*.csv
 !results/raw/.gitkeep
 !results/figures/.gitkeep
 !results/analysis/.gitkeep
+!results/processed/.gitkeep
 
 # Editor — optional; keep if you want shared settings, remove if not
 # .vscode/
+
+# Local agent/tool litter
+.gnhf/
+overnight_*.log

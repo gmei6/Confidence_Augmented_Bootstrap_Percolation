@@ -1,5 +1,5 @@
 ---
-mutability: live
+mutability: append-only
 type: index
 ---
 
@@ -37,3 +37,4 @@ type: index
 - [d-029-benchmark-math-block-fix](d-029-benchmark-math-block-fix.md)
 - [d-030-okf-migration](d-030-okf-migration.md)
 - [d-031-discard-tracks-4-5](d-031-discard-tracks-4-5.md)
+- [d-032-decision-change-index-append-only](d-032-decision-change-index-append-only.md)

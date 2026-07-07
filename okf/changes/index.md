@@ -1,5 +1,5 @@
 ---
-mutability: live
+mutability: append-only
 type: index
 ---
 

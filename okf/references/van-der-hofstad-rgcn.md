@@ -13,3 +13,5 @@ Verbatim entry migrated from `docs/PROJECT_TRACKER.md` §13 (Key References) on 
   branching-process approximations, local tree-likeness; the advisor's lineage. This is the book
   Prof. Dhara referenced at the 2026-07-01 meeting (D-028) for configuration-model methods on
   general degree distributions.*
+
+See also: `cache/van-der-hofstad-rgcn.md` for a verified page map (Tiers 1–2) cross-referenced to code.

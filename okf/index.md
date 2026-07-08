@@ -20,5 +20,6 @@ mutability: live
 - [Model](model/index.md)
 - [Benchmark](benchmark.md)
 - [References](references/index.md)
+- [Cache](cache/index.md)
 - [Decisions](decisions/index.md)
 - [Changes](changes/index.md)

@@ -41,3 +41,4 @@ mutability: append-only
 - [d-031-discard-tracks-4-5](d-031-discard-tracks-4-5.md)
 - [d-032-decision-change-index-append-only](d-032-decision-change-index-append-only.md)
 - [d-033-frontmatter-title-description](d-033-frontmatter-title-description.md)
+- [d-034-cache-dir](d-034-cache-dir.md)

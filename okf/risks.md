@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§7 — Risks & Mitigations"
+description: "Frozen risk register; biggest risk is mu having no teeth (fear channel inert)."
 mutability: frozen
-type: concept
 ---
 
 # §7 — Risks & Mitigations 🔒

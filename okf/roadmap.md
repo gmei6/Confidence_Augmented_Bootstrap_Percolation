@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§6 — Roadmap (≈10 weeks)"
+description: "Frozen ~10-week roadmap; MVP is one (r,mu) phase diagram with verified bimodality; checkboxes ticked in place."
 mutability: frozen
-type: concept
 ---
 
 # §6 — Roadmap (≈10 weeks) 🔒 *(structure frozen; check items off in place)*

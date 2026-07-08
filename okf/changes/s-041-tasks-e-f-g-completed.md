@@ -1,3 +1,10 @@
+---
+type: Session Change
+title: "S-041: Tasks E, F, and G completed"
+description: "Tasks E (fear-field variance), F (binomial overdispersion), G (scaling-law validation) completed."
+mutability: append-only
+timestamp: 2026-07-04
+---
 # S-041: Tasks E, F, and G completed
 
 The following tasks were completed:

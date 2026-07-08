@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-037: First advisor meeting logged (D-028)"
+description: "Logged the first advisor meeting outcome (D-028); Q4–Q8 opened."
 mutability: append-only
 timestamp: 2026-07-01
 ---

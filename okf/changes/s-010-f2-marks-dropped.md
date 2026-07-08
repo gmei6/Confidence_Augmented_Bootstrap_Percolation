@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-010: Fork F2 resolved (marks dropped)"
+description: "Resolved fork F2 (D-008): fear-marks mechanism dropped."
 mutability: append-only
 timestamp: 2026-06-04
 ---

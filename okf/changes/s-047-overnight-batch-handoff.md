@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-047: Overnight Batch Handoff (sandbox agent)"
+description: "Overnight compute batch queued and handed off to a sandbox agent."
 mutability: append-only
 timestamp: 2026-07-04
 tags: [handoff, overnight, q3, q4, q5, task-h]

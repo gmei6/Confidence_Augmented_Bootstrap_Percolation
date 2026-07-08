@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-021: Purely empirical threshold clamping"
+description: "Purely empirical threshold clamping; theoretical offsets kept descriptive only."
 mutability: append-only
 timestamp: 2026-06-15
 ---

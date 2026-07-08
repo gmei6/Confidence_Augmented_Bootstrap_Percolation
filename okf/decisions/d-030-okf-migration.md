@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-030: Migrate tracker + lessons into the okf/ knowledge bundle"
+description: "Tracker and lessons migrated into the okf/ knowledge bundle with zero information loss."
 mutability: append-only
 timestamp: 2026-07-04
 ---

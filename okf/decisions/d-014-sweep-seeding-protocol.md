@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-014: Sweep seeding & optimization protocol"
+description: "Sweep seeding protocol: seed sizes scaled to a_c(0), SeedSequence + multiprocessing, histories omitted."
 mutability: append-only
 timestamp: 2026-06-06
 ---

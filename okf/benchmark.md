@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§4 — Analytical Benchmark (Janson et al. 2012)"
+description: "The Janson et al. (2012) analytical benchmark: the mu=0 case is their model; critical quantities t_c, a_c, p_c."
 mutability: frozen
-type: concept
 ---
 
 # §4 — Analytical Benchmark (Janson et al. 2012) 🔒 *(reference)*

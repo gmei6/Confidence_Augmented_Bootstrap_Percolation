@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-004: Fork E1 resolved (file I/O boundary)"
+description: "Resolved fork E1: standalone C++ executable + file I/O (D-003)."
 mutability: append-only
 timestamp: 2026-06-03
 ---

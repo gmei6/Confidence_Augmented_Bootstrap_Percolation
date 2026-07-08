@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-008: Fork F2: m/k fear-marks mechanism dropped"
+description: "Fork F2: m/k fear-marks mechanism dropped for the MVP; direct-failure fear channel standardized."
 mutability: append-only
 timestamp: 2026-06-04
 ---

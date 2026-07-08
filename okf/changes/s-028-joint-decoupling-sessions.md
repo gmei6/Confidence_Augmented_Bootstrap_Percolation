@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-028: Joint-decoupling parallel sessions"
+description: "Two parallel joint-decoupling sessions: leave-m-out proof committed (D-025); empirical design feedback sent."
 mutability: append-only
 timestamp: 2026-06-25
 ---

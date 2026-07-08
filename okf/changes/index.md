@@ -1,6 +1,8 @@
 ---
+type: Index
+title: "Changes (§12 — Session Changelog)"
+description: "Append-only index of the §12 session changelog."
 mutability: append-only
-type: index
 ---
 
 # Changes (§12 — Session Changelog)
@@ -46,3 +48,4 @@ type: index
 - [s-046-q4-q5-analysis-and-track-decision](s-046-q4-q5-analysis-and-track-decision.md)
 - [s-047-overnight-batch-handoff](s-047-overnight-batch-handoff.md)
 - [s-048-overnight-batch-executed](s-048-overnight-batch-executed.md)
+- [s-049-frontmatter-enrichment](s-049-frontmatter-enrichment.md)

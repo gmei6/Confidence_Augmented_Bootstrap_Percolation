@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Shu, Yang, Ruan & Xuan (2024)"
+description: "Social contagion under hybrid interactions."
 resource: arXiv:2408.05050
 ---
 

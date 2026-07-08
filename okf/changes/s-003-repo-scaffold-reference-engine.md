@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-003: Repo scaffold + reference engine"
+description: "Stood up the repo scaffold and built the reference.py engine."
 mutability: append-only
 timestamp: 2026-06-03
 ---

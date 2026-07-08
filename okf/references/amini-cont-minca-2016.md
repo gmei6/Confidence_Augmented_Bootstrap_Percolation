@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Amini, Cont & Minca (2016)"
+description: "Rigorous default-cascade asymptotics on inhomogeneous random graphs."
 resource: arXiv:1112.5687
 ---
 

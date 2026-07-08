@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-011: Repository structure & dependency lock"
+description: "Repository structure standardized; Python dependency versions locked."
 mutability: append-only
 timestamp: 2026-06-04
 ---

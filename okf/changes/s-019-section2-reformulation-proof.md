@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-019: Janson §2 reformulation completed"
+description: "Completed the Janson §2 reformulation proof and its numerical test; reviewer/critic/auditor all passed."
 mutability: append-only
 timestamp: 2026-06-08
 ---

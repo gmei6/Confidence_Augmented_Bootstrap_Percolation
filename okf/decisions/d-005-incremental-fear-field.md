@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-005: Fork F1: incremental fear field"
+description: "Fork F1: incremental fear field g_t = a_(t-1)/n; cumulative rejected outright."
 mutability: append-only
 timestamp: 2026-06-03
 ---

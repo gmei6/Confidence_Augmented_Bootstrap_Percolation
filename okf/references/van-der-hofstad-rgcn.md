@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "van der Hofstad — Random Graphs and Complex Networks, Vol. 1"
+description: "Bridge text (advisor's lineage): branching-process approximations; the book cited at the 2026-07-01 meeting."
 resource: https://www.win.tue.nl/~rhofstad/NotesRGCN.html
 ---
 

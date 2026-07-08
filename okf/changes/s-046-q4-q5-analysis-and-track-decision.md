@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-046: Q4 tilt analysis, Q5 locality sweep, Tracks 4/5 decision"
+description: "Q4 tilt-monotonicity analysis, Q5 locality sweep, and the D-031 track decision."
 mutability: append-only
 timestamp: 2026-07-04
 tags: [q4, q5, tilt-monotonicity, locality, decision]

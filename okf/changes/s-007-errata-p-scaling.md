@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-007: ERRATA: p-scaling / finite-size corrections"
+description: "ERRATA: corrections of record for the S-005/S-006 p-scaling claims; BETA frozen at a fixed N_REF."
 mutability: append-only
 timestamp: 2026-06-03
 ---

@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-048: S-047 Overnight Batch Executed — 5/5 OK (sandbox copy)"
+description: "S-047 overnight batch executed in the sandbox: 5/5 steps OK; C-Q5 readout complete."
 mutability: append-only
 timestamp: 2026-07-05
 tags: [overnight, q3, q4, q5, task-h, sandbox]

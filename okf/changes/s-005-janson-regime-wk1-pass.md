@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-005: Fork F4 resolved; Wk-1 validation passes"
+description: "Resolved fork F4 (Janson regime, D-004); the Wk-1 mu=0 validation passes."
 mutability: append-only
 timestamp: 2026-06-03
 ---

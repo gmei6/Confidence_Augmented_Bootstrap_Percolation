@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-009: Survivor-hazard removed"
+description: "Survivor-hazard removed entirely (D-007); next actions reworked around window_len."
 mutability: append-only
 timestamp: 2026-06-03
 ---

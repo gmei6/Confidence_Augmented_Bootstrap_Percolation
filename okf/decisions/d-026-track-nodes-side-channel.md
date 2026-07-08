@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-026: track_nodes diagnostic side-channel in reference.py"
+description: "track_nodes diagnostic side-channel approved in reference.py; exempted from §5.4 C++ parity."
 mutability: append-only
 timestamp: 2026-06-25
 ---

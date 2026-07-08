@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-021: §5.4 cross-language validation completed"
+description: "Completed §5.4 cross-language validation (Prongs A and B); §5.5 sanitizer note per D-018."
 mutability: append-only
 timestamp: 2026-06-11
 ---

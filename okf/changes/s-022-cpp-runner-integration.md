@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-022: C++ engine integrated into runner sweeps"
+description: "Integrated the C++ engine into runner.py sweeps; ran the n=1000 milestone sweeps for r in {2,3,4}."
 mutability: append-only
 timestamp: 2026-06-11
 ---

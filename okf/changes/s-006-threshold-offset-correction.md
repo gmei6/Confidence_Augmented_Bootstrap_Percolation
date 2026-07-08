@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-006: Threshold-offset wording corrected"
+description: "Corrected the threshold-offset wording: the ~28% gap is a finite-size effect, not an np correction."
 mutability: append-only
 timestamp: 2026-06-03
 ---

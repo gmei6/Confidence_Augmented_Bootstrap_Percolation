@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-000: Tracker created; f/g notation standardized"
+description: "Tracker created; fear notation standardized to f (individual) / g (global field)."
 mutability: append-only
 timestamp: 2026-06-01
 ---

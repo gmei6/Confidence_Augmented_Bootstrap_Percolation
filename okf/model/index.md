@@ -1,6 +1,8 @@
 ---
+type: Index
+title: "Model"
+description: "Index of the §3 model-specification files."
 mutability: live
-type: index
 ---
 
 # Model

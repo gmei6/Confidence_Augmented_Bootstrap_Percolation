@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-027: viz/ section 3 Part A/B walkthroughs"
+description: "viz/ section 3 expanded into Part A/B walkthroughs; illustrative only, §5.4/§5.6 not applicable."
 mutability: append-only
 timestamp: 2026-06-29
 ---

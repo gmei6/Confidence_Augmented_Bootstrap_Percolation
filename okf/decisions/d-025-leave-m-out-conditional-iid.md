@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-025: Exact conditional i.i.d. via leave-m-out"
+description: "Exact conditional i.i.d. structure proved via leave-m-out construction, sharpening the decoupling conjecture."
 mutability: append-only
 timestamp: 2026-06-25
 ---

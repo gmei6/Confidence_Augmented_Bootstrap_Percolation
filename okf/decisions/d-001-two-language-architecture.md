@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-001: C++ core + Python orchestration"
+description: "Two-language architecture: C++ performance core + Python orchestration, with a pure-Python oracle."
 mutability: append-only
 timestamp: 2026-06-01
 ---

@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§2 — North Star & Contribution Claim"
+description: "Frozen contribution claim and novelty framing; the anti-drift anchor for all scope decisions."
 mutability: frozen
-type: concept
 ---
 
 # §2 — North Star & Contribution Claim 🔒

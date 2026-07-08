@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-023: Scaling analysis hardened; results/analysis/ added"
+description: "Hardened the scaling analysis; results/analysis/ added (D-020, D-021)."
 mutability: append-only
 timestamp: 2026-06-15
 ---

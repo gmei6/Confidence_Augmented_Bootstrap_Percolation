@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-033: viz tests 17/17; advisor brief drafted"
+description: "viz test suites added (17/17 pass); advisor brief drafted."
 mutability: append-only
 timestamp: 2026-06-29
 ---

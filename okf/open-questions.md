@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§9 — Open Questions & Blockers"
+description: "Live open questions (Q#), blockers, and active constraints; overwritten each session."
 mutability: live
-type: concept
 ---
 
 # §9 — Open Questions & Blockers 🟢 *(overwrite each session)*

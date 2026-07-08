@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Dhara, van der Hofstad, van Leeuwaarden & Sen (2017)"
+description: "Advisor's critical-window work: configuration model with finite third-moment degrees."
 resource: arXiv:1605.02868
 ---
 

@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§3 — Model Specification (3.5: notation & parameters)"
+description: "Frozen §3.5 notation table (f individual fear, g global field) and parameter definitions."
 mutability: frozen
-type: concept
 ---
 
 # §3 — Model Specification (3.5: notation & parameters)

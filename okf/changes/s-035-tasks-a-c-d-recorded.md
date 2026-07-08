@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-035: Antigravity tasks A/C/D recorded"
+description: "Recorded Antigravity queue tasks A/C/D (nu estimates, targeted-seeding negative, window invariance)."
 mutability: append-only
 timestamp: 2026-06-29
 ---

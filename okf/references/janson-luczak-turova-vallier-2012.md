@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Janson, Łuczak, Turova & Vallier (2012)"
+description: "Base model: bootstrap percolation on G(n,p); the sharp-threshold dichotomy and a_c benchmark."
 resource: arXiv:1012.3535
 ---
 

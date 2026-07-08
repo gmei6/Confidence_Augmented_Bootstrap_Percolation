@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-029: §4 display-math block reformatted"
+description: "§4 critical-quantities display-math block reformatted; no mathematical content changed."
 mutability: append-only
 timestamp: 2026-07-02
 ---

@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Miller (2015)"
+description: "Dynamic Watts model with hybrid bifurcations."
 resource: arXiv:1501.01585
 ---
 

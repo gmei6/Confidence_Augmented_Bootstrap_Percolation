@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-032: decisions/index.md and changes/index.md reclassified as append-only"
+description: "decisions/index.md and changes/index.md reclassified from live to append-only."
 mutability: append-only
 timestamp: 2026-07-07
 tags: [okf-convention, mutability-taxonomy]

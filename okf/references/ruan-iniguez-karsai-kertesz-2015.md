@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Ruan, Iñiguez, Karsai & Kertész (2015)"
+description: "Threshold model with immune nodes and external driving; nearest relative to the global fear field."
 resource: arXiv:1506.00251
 ---
 

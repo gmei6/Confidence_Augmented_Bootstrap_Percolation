@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-024: Cross-language parity thresholds by p-value"
+description: "Cross-language parity thresholds moved to scale-invariant p-values (z-test and KS, p > 0.005); seed 12345."
 mutability: append-only
 timestamp: 2026-06-24
 ---

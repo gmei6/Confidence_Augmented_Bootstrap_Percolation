@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-019: C++ engine integrated at grid-cell level"
+description: "C++ engine integrated into runner.py sweeps at grid-cell level, cutting subprocess overhead to O(N_cells)."
 mutability: append-only
 timestamp: 2026-06-11
 ---

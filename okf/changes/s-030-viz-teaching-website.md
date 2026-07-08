@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-030: Interactive teaching website built"
+description: "Built the interactive teaching website (viz/) with the FIFO step-trace walkthrough."
 mutability: append-only
 timestamp: 2026-06-28
 ---

@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§3 — Model Specification (3.1–3.4: network, channels, dynamics)"
+description: "Frozen §3.1–3.4: G(n,p) network, solvency and fear channels, simultaneous-update dynamics, halting rule."
 mutability: frozen
-type: concept
 ---
 
 # §3 — Model Specification (3.1–3.4: network, channels, dynamics)

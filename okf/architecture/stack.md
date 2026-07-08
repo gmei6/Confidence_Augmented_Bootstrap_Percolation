@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§5 — Coding Standards & Architecture (5.1–5.2: stack & performance contract)"
+description: "Frozen §5.1–5.2: two-language split (C++ core, Python orchestration) and the performance contract."
 mutability: frozen
-type: concept
 ---
 
 # §5 — Coding Standards & Architecture (5.1–5.2: stack & performance contract)

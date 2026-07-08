@@ -1,6 +1,8 @@
 ---
+type: Index
+title: "Architecture"
+description: "Index of the §5 coding-standards and architecture files."
 mutability: live
-type: index
 ---
 
 # Architecture

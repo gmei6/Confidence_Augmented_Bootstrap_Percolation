@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§5 — Coding Standards & Architecture (5.3: repository layout)"
+description: "Frozen §5.3 repository layout."
 mutability: frozen
-type: concept
 ---
 
 # §5 — Coding Standards & Architecture (5.3: repository layout)

@@ -1,3 +1,10 @@
+---
+type: Session Change
+title: "S-045: Antigravity-to-Claude Handoff"
+description: "Antigravity-to-Claude handoff: session summary, monotonicity guardrail, fleet and repo state."
+mutability: append-only
+timestamp: 2026-07-04
+---
 # S-045: Antigravity-to-Claude Handoff
 
 > S-045 | 2026-07-04 | Handoff document summarizing the Antigravity session for Claude Code to safely resume.

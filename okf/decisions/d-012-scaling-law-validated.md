@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-012: Critical-seed scaling law validated"
+description: "Critical-seed scaling law a_c(mu)=a_c(0)(1-mu)^(r/(r-1)) validated mathematically and numerically."
 mutability: append-only
 timestamp: 2026-06-04
 ---

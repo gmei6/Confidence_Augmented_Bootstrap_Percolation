@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-031: Discard Track 4 (SIR recovery); defer Track 5 (weighted edges) indefinitely"
+description: "Track 4 (SIR recovery) rejected to protect monotonicity; Track 5 (weighted edges) deferred indefinitely."
 mutability: append-only
 timestamp: 2026-07-04
 tags: [scope, advisor-tracks, monotonicity]

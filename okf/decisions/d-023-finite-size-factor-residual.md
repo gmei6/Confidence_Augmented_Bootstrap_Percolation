@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-023: r=2 bias formalized as finite-size residual"
+description: "r=2 systematic bias formalized as a finite-size factor residual, not a physical floor constraint."
 mutability: append-only
 timestamp: 2026-06-16
 ---

@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-022: Plotting analysis-write gated behind flag"
+description: "Analysis-JSON writes in plot_wk3_4.py gated behind --write-analysis; plotting is read-only on analysis artifacts."
 mutability: append-only
 timestamp: 2026-06-16
 ---

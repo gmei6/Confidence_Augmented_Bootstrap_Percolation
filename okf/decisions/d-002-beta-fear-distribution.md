@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-002: Fork F3: Beta(α,β) individual fear"
+description: "Fork F3: individual fear f_i ~ Beta(alpha,beta) with E[f]=mu exactly; truncated-normal dropped."
 mutability: append-only
 timestamp: 2026-06-02
 ---

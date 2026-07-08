@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-010: window_len/weights exposed in reference engine"
+description: "window_len/weights exposed in the reference engine; X=1 default preserves the core model exactly."
 mutability: append-only
 timestamp: 2026-06-04
 ---

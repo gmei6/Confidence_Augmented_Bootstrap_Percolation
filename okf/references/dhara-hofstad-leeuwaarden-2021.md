@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Dhara, van der Hofstad & van Leeuwaarden (2021)"
+description: "Critical percolation on scale-free random graphs."
 resource: arXiv:1909.05590
 ---
 

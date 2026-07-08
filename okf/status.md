@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§8 — Current Status"
+description: "Live current status: phase, latest validated findings, and code map; overwritten each session."
 mutability: live
-type: concept
 ---
 
 # §8 — Current Status 🟢 *(overwrite each session)*

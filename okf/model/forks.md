@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§3 — Model Specification (3.6: modeling forks — all decided)"
+description: "Frozen §3.6 modeling forks F1–F4, all decided, with rationale and rejected alternatives."
 mutability: frozen
-type: concept
 ---
 
 # §3 — Model Specification (3.6: modeling forks — all decided)

@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§10 — Next Actions"
+description: "Live list of the next few concrete steps; overwritten each session."
 mutability: live
-type: concept
 ---
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*

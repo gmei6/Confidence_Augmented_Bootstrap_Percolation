@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-040: OKF migration (tracker + lessons → okf/)"
+description: "Migrated the tracker and lessons into okf/ per D-030; built the edit-okf and session skills."
 mutability: append-only
 timestamp: 2026-07-04
 ---

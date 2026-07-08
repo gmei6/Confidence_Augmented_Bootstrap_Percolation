@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-002: Fork F3 resolved (Beta fear)"
+description: "Resolved fork F3: Beta(alpha,beta) fear distribution (D-002)."
 mutability: append-only
 timestamp: 2026-06-02
 ---

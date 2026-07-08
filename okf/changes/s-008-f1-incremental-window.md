@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-008: Fork F1 resolved; memory-window adopted"
+description: "Resolved fork F1 (incremental field, D-005); normalized memory-window family adopted (D-006)."
 mutability: append-only
 timestamp: 2026-06-03
 ---

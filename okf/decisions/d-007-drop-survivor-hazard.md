@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-007: Survivor-hazard normalization removed"
+description: "Survivor-hazard normalization removed entirely; the mu-inert fallback becomes the heterogeneous-graph pivot."
 mutability: append-only
 timestamp: 2026-06-03
 ---

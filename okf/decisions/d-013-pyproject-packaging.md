@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-013: pyproject.toml packaging"
+description: "pyproject.toml packaging adopted for editable installs and clean module-path resolution."
 mutability: append-only
 timestamp: 2026-06-04
 ---

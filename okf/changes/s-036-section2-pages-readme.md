@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-036: section2 deployed to Pages; README updated"
+description: "Deployed section2-reformulation/ to GitHub Pages; README updated."
 mutability: append-only
 timestamp: 2026-06-29
 ---

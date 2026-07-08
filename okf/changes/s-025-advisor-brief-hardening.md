@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-025: Advisor briefing hardened"
+description: "Hardened the advisor briefing; r=2 bias origin clarified per D-023."
 mutability: append-only
 timestamp: 2026-06-16
 ---

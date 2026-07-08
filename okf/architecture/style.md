@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§5 — Coding Standards & Architecture (5.5: style)"
+description: "Frozen §5.5 style rules: small pure functions, no global state, engine does no I/O."
 mutability: frozen
-type: concept
 ---
 
 # §5 — Coding Standards & Architecture (5.5: style)

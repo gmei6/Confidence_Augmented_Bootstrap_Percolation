@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-004: Fork F4: Janson regime p_n = β·n^-α"
+description: "Fork F4: Janson p–n regime p_n = beta*n^(-alpha), alpha in (1/r,1); bounded-degree regime rejected."
 mutability: append-only
 timestamp: 2026-06-03
 ---

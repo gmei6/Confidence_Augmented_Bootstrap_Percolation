@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-029: Pairwise decoupling finalized; D-026"
+description: "Pairwise-decoupling empirics finalized; oracle violation caught and resolved via D-026."
 mutability: append-only
 timestamp: 2026-06-25
 ---

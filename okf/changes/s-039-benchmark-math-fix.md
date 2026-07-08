@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-039: §4 math-block rendering fixed (D-029)"
+description: "Fixed the §4 display-math rendering bug (D-029)."
 mutability: append-only
 timestamp: 2026-07-02
 ---

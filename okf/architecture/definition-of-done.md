@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§5 — Coding Standards & Architecture (5.6: Definition of Done)"
+description: "Frozen §5.6 Definition of Done: committed config + logged seed, saved raws, regenerable figure, validation."
 mutability: frozen
-type: concept
 ---
 
 # §5 — Coding Standards & Architecture (5.6: Definition of Done)

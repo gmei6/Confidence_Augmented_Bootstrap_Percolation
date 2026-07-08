@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-026: First advisor meeting scheduled"
+description: "First advisor meeting scheduled (2026-07-01); briefing deliberately held for polish."
 mutability: append-only
 timestamp: 2026-06-24
 ---

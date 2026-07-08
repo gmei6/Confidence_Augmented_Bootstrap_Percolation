@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-024: Wk-5 overlays; provenance decoupled"
+description: "Completed Wk-5 phase-diagram overlays; analysis provenance decoupled from plotting (D-022)."
 mutability: append-only
 timestamp: 2026-06-16
 ---

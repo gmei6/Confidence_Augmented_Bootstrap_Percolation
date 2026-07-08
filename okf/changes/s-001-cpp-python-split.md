@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-001: C++ core + Python orchestration adopted"
+description: "Adopted the C++ core + Python orchestration split (D-001); §5/§6 rewritten."
 mutability: append-only
 timestamp: 2026-06-01
 ---

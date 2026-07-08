@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-003: Fork E1: standalone C++ executable + file I/O"
+description: "Fork E1: standalone C++ executable + file I/O boundary; pybind11 deferred to stretch."
 mutability: append-only
 timestamp: 2026-06-03
 ---

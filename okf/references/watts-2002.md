@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Watts (2002)"
+description: "Canonical threshold-cascade model; the cascade window; heterogeneity raises vulnerability."
 resource: PNAS 99(9), 5766–5771
 ---
 

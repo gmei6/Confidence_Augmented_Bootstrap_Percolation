@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§5 — Coding Standards & Architecture (5.4: reproducibility)"
+description: "Frozen §5.4: seed-everything rule and the two-prong Python↔C++ cross-validation protocol."
 mutability: frozen
-type: concept
 ---
 
 # §5 — Coding Standards & Architecture (5.4: reproducibility)

@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-000: Initial tracker built"
+description: "Initial tracker built from the project summary, the Janson paper, and the mentor review."
 mutability: append-only
 timestamp: 2026-06-01
 ---

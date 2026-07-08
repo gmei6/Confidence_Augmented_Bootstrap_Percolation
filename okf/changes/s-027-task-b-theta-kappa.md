@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-027: Task B (θ/κ robustness) verified"
+description: "Verified and recorded Task B (theta/kappa robustness); appended D-024."
 mutability: append-only
 timestamp: 2026-06-24
 ---

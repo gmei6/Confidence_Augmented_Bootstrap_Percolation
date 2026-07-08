@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-031: viz/ Part A/B walkthroughs (D-027)"
+description: "Expanded viz/ into Part A/B guided walkthroughs (D-027)."
 mutability: append-only
 timestamp: 2026-06-29
 ---

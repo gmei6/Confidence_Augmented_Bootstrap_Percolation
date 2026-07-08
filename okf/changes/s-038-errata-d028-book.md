@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-038: ERRATA: D-028 book reference corrected"
+description: "ERRATA: D-028 book reference corrected to van der Hofstad, Random Graphs and Complex Networks Vol. I."
 mutability: append-only
 timestamp: 2026-07-01
 ---

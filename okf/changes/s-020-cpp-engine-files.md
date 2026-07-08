@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-020: Core C++ engine files written"
+description: "Wrote the core C++ engine files and verified native compilation."
 mutability: append-only
 timestamp: 2026-06-11
 ---

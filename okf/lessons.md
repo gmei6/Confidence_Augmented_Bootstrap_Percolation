@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "Lessons Learned (agent memory)"
+description: "Agent memory: codebase-specific gotchas and modeling pitfalls; read before every planning phase."
 mutability: live
-type: concept
 ---
 
 # Lessons Learned (agent memory)

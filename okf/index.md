@@ -1,6 +1,8 @@
 ---
+type: Index
+title: "Open Knowledge Format (OKF)"
+description: "Root index of the TwoCascade knowledge bundle; the session-start entry point."
 mutability: live
-type: index
 ---
 
 # Open Knowledge Format (OKF)

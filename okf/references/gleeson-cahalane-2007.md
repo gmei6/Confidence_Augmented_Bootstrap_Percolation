@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Gleeson & Cahalane (2007)"
+description: "Seed-size-dependent cascade condition and tree recursion; machinery for the mean-field threshold."
 resource: Phys. Rev. E 75, 056103
 ---
 

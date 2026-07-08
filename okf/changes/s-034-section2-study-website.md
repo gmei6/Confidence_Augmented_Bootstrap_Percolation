@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-034: Section-2 static study website built"
+description: "Built the static section-2 reformulation study website; fixed three math bugs."
 mutability: append-only
 timestamp: 2026-06-29
 ---

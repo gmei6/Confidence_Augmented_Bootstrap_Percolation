@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-018: macOS Debug = UBSan only; ASan deferred"
+description: "macOS Debug builds use UBSan only; ASan deferred to Linux/PACE (AppleClang 17 pre-main deadlock)."
 mutability: append-only
 timestamp: 2026-06-11
 ---

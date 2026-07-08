@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-020: results/analysis/ + dual-commit provenance"
+description: "results/analysis/ directory added with dual-commit provenance stamping."
 mutability: append-only
 timestamp: 2026-06-15
 ---

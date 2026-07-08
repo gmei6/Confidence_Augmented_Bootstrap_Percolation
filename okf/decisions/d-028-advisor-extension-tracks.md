@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-028: First advisor meeting: five extension tracks"
+description: "First advisor meeting: five extension tracks (config model + degree-dependent fear, geometry/GIRGs, both combined, recovery, weighted edges)."
 mutability: append-only
 timestamp: 2026-07-01
 ---

@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-009: Q1: tiered rigor stance adopted"
+description: "Q1 resolved by the tiered rigor stance: scaling-law analytics plus high-performance simulation validation."
 mutability: append-only
 timestamp: 2026-06-04
 ---

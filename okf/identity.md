@@ -1,6 +1,8 @@
 ---
+type: Concept
+title: "§1 — Project Identity"
+description: "Frozen project identity: extend Janson bootstrap percolation on G(n,p) with a confidence-driven fear channel."
 mutability: frozen
-type: concept
 ---
 
 # §1 — Project Identity 🔒

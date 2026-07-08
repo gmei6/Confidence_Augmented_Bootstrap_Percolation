@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-016: reviewer/critic/auditor blind verification gate"
+description: "Adversarial review split into blind reviewer/critic/auditor agents plus the /verify workflow."
 mutability: append-only
 timestamp: 2026-06-06
 ---

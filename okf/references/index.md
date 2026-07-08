@@ -1,6 +1,8 @@
 ---
+type: Index
+title: "References (§13 — Key References)"
+description: "Index of the §13 key references."
 mutability: live
-type: index
 ---
 
 # References (§13 — Key References)

@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-015: Scaling formula moved to meanfield.py"
+description: "Seed-scaling formula moved from model.py to meanfield.py; plotting decoupled."
 mutability: append-only
 timestamp: 2026-06-06
 ---

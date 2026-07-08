@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Gai & Kapadia (2010)"
+description: "Foundational analytical default-cascade model for financial networks."
 resource: Proc. R. Soc. A 466, 2401–2423
 ---
 

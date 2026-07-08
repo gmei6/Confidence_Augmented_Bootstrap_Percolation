@@ -1,5 +1,7 @@
 ---
 type: Session Change
+title: "S-032: GitHub Pages path-filter deploy fix"
+description: "Diagnosed and fixed the GitHub Pages path-filter deploy miss."
 mutability: append-only
 timestamp: 2026-06-29
 ---

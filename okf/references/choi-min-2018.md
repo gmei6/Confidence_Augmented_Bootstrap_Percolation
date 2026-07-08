@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Choi, Min et al. (2018)"
+description: "Competing contagion processes; hybrid/double transitions."
 resource: arXiv:1712.05059
 ---
 

@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-006: Normalized memory-window persistence family"
+description: "Normalized memory-window family adopted as the sanctioned persistence extension; X=1 is the decided model."
 mutability: append-only
 timestamp: 2026-06-03
 ---

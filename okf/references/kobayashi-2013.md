@@ -1,5 +1,7 @@
 ---
 type: Reference
+title: "Kobayashi (2013)"
+description: "Balance-sheet contagion shown equivalent to the Watts threshold model."
 resource: arXiv:1312.6804
 ---
 

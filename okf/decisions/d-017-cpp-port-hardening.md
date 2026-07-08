@@ -1,5 +1,7 @@
 ---
 type: Decision
+title: "D-017: C++ port design hardening"
+description: "C++ port design hardened: double typing, z-test zero-variance bypass, deque emulation, ARM64 flag dispatch."
 mutability: append-only
 timestamp: 2026-06-11
 ---

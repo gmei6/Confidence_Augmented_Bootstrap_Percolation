@@ -49,3 +49,4 @@ mutability: append-only
 - [s-047-overnight-batch-handoff](s-047-overnight-batch-handoff.md)
 - [s-048-overnight-batch-executed](s-048-overnight-batch-executed.md)
 - [s-049-frontmatter-enrichment](s-049-frontmatter-enrichment.md)
+- [s-050-recovery-literature-flagged](s-050-recovery-literature-flagged.md)

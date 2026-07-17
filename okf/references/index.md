@@ -20,3 +20,5 @@ mutability: live
 - [van der Hofstad — Random Graphs and Complex Networks, Vol. 1](van-der-hofstad-rgcn.md)
 - [Dhara, van der Hofstad, van Leeuwaarden & Sen (2017)](dhara-hofstad-leeuwaarden-sen-2017.md)
 - [Dhara, van der Hofstad & van Leeuwaarden (2021)](dhara-hofstad-leeuwaarden-2021.md)
+- [Coker & Gunderson (2015)](coker-gunderson-2015.md)
+- [Ballen & Guha (2015)](ballen-guha-2015.md)

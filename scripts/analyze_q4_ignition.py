@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(base_dir, "src"))
 from twocascade.runner import get_git_commit_hash
 from twocascade.analysis import load_raw_results, analyze_sweep
 
-N_GRID = [4000, 10000, 20000, 40000, 80000]
+N_GRID = [4000, 10000, 20000, 40000, 80000, 160000]
 # tau = 3.5 has no raw data beyond n=20000 (S-051 only extended tau = 2.5).
 N_GRID_BY_TAG = {"tau25": N_GRID, "tau35": [4000, 10000, 20000]}
 TAUS = {"tau25": 2.5, "tau35": 3.5}
@@ -61,6 +61,33 @@ def main():
                     "raw_file": raw_rel,
                 })
 
+    def cochran_armitage_trend(rows):
+        """Cochran-Armitage trend test of P(systemic) against log(n): regenerable
+        statistic behind the 'does the n-decline continue or plateau' call (a
+        monotone-alternative test, more powered than an omnibus homogeneity chi2).
+        Returns z (negative = declining in n), two-sided p, and the log-n slope.
+        None if fewer than 3 informative points."""
+        pts = [(r["n"], r["n_systemic"], r["n_trials"]) for r in rows]
+        K = sum(k for _, k, _ in pts)
+        N = sum(t for _, _, t in pts)
+        if len(pts) < 3 or K == 0 or K == N:
+            return None
+        x = np.log([n for n, _, _ in pts])
+        Ni = np.array([t for _, _, t in pts], dtype=float)
+        ki = np.array([k for _, k, _ in pts], dtype=float)
+        p = K / N
+        xbar = np.average(x, weights=Ni)
+        num = float(np.sum(ki * (x - xbar)))
+        den = p * (1 - p) * float(np.sum(Ni * (x - xbar) ** 2))
+        if den <= 0:
+            return None
+        z = num / np.sqrt(den)
+        from scipy.stats import norm, linregress
+        lr = linregress(x, [k / t for (_, k, _), t in zip(pts, Ni)])
+        return {"z": float(z), "p_two_sided": float(2 * (1 - norm.cdf(abs(z)))),
+                "p_vs_logn_slope": float(lr.slope), "p_vs_logn_r": float(lr.rvalue),
+                "n_points": len(pts)}
+
     # Gate check per (tau, mu) series across n.
     series = {}
     for tau in (2.5, 3.5):
@@ -77,6 +104,8 @@ def main():
                               else "increasing" if ps == sorted(ps) and ps[0] < ps[-1]
                               else "decreasing" if ps == sorted(ps, reverse=True) and ps[0] > ps[-1]
                               else "non-monotone"),
+                "trend_test_full": cochran_armitage_trend(rows),
+                "trend_test_n_ge_20000": cochran_armitage_trend([r for r in rows if r["n"] >= 20000]),
             }
 
     tau35_gate = all(s["total_systemic"] == 0 for s in series.values() if s["tau"] == 3.5)

@@ -38,7 +38,7 @@ from twocascade.analysis import (
 )
 from twocascade.plotting import apply_plot_style
 
-N_LIST = [1000, 2000, 5000, 10000, 20000]
+N_LIST = [1000, 2000, 5000, 10000, 20000, 40000, 80000]
 MU_LIST = [0.0, 0.3]
 THETA = 0.5
 BOOTSTRAP_SEED = 20260629  # same as scripts/plot_finite_size_scaling.py
@@ -100,11 +100,22 @@ def main():
             [r["width"] for r in rows],
             [r["width_err"] for r in rows],
         )
+        # Regenerable crossover diagnostic: residuals of log w about the power-law
+        # fit line. A finite-size crossover would bend the large-n points off the
+        # line (one-signed residuals at the top of the grid); scatter that
+        # alternates in sign is consistent with a clean power law (no crossover).
+        log_n = np.log([r["n"] for r in rows])
+        log_w = np.log([r["width"] for r in rows])
+        resid = (log_w - (fit["slope"] * log_n + fit["intercept"])).tolist()
+        last3_signs = ["+" if r > 0 else "-" for r in resid[-3:]]
         fits[str(mu)] = {
             "nu": fit["nu"], "nu_err": fit["nu_err"],
             "slope": fit["slope"], "intercept": fit["intercept"],
             "r_squared": fit["r_squared"],
             "n_list": N_LIST,
+            "log_w_residuals": resid,
+            "last3_residual_signs": last3_signs,
+            "one_signed_bend_at_large_n": len(set(last3_signs)) == 1,
             "prior_three_point_fit": PRIOR_FIT[str(mu)],
         }
         print(f"mu={mu}: nu={fit['nu']:.3f} +/- {fit['nu_err']:.3f} "
@@ -120,7 +131,7 @@ def main():
         ax.errorbar([r["n"] for r in rows], [r["width"] for r in rows],
                     yerr=[r["width_err"] for r in rows],
                     fmt="o", color=colors[mu], capsize=4, label=f"Data $\\mu={mu}$")
-        n_fit = np.linspace(800, 24000, 100)
+        n_fit = np.linspace(min(N_LIST) * 0.8, max(N_LIST) * 1.2, 100)
         ax.loglog(n_fit, np.exp(f["slope"] * np.log(n_fit) + f["intercept"]),
                   color=colors[mu],
                   label=f"Fit $\\mu={mu}$ ($\\nu={f['nu']:.2f} \\pm {f['nu_err']:.2f}$)")
@@ -130,7 +141,7 @@ def main():
     ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
     ax.set_xlabel("System Size $n$")
     ax.set_ylabel("Transition Width $w$")
-    ax.set_title("Finite-Size Scaling, $n \\in [1000, 20000]$ (C++ engine)\n"
+    ax.set_title(f"Finite-Size Scaling, $n \\in [{min(N_LIST)}, {max(N_LIST)}]$ (C++ engine)\n"
                  "$w \\sim n^{-1/\\nu}$")
     ax.legend(loc="lower left")
     ax.grid(True, which="both")

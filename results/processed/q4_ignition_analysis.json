@@ -7,7 +7,8 @@
         10000,
         20000,
         40000,
-        80000
+        80000,
+        160000
       ],
       "tau35": [
         4000,
@@ -25,12 +26,13 @@
       "results/q4_ignition_tau25_n20000_raw.json": "fb0ac42c64373bef5ded40cefaf32980c584b6e7",
       "results/q4_ignition_tau25_n40000_raw.json": "a84f248ac35b20db050a20cc7888932dae0cfcef",
       "results/q4_ignition_tau25_n80000_raw.json": "a84f248ac35b20db050a20cc7888932dae0cfcef",
+      "results/q4_ignition_tau25_n160000_raw.json": "e066fd894c2b68c6b65547cff938f71e73498d9c",
       "results/q4_ignition_tau35_n4000_raw.json": "fb0ac42c64373bef5ded40cefaf32980c584b6e7",
       "results/q4_ignition_tau35_n10000_raw.json": "fb0ac42c64373bef5ded40cefaf32980c584b6e7",
       "results/q4_ignition_tau35_n20000_raw.json": "fb0ac42c64373bef5ded40cefaf32980c584b6e7"
     },
-    "analysis_runtime_commit": "a84f248ac35b20db050a20cc7888932dae0cfcef",
-    "timestamp": "2026-07-18T11:28:01.717998"
+    "analysis_runtime_commit": "e066fd894c2b68c6b65547cff938f71e73498d9c",
+    "timestamp": "2026-07-18T19:01:32.398265"
   },
   "cells": [
     {
@@ -174,6 +176,34 @@
       "raw_file": "results/q4_ignition_tau25_n80000_raw.json"
     },
     {
+      "tau": 2.5,
+      "n": 160000,
+      "mean_fear": 0.0,
+      "seed_size": 2,
+      "n_trials": 500,
+      "n_systemic": 6,
+      "p_systemic": 0.012,
+      "wilson_95": [
+        0.0055109199671753584,
+        0.025930707718986326
+      ],
+      "raw_file": "results/q4_ignition_tau25_n160000_raw.json"
+    },
+    {
+      "tau": 2.5,
+      "n": 160000,
+      "mean_fear": 0.4,
+      "seed_size": 2,
+      "n_trials": 500,
+      "n_systemic": 17,
+      "p_systemic": 0.034,
+      "wilson_95": [
+        0.02133433944461342,
+        0.053771805026188516
+      ],
+      "raw_file": "results/q4_ignition_tau25_n160000_raw.json"
+    },
+    {
       "tau": 3.5,
       "n": 4000,
       "mean_fear": 0.0,
@@ -267,10 +297,25 @@
         "10000": 0.024,
         "20000": 0.028,
         "40000": 0.018,
-        "80000": 0.014
+        "80000": 0.014,
+        "160000": 0.012
       },
-      "total_systemic": 61,
-      "direction": "non-monotone"
+      "total_systemic": 67,
+      "direction": "non-monotone",
+      "trend_test_full": {
+        "z": -3.1099968971202,
+        "p_two_sided": 0.001870893092409398,
+        "p_vs_logn_slope": -0.006767312643127413,
+        "p_vs_logn_r": -0.9426446266855686,
+        "n_points": 6
+      },
+      "trend_test_n_ge_20000": {
+        "z": -1.9556059570949451,
+        "p_two_sided": 0.05051159060538324,
+        "p_vs_logn_slope": -0.00750201421262261,
+        "p_vs_logn_r": -0.9431191251430153,
+        "n_points": 4
+      }
     },
     "tau=2.5|mu=0.4": {
       "tau": 2.5,
@@ -280,10 +325,25 @@
         "10000": 0.116,
         "20000": 0.062,
         "40000": 0.05,
-        "80000": 0.044
+        "80000": 0.044,
+        "160000": 0.034
       },
-      "total_systemic": 203,
-      "direction": "decreasing"
+      "total_systemic": 220,
+      "direction": "decreasing",
+      "trend_test_full": {
+        "z": -7.50873494108143,
+        "p_two_sided": 5.972999872483342e-14,
+        "p_vs_logn_slope": -0.0288246050047394,
+        "p_vs_logn_r": -0.9449674939859054,
+        "n_points": 6
+      },
+      "trend_test_n_ge_20000": {
+        "z": -2.1155983361530946,
+        "p_two_sided": 0.034378983486239356,
+        "p_vs_logn_slope": -0.01298425536800067,
+        "p_vs_logn_r": -0.9926738940125377,
+        "n_points": 4
+      }
     },
     "tau=3.5|mu=0.0": {
       "tau": 3.5,
@@ -294,7 +354,9 @@
         "20000": 0.0
       },
       "total_systemic": 0,
-      "direction": "all-zero"
+      "direction": "all-zero",
+      "trend_test_full": null,
+      "trend_test_n_ge_20000": null
     },
     "tau=3.5|mu=0.4": {
       "tau": 3.5,
@@ -305,7 +367,9 @@
         "20000": 0.0
       },
       "total_systemic": 0,
-      "direction": "all-zero"
+      "direction": "all-zero",
+      "trend_test_full": null,
+      "trend_test_n_ge_20000": null
     }
   },
   "verdict": {

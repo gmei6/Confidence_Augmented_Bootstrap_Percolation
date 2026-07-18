@@ -518,6 +518,10 @@ def plot_fear_field_concentration(concentration: Dict[str, Any], output_dir: str
 
     fig.suptitle("Fear-Field Trajectory Concentration ($r=2$): Relative Variance vs. $n$")
 
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath, dpi=300)
+    plt.close()
+
 def plot_extended_scaling_validation(fits_by_r: Dict[int, list], output_dir: str, filename: str = "extended_scaling_validation.png") -> None:
     """
     Plot empirical threshold ratio vs mu for r in {2, 3, 4} and overlay theoretical scaling law.

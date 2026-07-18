@@ -50,3 +50,5 @@ mutability: append-only
 - [s-048-overnight-batch-executed](s-048-overnight-batch-executed.md)
 - [s-049-frontmatter-enrichment](s-049-frontmatter-enrichment.md)
 - [s-050-recovery-literature-flagged](s-050-recovery-literature-flagged.md)
+- [s-051-task-queue-qrst](s-051-task-queue-qrst.md)
+- [s-052-next-actions-triage](s-052-next-actions-triage.md)

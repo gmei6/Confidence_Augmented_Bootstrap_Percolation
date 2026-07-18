@@ -1,15 +1,19 @@
 """
-Q3 nu tightening (Task A machinery + n = 10000 C++ point).
+Q3 nu tightening (Task A machinery + n = 10000, 20000 C++ points).
 
-Recomputes the finite-size transition-width exponent nu with the new
-results/raw/finite_size_r2_n10000.json point added to the Task A n-grid
-{1000, 2000, 5000}, per the S-047 handoff. Uses the same machinery as
+Recomputes the finite-size transition-width exponent nu with the
+results/raw/finite_size_r2_n10000.json (S-047) and
+results/raw/finite_size_r2_n20000.json (S-051) points added to the Task A
+n-grid {1000, 2000, 5000}. Uses the same machinery as
 scripts/plot_finite_size_scaling.py: estimate_transition_width (logistic
 10-90% width, 500 bootstrap reps) and fit_finite_size_exponent
 (log w ~ -(1/nu) log n).
 
 Writes results/processed/task_a_nu_n10000.json and
-results/figures/finite_size_scaling_r2_n10000.png.
+results/figures/finite_size_scaling_r2_n10000.png. (Output filenames are
+kept as-is for continuity with the existing S-047 artifact lineage even
+though the n-grid now extends to 20000 -- see metadata.n_list for the
+actual grid used.)
 """
 
 import os
@@ -34,7 +38,7 @@ from twocascade.analysis import (
 )
 from twocascade.plotting import apply_plot_style
 
-N_LIST = [1000, 2000, 5000, 10000]
+N_LIST = [1000, 2000, 5000, 10000, 20000]
 MU_LIST = [0.0, 0.3]
 THETA = 0.5
 BOOTSTRAP_SEED = 20260629  # same as scripts/plot_finite_size_scaling.py
@@ -116,7 +120,7 @@ def main():
         ax.errorbar([r["n"] for r in rows], [r["width"] for r in rows],
                     yerr=[r["width_err"] for r in rows],
                     fmt="o", color=colors[mu], capsize=4, label=f"Data $\\mu={mu}$")
-        n_fit = np.linspace(800, 12000, 100)
+        n_fit = np.linspace(800, 24000, 100)
         ax.loglog(n_fit, np.exp(f["slope"] * np.log(n_fit) + f["intercept"]),
                   color=colors[mu],
                   label=f"Fit $\\mu={mu}$ ($\\nu={f['nu']:.2f} \\pm {f['nu_err']:.2f}$)")
@@ -126,7 +130,7 @@ def main():
     ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
     ax.set_xlabel("System Size $n$")
     ax.set_ylabel("Transition Width $w$")
-    ax.set_title("Finite-Size Scaling with $n=10000$ (C++ engine)\n"
+    ax.set_title("Finite-Size Scaling, $n \\in [1000, 20000]$ (C++ engine)\n"
                  "$w \\sim n^{-1/\\nu}$")
     ax.legend(loc="lower left")
     ax.grid(True, which="both")

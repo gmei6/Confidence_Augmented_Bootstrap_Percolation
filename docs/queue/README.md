@@ -63,13 +63,24 @@
 | [K](old-tasks/task_K_geometric_graph_scoping.md) | Scoping doc: panic-field locality on geometric graphs (Q5) | new `docs/research/q5_geometric_graph_scoping.md` | none | low |
 | [L](old-tasks/task_L_q1_decoupling_followup.md) | Q1 follow-up: path forward for the Asymptotic Decoupling Conjecture | new `docs/research/q1_decoupling_path_forward.md` | none | low |
 | [M](old-tasks/task_M_q7_recovery_phase_scoping.md) | Scoping doc: optional recovery/healing phase (Q7) | new `docs/research/q7_recovery_phase_scoping.md` | none | low |
+| [Q](task_Q_epsilon_cap_sampler_fix.md) | ε-cap sampler fix (Q4 Phase 2 unblock) | `graphs.py` | **yes** — needs review before running | med |
+| [R](task_R_cross_round_remote_ignition.md) | Cross-round remote-ignition tracker (Q5 nucleation-law caveat) | new `scripts/run_task_r_cross_round.py` | probably none (script-only) but undrafted | low-med |
+| [S](task_S_q4_ignition_wider_n_grid.md) | Q4(iii) ignition gate: wider n-grid at μ̄=0.4 | new configs only | none | low |
+| [T](task_T_q3_nu_extended_n.md) | Q3 ν: extend finite-size fit to n=20000 | new config only | none | low |
 
 **Suggested order for new tasks:** E → F → H → G → I → J → K → L → M.
 Each task is independent; do them in any order, one full `/research-cycle` each.
 
 **Status after the 2026-07-04 overnight run (see `run.log` and `reports/`):**
 I, J, K, L, M are **done** (moved to `old-tasks/`, reports in `reports/task_{i,j,k,l,m}_report.md`).
-E, F, G, H are **BLOCKED on the sandbox environment** (no numpy/matplotlib/pytest, no pip, no
-network; the committed C++ binary is macOS-only) — task files left in place, diagnosis and exact
-resume points in `reports/task_{e,f,g,h}_BLOCKED.md`. They need a machine with the scientific
-Python stack (and, for E/F/H, the runner history-capture extension described in the E report).
+E, F, G, H **have since been completed** (S-048; reports in `reports/task_{e,f,g,h}_report.md`,
+task files removed) — this README's E/F/G/H rows above are stale (still point at files that no
+longer exist) but left as-is rather than rewritten as part of this update; flagged for cleanup.
+
+**Queued 2026-07-17 (S-051) for unattended execution while Gary is away from keyboard:**
+Q, R, S, T. **S and T are config-only (no `src`/`cpp/src` changes) and were launched
+immediately** via `scripts/run_overnight_s051.py` — see that script and their task files for
+exact configs/grids. **Q and R are NOT started** — Q needs a reviewed `src/twocascade/graphs.py`
+change (baseline isolation + `/verify` gate, not safe to apply unattended); R needs new script
+logic drafted first (the cross-round nucleus definition is a real methodology call). Both are
+fully scoped in their task files, ready for `/research-cycle` when Gary is back.

@@ -1,12 +1,14 @@
 """
 Q4 ignition-gate analysis (C-Q4(iii)): bounded-seed (a = r = 2) ignition on
-tau = 2.5 vs tau = 3.5 configuration models across n in {4000, 10000, 20000}.
+tau = 2.5 vs tau = 3.5 configuration models. tau = 2.5 spans n in
+{4000, 10000, 20000, 40000, 80000} (S-051 extension); tau = 3.5 spans
+n in {4000, 10000, 20000} (no wider-n raw data exists for tau = 3.5).
 
 C-Q4(iii) predicts: at tau = 2.5 (heavy tail) a bounded seed ignites systemic
 cascades with probability Theta(1) (or growing in n); at tau = 3.5 (light
 tail) bounded seeds must NOT ignite (P(systemic) -> 0 with n).
 
-Reads the six results/q4_ignition_*_raw.json files via analyze_sweep and
+Reads the results/q4_ignition_*_raw.json files via analyze_sweep and
 writes results/processed/q4_ignition_analysis.json.
 """
 
@@ -23,7 +25,9 @@ sys.path.insert(0, os.path.join(base_dir, "src"))
 from twocascade.runner import get_git_commit_hash
 from twocascade.analysis import load_raw_results, analyze_sweep
 
-N_GRID = [4000, 10000, 20000]
+N_GRID = [4000, 10000, 20000, 40000, 80000]
+# tau = 3.5 has no raw data beyond n=20000 (S-051 only extended tau = 2.5).
+N_GRID_BY_TAG = {"tau25": N_GRID, "tau35": [4000, 10000, 20000]}
 TAUS = {"tau25": 2.5, "tau35": 3.5}
 OUTPUT_PATH = "results/processed/q4_ignition_analysis.json"
 
@@ -32,7 +36,7 @@ def main():
     cells = []
     source_commits = {}
     for tag, tau in TAUS.items():
-        for n in N_GRID:
+        for n in N_GRID_BY_TAG[tag]:
             raw_rel = f"results/q4_ignition_{tag}_n{n}_raw.json"
             raw = load_raw_results(os.path.join(base_dir, raw_rel))
             source_commits[raw_rel] = raw["metadata"]["git_commit"]
@@ -86,13 +90,13 @@ def main():
         "note": "The tau = 2.5 vs 3.5 dichotomy is the gate; the n-direction of "
                 "the tau = 2.5 branch is reported per series (Theta(1) requires "
                 "non-vanishing P as n grows and is only bounded, not proven, by "
-                "three n points).",
+                "a finite n-grid: five points for tau=2.5, three for tau=3.5).",
     }
 
     out = {
         "metadata": {
             "task": "Q4 ignition gates (C-Q4(iii) bounded-seed tail gating)",
-            "n_grid": N_GRID,
+            "n_grid_by_tag": N_GRID_BY_TAG,
             "taus": list(TAUS.values()),
             "source_commits": source_commits,
             "analysis_runtime_commit": get_git_commit_hash(),

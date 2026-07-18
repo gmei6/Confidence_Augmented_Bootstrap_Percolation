@@ -52,3 +52,4 @@ mutability: append-only
 - [s-050-recovery-literature-flagged](s-050-recovery-literature-flagged.md)
 - [s-051-task-queue-qrst](s-051-task-queue-qrst.md)
 - [s-052-next-actions-triage](s-052-next-actions-triage.md)
+- [s-053-pending-file-cleanup](s-053-pending-file-cleanup.md)

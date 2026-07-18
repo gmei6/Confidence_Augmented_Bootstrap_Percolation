@@ -48,8 +48,10 @@ the asymptotic regime kicks in. Not required to follow §3.2–§3.3.
 
 | § | Title | PDF p. | Why it matters |
 |---|---|---|---|
-| 1.7.1 | Old Tales of Tails | 58 | Defines `N_k ∝ k^(-τ)`; τ>1 forced by `ΣN_k=n`. |
-| 1.7.3 | Power laws, Their Estimation, and Criticism | 61 | τ>2 ⇒ finite mean; τ>3 ⇒ finite variance. τ=2.5 sits in finite-mean/infinite-variance — this is the mechanism behind the τ=2.5-ignites/τ=3.5-gates result in `okf/next-actions.md` #2. Also explains why `sample_powerlaw_degrees` (`graphs.py:3`) needs a hard `k_max` cap: for τ≤3 the theoretical variance is infinite. |
+| 1.4.1 | Scale-Free Graph Sequences | 29 | **Correction (2026-07-08): moved here from 1.7.3, which does not contain it.** Def. 1.4 formally defines scale-free via regular variation of the tail, `1-F(k) ~ k^(1-τ)` (Def. 1.5). τ>2 ⇒ finite mean, τ>3 ⇒ finite variance is a direct consequence of that tail (standard tail-sum argument, not spelled out as a numbered theorem at this point in the book) — it's the mechanism behind the τ=2.5-ignites/τ=3.5-gates result in `okf/next-actions.md` #2, and why `sample_powerlaw_degrees` (`graphs.py:3`) needs a hard `k_max` cap for τ≤3. |
+| 1.7.1 | Old Tales of Tails | 58 | Historical power laws (Zipf, Lotka) and the log-log-plot linearization trick, `log f(k) = log C - τ log k`. |
+| 1.7.2 | New Tales of Tails | 60 | Heuristic: if the graph grows exponentially (rate ρ) and a vertex's in-degree grows exponentially (rate β), its in-degree tail is `P(X>i) = i^(-ρ/β)`, giving τ = ρ/β + 1 ≥ 2 — a structural reason dynamic/growing networks can't have τ<2. |
+| 1.7.3 | Power laws, Their Estimation, and Criticism | 61 | Traceroute measurements have a *sampling bias* toward high-degree vertices (Lakhina et al. 2003; Clauset & Moore) — even an Erdős–Rényi subgraph can look power-law under traceroute sampling. Estimating τ from data: the Hill estimator `H_{k,m} = (1/k)Σ log(X_(i)/X_(k+1)) → 1/(τ-1)`. Real τ estimates in (2,3) may partly be an estimation artifact, not pure nature. |
 
 ### Chapter 7 — Configuration Model (printed 213–250 / PDF 231–268)
 
@@ -57,7 +59,9 @@ the asymptotic regime kicks in. Not required to follow §3.2–§3.3.
 |---|---|---|---|
 | 7.2 | Introduction to the Model | 233 | Stub-matching: `d_i` half-edges per vertex, paired uniformly at random. |
 | 7.3 | Erased Configuration Model | 242 | Delete self-loops, collapse multi-edges. Matches `sample_configuration_model` (`graphs.py:20-44`) exactly — it drops `u==v` and stores neighbors in a Python `set`, which silently collapses multi-edges too. §7.4-7.5's discussion of how erasure distorts the realized degree sequence is the mechanism behind the cap-shortfall issue in `okf/next-actions.md` #4. |
+| 7.4 | Repeated CM: Simplicity Probability | 247 | `P(CM simple) → exp(-ν/2 - ν²/4)`, where `ν = E[D(D-1)]/E[D]` (mean excess/size-biased-minus-one degree). |
 | 7.6 | Configuration Model with I.I.D. Degrees | 257 | The two-step pipeline `sample_powerlaw_degrees` → `sample_configuration_model` in `graphs.py`. |
+| 7.9 | Notes (Molloy–Reed) | 265 | Molloy & Reed (1995, 1998): the same `ν = E[D(D-1)]/E[D]` from §7.4 is the giant-component criterion for the configuration model — giant component exists iff `ν>1`. Structurally identical to Tier 1's `np>1` (Ch.4) and to `R_fear≈μ` (§3.3): a "mean offspring of a local exploration process crosses 1" threshold, just for three different explorations (ER edges, CM excess degree, the fear field). |
 
 ## Not covered by this volume
 

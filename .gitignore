@@ -43,3 +43,9 @@ results/*.csv
 # Local agent/tool litter
 .gnhf/
 overnight_*.log
+
+# Lavish review artifacts — generated HTML review pages, not source
+.lavish/
+
+# Personal reference material — not project documentation
+EXPLAINER.md

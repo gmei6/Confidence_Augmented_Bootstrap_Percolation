@@ -42,3 +42,4 @@ mutability: append-only
 - [d-032-decision-change-index-append-only](d-032-decision-change-index-append-only.md)
 - [d-033-frontmatter-title-description](d-033-frontmatter-title-description.md)
 - [d-034-cache-dir](d-034-cache-dir.md)
+- [d-035-retire-cross-round-strict-clique-ztest](d-035-retire-cross-round-strict-clique-ztest.md)

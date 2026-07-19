@@ -67,6 +67,9 @@
 | [R](task_R_cross_round_remote_ignition.md) | Cross-round remote-ignition tracker (Q5 nucleation-law caveat) | new `scripts/run_task_r_cross_round.py` | probably none (script-only) but undrafted | low-med |
 | [S](task_S_q4_ignition_wider_n_grid.md) | Q4(iii) ignition gate: wider n-grid at μ̄=0.4 | new configs only | none | low |
 | [T](task_T_q3_nu_extended_n.md) | Q3 ν: extend finite-size fit to n=20000 | new config only | none | low |
+| [U](task_U_q5_duration_asymptotic_form.md) | Q5 C-Q5(ii) refinement: asymptotic form of global-field sub-ballistic decay | new scripts (copies of Task O) | none | low-med |
+| [V](task_V_q4_ignition_mu_map.md) | Q4 ignition: intermediate-μ̄ map (0.1/0.2/0.3) across the 5-point n-grid | new configs + 1 read-only analysis script | none | low |
+| [W](task_W_finite_size_crossover.md) | Shared finite-size crossover: push Q3-ν and Q4-ignition series past n=20000 | new configs + 1-line edits to 2 analysis scripts | none | low |
 
 **Suggested order for new tasks:** E → F → H → G → I → J → K → L → M.
 Each task is independent; do them in any order, one full `/research-cycle` each.
@@ -84,3 +87,13 @@ exact configs/grids. **Q and R are NOT started** — Q needs a reviewed `src/two
 change (baseline isolation + `/verify` gate, not safe to apply unattended); R needs new script
 logic drafted first (the cross-round nucleus definition is a real methodology call). Both are
 fully scoped in their task files, ready for `/research-cycle` when Gary is back.
+
+**Queued 2026-07-18 (S-054) — three follow-ups grounded in this session's results:**
+U, V, W. All are Local Mode (no `src`/`cpp/src` changes) and `/verify`-gated. **V is config-only
+(S/T tier) and autonomous-safe.** **U and W add new/edited scripts and have a compute-feasibility
+check, so run them through `/research-cycle` with a human at the verify gate, not blind overnight.**
+Note: U's task file also flags that `okf/open-questions.md` Q5 line "C-Q5(ii) … deferred" is
+**stale** — the Task O follow-up already found C-Q5(ii) SUPPORTED; U is a refinement of it, and its
+wrap-up should draft the fix to that line. U/V/W share a theme — the n≈20000 flattening seen in
+both the Q3-ν and Q4-ignition series this session; W tests it head-on, U checks whether Q5 duration
+is a third series on the same crossover.

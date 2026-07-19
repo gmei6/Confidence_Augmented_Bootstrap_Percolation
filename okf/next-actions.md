@@ -30,10 +30,23 @@ mutability: live
    made, that too — check `results/figures/` after regenerating.
 2. **Email Prof. Dhara before 2026-07-22** — send once item 1's site refresh is done, so the
    email and the leave-behind site tell the same story.
-3. **Task Q — ε-cap sampler fix** (`docs/queue/task_Q_epsilon_cap_sampler_fix.md`): still needs
-   a reviewed `src/twocascade/graphs.py` change; not safe to run unattended.
-4. **Task R — cross-round remote-ignition tracker** (`docs/queue/task_R_cross_round_remote_ignition.md`):
-   still needs new script logic drafted first.
+3. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
+   to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
+   (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
+   centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
+   cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
+4. **Queue hygiene — U/W still need a human at their verify gate.** Tasks U (Q5 duration
+   asymptotic form) and W (finite-size crossover) were committed (`d70dbd8`) but their task
+   files flag they need a human at `/verify`, not blind overnight. Not yet gate-cleared.
+
+**Resolved 2026-07-19 (S-056/S-057):**
+- **Task Q (S-054): merged `c4ef634`.** ε-cap water-filling fix landed; unblocked Task X.
+- **Task X (S-056): DONE, AUDIT PASS.** C-Q4(i) γ=0→+1 leg confirmed cap-free; C-Q4(ii)
+  size-biased collapse REFUTED (μ̄ ≻ μ*, ratio 2.05). Report: `docs/queue/reports/task_x_report.md`.
+- **Task R (S-057): DONE, AUDIT PASS.** Counting bug fixed (peeling, `e066fd8`); the strict-
+  r_n-clique cross-round metric is structurally blind (D-035), z-test retired; C-Q5(i)
+  cross-round question stays OPEN (Option B is the valid test — item 3). Supersedes the
+  S-055 block. Report: `docs/queue/reports/task_r_cross_round_report.md`.
 
 **Resolved 2026-07-18:** item 3 ("review and commit the S-046/S-047 primary-checkout working
 tree") was already committed as `fb0ac42` before this session started — removed as stale, no PR

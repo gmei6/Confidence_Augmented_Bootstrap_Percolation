@@ -53,3 +53,7 @@ mutability: append-only
 - [s-051-task-queue-qrst](s-051-task-queue-qrst.md)
 - [s-052-next-actions-triage](s-052-next-actions-triage.md)
 - [s-053-pending-file-cleanup](s-053-pending-file-cleanup.md)
+- [s-054-task-q-epsilon-cap-fix-verified](s-054-task-q-epsilon-cap-fix-verified.md)
+- [s-055-task-r-cross-round-pilot-blocked](s-055-task-r-cross-round-pilot-blocked.md)
+- [s-056-task-x-size-biased-collapse](s-056-task-x-size-biased-collapse.md)
+- [s-057-task-r-cross-round-structural](s-057-task-r-cross-round-structural.md)

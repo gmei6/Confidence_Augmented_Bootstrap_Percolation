@@ -7,41 +7,16 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Refresh `advisor-update-2026-07-22/index.html` — not yet done. → Full task-scoped brief:
-   [`okf/handoff-advisor-site-refresh.md`](handoff-advisor-site-refresh.md)** (start there; it has
-   the exact stale claims with line numbers, replacement values, and how to work the 1.5 MB file
-   without blowing out context). The site (Ultraplan, S-051-era, 2026-07-17) predates Tasks
-   Q/R/S/T/U/V/W/X. Summary of what changes:
-   - **Q4(iii) ignition gate (Tasks S→W).** Gate holds. The μ̄=0.4 branch declines
-     0.134→0.116→0.062→0.050→0.044→0.034 over n∈{4000..160000} and is **still declining**, not
-     flattening: Cochran–Armitage trend on the pooled replicate + n=160000 gives z=−3.31,
-     p=0.0009 (`docs/queue/reports/task_v_report.md`). ⚠️ The earlier "finite-size transient
-     flattening after n=20000 (χ²=1.70, p≈0.43)" reading is **superseded** — it came from a
-     single 500-trial series and does not survive doubling the trials. Do not put it on the site.
-   - **Q3 ν (Tasks T→W).** Current committed fit is **7-point**, n∈{1000..80000}:
-     **ν(μ=0)=5.61±0.18** (R²=0.953), **ν(μ=0.3)=4.82±0.15** (R²=0.978)
-     (`results/processed/task_a_nu_n10000.json`). ⚠️ T's n=20000 values (6.29±0.39, 4.90±0.22)
-     are **superseded** — do not cite them.
-   - ⚠️ **Do NOT present a "shared n≈20000 crossover" story.** Task W tested exactly that and
-     concluded the opposite: the apparent flattening is **not** a shared crossover — ν widths,
-     ignition point estimates, and the Task U slope all fail to flatten. The earlier
-     "same flattening pattern / notable cross-experiment observation" framing is retracted.
-   - The `plot_fear_field_concentration` savefig/close bug is now fixed (`df0575d`) — can drop
-     from any "known defects" list if the site has one.
-   - Tasks Q and R are **DONE** (both AUDIT PASS) — see the Resolved block below. Present as
-     results, not as open items.
-   - **The site's own "Open questions & decisions needed" chapter is 2/3 stale** (found S-058):
-     its "sampler bug caps how much panic can concentrate" item is fixed (Task Q, `c4ef634`;
-     Task X confirmed cap-free), and its "run an even larger network size to tighten the CI"
-     item was done (Task W, 7-point fit). Only "publication route: empirical vs. theoretical"
-     is genuinely still open — that's the real decision to put to Prof. Dhara.
-   - `gh-axi` was installed (session tooling, not research) — not meeting-relevant, don't
-     include.
-   Figures to (re)embed as base64, same convention as the original 3: an updated
-   `finite_size_scaling_r2_n10000.png` (regenerated, now 7-point) and, if a Q4-gate figure gets
-   made, that too — check `results/figures/` after regenerating.
-2. **Email Prof. Dhara before 2026-07-22** — send once item 1's site refresh is done, so the
-   email and the leave-behind site tell the same story.
+1. **Email Prof. Dhara before 2026-07-22** — the only remaining pre-meeting action. The site
+   refresh it was gated on is **DONE** (see the Resolved block). The one genuinely open question
+   to put to him is the **publication route: empirical (real network data + fear channel) vs.
+   theoretical (simplified model + proof)** — every other item on the site's "open questions"
+   chapter was closed by Tasks Q/W/X.
+2. **Eyeball the refreshed site in a browser before sending.** Structure, hashes, and every
+   cited number were verified programmatically, but the rendered layout never was. The two
+   things to look at: the 5-panel Q4 figure (widest element on the page) and the 7-column ν
+   table — both sit in `overflow-x: auto` and *should* scroll rather than break, but that is
+   reasoning, not observation.
 3. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
    to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
@@ -55,6 +30,20 @@ mutability: live
    process gap, not an ungated result. ⚠️ Closure records for these tasks live in **commit
    bodies and `okf/changes/`**, not in `docs/queue/reports/` — a missing report file does not
    mean a task is open (this misread cost a session).
+
+**Resolved 2026-07-21 (S-058) — advisor site refreshed (`2f61275`, pushed):**
+- **All stale claims corrected.** The Θ(1) caveat replaced with the settled n-direction result;
+  the ν table updated to the 7-point fit (5.61±0.18 / 4.82±0.15); the "shared n≈20000 crossover"
+  framing kept off the site entirely (Task W refuted it); the site's own "open questions" chapter
+  cut from 3 items to the 1 that is genuinely open.
+- **Q4 μ̄×n ignition figure created and embedded** — `results/figures/q4_mumap_ignition.png` via
+  the new `scripts/plot_q4_mumap.py` (byte-identical on regeneration). Faceted rather than
+  overlaid: 5 single-hue lines failed the normal-vision adjacent-pair separation floor.
+- **Multiplier claim qualified.** "Approximately constant ~3×" read as "always 3×" and was wrong
+  at low μ̄ (1.5× at μ̄=0.1). The multiplier is constant **in n** at fixed μ̄, not across μ̄.
+- **Replicate discrepancy documented** (page note + in-figure caption): the table's μ̄=0.4 row and
+  the figure's μ̄=0.4 panel are independent replicates differing up to 27.6% at a cell, while the
+  μ=0 row is trial-identical. Cause is the flat cell-major seed spawn, which predicts both.
 
 **Resolved 2026-07-19 (S-056/S-057):**
 - **Task Q (S-054): merged `c4ef634`.** ε-cap water-filling fix landed; unblocked Task X.

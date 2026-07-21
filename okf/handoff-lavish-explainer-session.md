@@ -25,8 +25,8 @@ Two files, **both gitignored** (`.gitignore:48`), so they are on disk but not in
 
 | file | what it is |
 |---|---|
-| `.lavish/advisor-explainer.html` | the companion Gary is reading — **all the session's work** |
-| `.lavish/advisor-site-review.html` | byte-identical copy of the real advisor site (SHA-256 `2ad38a44…`), for annotation only |
+| `.lavish/advisor-explainer.html` | the companion Gary is reading — **all the session's work**. Session still **open**, resume with `poll` |
+| `.lavish/advisor-site-review.html` | byte-identical copy of the real advisor site (SHA-256 `2ad38a44…`), for annotation only. Session has **closed** — needs `lavish-axi .lavish/advisor-site-review.html --reopen` |
 
 ⚠️ **The real site `advisor-update-2026-07-22/index.html` was deliberately NOT rebuilt.** It is
 verified (hashes, tag balance, every number checked against committed JSON). Gary asked for a

@@ -66,14 +66,44 @@ mutability: live
      written. The variant requires injecting an **exogenous initial fear field `g_0`** — a
      `src/twocascade/` change (baseline isolation + `/verify`), not a config. Do not queue it as
      config-only.
-   - **The exogenous-`g_0` variant has its own, cleaner prediction.** Round 1 gives `n·μ̄·g_0`
-     failures, then the same subcritical branching with `R = μ̄`, so total progeny
-     `≈ n·μ̄·g_0/(1−μ̄)`. Systemic at θn requires
-     **`g_0* ≈ θ(1−μ̄)/μ̄`** — **independent of n**, since `g_0` is already a fraction. Worked
-     values at θ=0.5: μ̄=0.5 → g_0*≈0.50; μ̄=0.9 → ≈0.056; μ̄=0.999 → ≈0.0005. This is the same
-     physics as the a-sweep above expressed as a fraction rather than a count (`g_0 ≈ a/n`), with
-     the n scaled out — arguably the better-posed version of the experiment, and it is a plausible
-     model of a pure news shock: everyone frightened, nobody actually failed.
+   - **The exogenous-`g_0` variant has its own, cleaner prediction. Full derivation, so it is not
+     re-derived next session:**
+     - Round 1: nobody has failed; each bank fails w.p. `f_i·g_0`, and `E[f_i] = μ̄`, so
+       `A₁ = n·μ̄·g_0`.
+     - Round 2: the field is now `g₁ = A₁/n`, giving `n·μ̄·(A₁/n) = μ̄·A₁`.
+     - Round k: `μ̄^(k−1)·A₁`. Each round is `μ̄` times the last — a shrinking geometric series
+       because `μ̄ < 1`.
+     - Total over the cascade: `A₁/(1−μ̄) = n·μ̄·g_0/(1−μ̄)`.
+     - Systemic at θn ⇒ cancel the n ⇒ **`g_0* = θ(1−μ̄)/μ̄`**, **independent of n** (g_0 is
+       already a fraction).
+     - **Reading it:** `1/(1−μ̄)` is the **amplification factor** — one initial failure ultimately
+       causes that many in total (μ̄=0.5 → 2, μ̄=0.9 → 10, μ̄=0.999 → 1000). `g_0*` is just "how big
+       a push, given the push gets amplified this much." The `(1−μ̄)` on top is the amplifier
+       inverted; the `μ̄` underneath is round 1 being weaker when banks are less afraid.
+     - Same physics as the a-sweep expressed as a fraction not a count (`g_0 ≈ a/n`), with n scaled
+       out — the better-posed version, and a plausible model of a pure news shock: everyone
+       frightened, nobody actually failed.
+   - **Suggested `g_0` grid — bracket the prediction, don't use a fixed grid** (it moves with μ̄, so
+     a fixed grid wastes most cells). Roughly 0.25× to 4× of `g_0*` per row:
+
+     | μ̄ | predicted `g_0*` | sweep range |
+     |---|---|---|
+     | 0.5 | 0.500 | 0.12 – 1.0 |
+     | 0.7 | 0.214 | 0.05 – 0.86 |
+     | 0.9 | 0.056 | 0.014 – 0.22 |
+     | 0.99 | 0.0051 | 0.0013 – 0.020 |
+     | 0.999 | 0.0005 | 0.00013 – 0.0020 |
+
+   - ⚠️ **`g_0*` is a lower bound and a scaling prediction, NOT a point forecast.** Expect the
+     measured value to land **above** it, for two reasons: (a) **depletion** — the derivation
+     assumes an unlimited pool of banks to frighten, but once half have failed the remaining pool
+     is halved and effective amplification drops; θ=0.5 is exactly where this bites hardest, so the
+     formula is optimistic. (b) **skew** — near threshold the outcome distribution is heavily
+     skewed (most runs die early, a few run away), so mean-at-threshold still implies a low
+     *probability* of threshold; this is the same effect that produced 0/1000 at μ̄=0.999, a=2.
+     **The result is not whether the number matches** — it is whether measured `g_0*` tracks
+     `(1−μ̄)/μ̄` as μ̄ varies, and whether it is genuinely independent of n. Do not record a
+     measured value above the formula as a failed prediction.
    - ⚠️ **"Activate the whole graph" is not θn.** Cascades in this model stop well short of the
      structural ceiling — measured max 0.732 (μ=0) and 0.8975 (μ̄=0.4) against a ceiling of ~99.8%
      — so "whole" may be unreachable at any g_0. Decide up front whether the target is θ=0.5 or a

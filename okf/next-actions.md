@@ -30,7 +30,60 @@ mutability: live
    any comparison (see `okf/lessons.md` §1). (b) At large **negative** γ, any degree-0 node gives
    weight ∞; `d_min=2` prevents this for the *drawn* sequence, but erasure can realize degree 0,
    so confirm the fear sampler is fed drawn degrees, not realized ones.
-4. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
+4. **Task AA — fear-only percolation: does the critical seed scale like θn(1−μ̄)?** Gary's design
+   (2026-07-21), from the μ̄-sweep result. Disable solvency entirely (`r = n+1`, or `r = 10⁹` as
+   the pilot used) so the fear channel runs alone, then sweep the **seed size a** against μ̄ and n.
+   **This has a derivable prediction, so it is a test and not a fishing trip.**
+   - With solvency off, fear is a branching process with reproduction number exactly
+     `R_fear = μ̄·Σwₖ = μ̄` — subcritical for every μ̄ < 1. Expected **total** progeny from a
+     ancestors is `a/(1−μ̄)`. Systemic needs θn, so
+     **`a_c^fear ≈ θn(1−μ̄)`**, i.e. **`a_c/n ≈ θ(1−μ̄)`**.
+   - **The claim that makes this worth running:** fear alone needs a seed that is a *fixed
+     fraction of n* — macroscopic, never bounded — **unless `1−μ̄` shrinks like 1/n.** So fear
+     alone can ignite from a bounded seed only if fear approaches certainty at a rate tied to
+     network size. That is a much stronger form of "amplifier, not igniter": a statement about
+     **scaling**, not a description. It sits directly against the headline — the heavy tail lets a
+     bounded seed ignite; fear alone provably cannot at any fixed μ̄ < 1.
+   - **Consistency check already available:** at μ̄=0.999, n=4000 the formula gives a_c ≈ 2, and
+     the exploratory pilot got **0/1000** at exactly a=2. Not a contradiction — near criticality
+     the total-progeny distribution is heavily skewed, so mean-at-threshold still implies low
+     probability *of* threshold. Expect the measured a_c to sit **well above** θn(1−μ̄), with the
+     gap set by fluctuation; quantifying that gap is part of the result.
+   - **Design:** 2-D sweep of a × μ̄ at 2–3 values of n, measuring a_c^fear, testing whether
+     `a_c/n` tracks `θ(1−μ̄)`. Config-only if `r` is settable per-config; check before assuming.
+   - **Motivating application (Gary's):** with solvency off this is pure belief contagion — false
+     news, no structural failure. ⚠️ **Own the limitation before offering it:** the fear channel is
+     **mean-field, not network-structured** — every node sees the same global `g_t`, which models
+     "everyone reads the same headline", not spread along social ties. Real misinformation is
+     network-mediated, and structure mattering is the whole point of the model elsewhere. Card 1's
+     local-vs-global result (local fear is statistically identical to no fear) is evidence the
+     distinction matters, and localising the belief channel is the natural extension.
+   - **Companion variant (Gary, 2026-07-21) — seed *fear* instead of failures, at a=0.** Find the
+     lowest initial fear field that activates the network with **no failed banks at all**.
+     ⚠️ **This cannot be run as a parameter sweep — it needs a model extension.** With `a=0` the
+     current engine is inert: no failures ⇒ `g_t = 0` ⇒ `f_i·g_t = 0` ⇒ no fear failures, and
+     solvency has nothing to count. There is **no spontaneous ignition path** in the model as
+     written. The variant requires injecting an **exogenous initial fear field `g_0`** — a
+     `src/twocascade/` change (baseline isolation + `/verify`), not a config. Do not queue it as
+     config-only.
+   - **The exogenous-`g_0` variant has its own, cleaner prediction.** Round 1 gives `n·μ̄·g_0`
+     failures, then the same subcritical branching with `R = μ̄`, so total progeny
+     `≈ n·μ̄·g_0/(1−μ̄)`. Systemic at θn requires
+     **`g_0* ≈ θ(1−μ̄)/μ̄`** — **independent of n**, since `g_0` is already a fraction. Worked
+     values at θ=0.5: μ̄=0.5 → g_0*≈0.50; μ̄=0.9 → ≈0.056; μ̄=0.999 → ≈0.0005. This is the same
+     physics as the a-sweep above expressed as a fraction rather than a count (`g_0 ≈ a/n`), with
+     the n scaled out — arguably the better-posed version of the experiment, and it is a plausible
+     model of a pure news shock: everyone frightened, nobody actually failed.
+   - ⚠️ **"Activate the whole graph" is not θn.** Cascades in this model stop well short of the
+     structural ceiling — measured max 0.732 (μ=0) and 0.8975 (μ̄=0.4) against a ceiling of ~99.8%
+     — so "whole" may be unreachable at any g_0. Decide up front whether the target is θ=0.5 or a
+     Janson-style n−β, and see the open question in
+     `okf/handoff-lavish-explainer-session.md` before designing against "whole".
+   - **Not before the 2026-07-22 meeting.** The scaling prediction is derivable and reads better to
+     Dhara as "here is a prediction I can test" than as a rushed pilot. It is also a strong
+     candidate answer to the publication-route question (item 1): clean theoretical statement,
+     obvious empirical hook.
+5. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
    discriminating test (front-loaded kernel `[1,0,0,0,0]` vs uniform `[0.2×5]`, predicting a ~5×
    change in multiplier−1) **does not discriminate.** Exploratory paired pilot, n=4000, μ̄=0.4,
    400 trials/arm: uniform **0.147**, front-loaded **0.110** — no 5× effect, if anything the
@@ -44,12 +97,12 @@ mutability: live
    salvageable test:** the sketch predicts the multiplier is *linear* in μ̄ (`1 + 5.3·μ̄`, R²=0.98
    on four points) — extend the ignition μ̄-grid to 0.5/0.6/0.7 and see whether it stays linear or
    bends. Pilot is exploratory: nothing stamped, nothing committed, **not** a §5.6 result.
-5. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
+6. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
    to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
    centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
    cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-6. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
+7. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
    records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
    S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
    series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual
@@ -78,7 +131,7 @@ mutability: live
   size-biased collapse REFUTED (μ̄ ≻ μ*, ratio 2.05). Report: `docs/queue/reports/task_x_report.md`.
 - **Task R (S-057): DONE, AUDIT PASS.** Counting bug fixed (peeling, `e066fd8`); the strict-
   r_n-clique cross-round metric is structurally blind (D-035), z-test retired; C-Q5(i)
-  cross-round question stays OPEN (Option B is the valid test — item 5). Supersedes the
+  cross-round question stays OPEN (Option B is the valid test — item 6). Supersedes the
   S-055 block. Report: `docs/queue/reports/task_r_cross_round_report.md`.
 
 **Resolved 2026-07-18:** item 3 ("review and commit the S-046/S-047 primary-checkout working

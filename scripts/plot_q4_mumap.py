@@ -15,9 +15,11 @@ The two readouts it carries:
   (a) P(systemic) is monotone increasing in mu_bar at every n -- each panel sits
       progressively higher above the shared gray control.
   (b) P(systemic) DECLINES with n at every mu_bar INCLUDING mu=0 -- every panel
-      slopes down, so the decline is not fear-specific. Fear is an approximately
-      constant multiplier (per-panel ratio annotated), not a modifier of the
-      n-scaling.
+      slopes down, so the decline is not fear-specific. Fear multiplies the
+      ignition rate (per-panel ratio annotated: ~3x at mu_bar=0.4, progressively
+      less below it) and that multiplier is stable in n, so fear raises the rate
+      without changing how it scales with n. Note the multiplier is constant in
+      n at fixed mu_bar, NOT constant across mu_bar.
 """
 
 import json
@@ -133,15 +135,31 @@ def main():
         r"Ignition declines with $n$ at every fear level $\bar\mu$ — including $\bar\mu=0$",
         fontsize=12.5, y=1.10, x=0.5,
     )
+    # Provenance travels WITH the image: this sweep is an independent replicate
+    # of the main tau=2.5 ignition series, and at mu_bar=0.4 its cells differ
+    # from that series by sampling variation. Stated here (not only in the page
+    # that embeds it) because a figure pasted into a slide or an email arrives
+    # with no table beside it, which is exactly where the difference would look
+    # like an error instead of a second measurement.
     fig.text(
         0.5, -0.10,
         rf"$\tau=2.5$ configuration model, bounded seed $a=r=2$, "
-        rf"{cells[(ns[0], mus[0])]['n_trials']} trials/cell, Wilson 95% intervals. "
+        rf"{cells[(ns[0], mus[0])]['n_trials']} trials/cell, Wilson 95% intervals.",
+        ha="center", fontsize=7.5, color="#666666",
+    )
+    fig.text(
+        0.5, -0.165,
+        r"Independent replicate of the $\tau=2.5$ ignition sweep: the $\bar\mu=0$ panel "
+        r"matches that series trial-for-trial (same seeds); $\bar\mu=0.4$ draws a separate "
+        r"RNG stream and differs by sampling variation ($|z|\leq1.7$, joint $p=0.56$).",
+        ha="center", fontsize=7.5, color="#666666",
+    )
+    fig.text(
+        0.5, -0.225,
         rf"Source: {os.path.relpath(ANALYSIS_PATH, base_dir)} "
         rf"(commit {meta['analysis_runtime_commit'][:7]}).",
         ha="center", fontsize=7.5, color="#666666",
     )
-
     fig.tight_layout()
     fig.savefig(FIG_PATH, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)

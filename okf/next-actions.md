@@ -17,21 +17,39 @@ mutability: live
    things to look at: the 5-panel Q4 figure (widest element on the page) and the 7-column ν
    table — both sit in `overflow-x: auto` and *should* scroll rather than break, but that is
    reasoning, not observation.
-3. **Task Y — test the candidate mechanism for the fear multiplier.** Derived 2026-07-21:
-   expected fear failures per round is `n·μ̄·(w₁a/n) = w₁·μ̄·a`, so **n cancels analytically** —
-   a candidate explanation for why the multiplier is constant in n and grows in μ̄ (constrained
-   fit `1 + 5.3·μ̄`, R²=0.98 on the four measured points). The discriminating test is that
-   ignition should depend on **w₁**, the most recent-round weight, even though D-006 says the
-   *boundary* is kernel-invariant. Queued as `docs/queue/task_Y_fear_multiplier_mechanism.md`.
-   ⚠️ This is a mean-field sketch, **not** a derivation — it does not carry through to ignition
-   *probability*, and a 4-point fit is weak. Present to Dhara as a hypothesis with a test
-   attached, never as a found mechanism.
-4. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
+3. **Task Z — widen the γ grid on the tilt experiment.** C-Q4(i) has only **three** γ points
+   (−1, 0, +1) and they show a clearly **saturating** shape: at μ̄=0.4 the empirical critical
+   seed runs 8.00 → 5.83 → 5.41, so γ=−1→0 buys 2.17 seeds while γ=0→+1 buys only 0.42.
+   Three points cannot tell a saturating curve from a kink, a plateau, or an eventual reversal —
+   **the same "too few grid points" trap that produced the retracted Θ(1) claim** (Task S/W).
+   Proposed: γ ∈ {−2, −1.5, −1, −0.5, 0, +0.5, +1, +1.5, +2} at τ=2.5, n=10000, paired on
+   `base_seed=42`, across the existing μ̄ rows. Config-only, no `src/` change, autonomous-safe.
+   ⚠️ **Two things this task must check, not assume:** (a) at large **positive** γ the ε-cap
+   becomes binding again — the very bug Task Q fixed; the water-filling path handles it, but every
+   cell must report `stats["realized_mu_bar"]` against nominal and flag cap-affected rows before
+   any comparison (see `okf/lessons.md` §1). (b) At large **negative** γ, any degree-0 node gives
+   weight ∞; `d_min=2` prevents this for the *drawn* sequence, but erasure can realize degree 0,
+   so confirm the fear sampler is fed drawn degrees, not realized ones.
+4. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
+   discriminating test (front-loaded kernel `[1,0,0,0,0]` vs uniform `[0.2×5]`, predicting a ~5×
+   change in multiplier−1) **does not discriminate.** Exploratory paired pilot, n=4000, μ̄=0.4,
+   400 trials/arm: uniform **0.147**, front-loaded **0.110** — no 5× effect, if anything the
+   opposite direction (Fisher p=0.14, so read as "no effect", not a reversal). Cause: both
+   kernels have Σwₖ=1, so total fear offspring is identical (D-006 kernel-mass invariance); the
+   transient w₁ argument does not survive a multi-round cascade with permanent failures and
+   cumulative neighbour counts. ⚠️ `docs/queue/task_Y_fear_multiplier_mechanism.md` still carries
+   the pre-registered 5× prediction and **needs an appended correction** before anyone picks it
+   up. **What survives:** the n-cancellation `n·μ̄·(Σwₖa/n) = μ̄·Σwₖa` holds for *any* kernel, so
+   "why is the multiplier flat in n" is answered by algebra and needs no experiment. **The one
+   salvageable test:** the sketch predicts the multiplier is *linear* in μ̄ (`1 + 5.3·μ̄`, R²=0.98
+   on four points) — extend the ignition μ̄-grid to 0.5/0.6/0.7 and see whether it stays linear or
+   bends. Pilot is exploratory: nothing stamped, nothing committed, **not** a §5.6 result.
+5. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
    to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
    centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
    cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-5. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
+6. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
    records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
    S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
    series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual
@@ -60,7 +78,7 @@ mutability: live
   size-biased collapse REFUTED (μ̄ ≻ μ*, ratio 2.05). Report: `docs/queue/reports/task_x_report.md`.
 - **Task R (S-057): DONE, AUDIT PASS.** Counting bug fixed (peeling, `e066fd8`); the strict-
   r_n-clique cross-round metric is structurally blind (D-035), z-test retired; C-Q5(i)
-  cross-round question stays OPEN (Option B is the valid test — item 4). Supersedes the
+  cross-round question stays OPEN (Option B is the valid test — item 5). Supersedes the
   S-055 block. Report: `docs/queue/reports/task_r_cross_round_report.md`.
 
 **Resolved 2026-07-18:** item 3 ("review and commit the S-046/S-047 primary-checkout working

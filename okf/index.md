@@ -9,6 +9,7 @@ mutability: live
 
 - [Status](status.md)
 - [Next Actions](next-actions.md)
+- [Handoff — advisor site refresh](handoff-advisor-site-refresh.md) — *temporary; delete once the refresh ships*
 - [Open Questions](open-questions.md)
 - [Log](log.md)
 - [Roadmap](roadmap.md)

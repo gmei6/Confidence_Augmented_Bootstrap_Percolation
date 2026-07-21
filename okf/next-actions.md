@@ -7,9 +7,11 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Refresh `advisor-update-2026-07-22/index.html` with this session's results (NEW, 2026-07-18)
-   — not yet done.** The site (built via Ultraplan, S-051-era) predates all of this session's
-   work and needs updating before the meeting:
+1. **Refresh `advisor-update-2026-07-22/index.html` — not yet done. → Full task-scoped brief:
+   [`okf/handoff-advisor-site-refresh.md`](handoff-advisor-site-refresh.md)** (start there; it has
+   the exact stale claims with line numbers, replacement values, and how to work the 1.5 MB file
+   without blowing out context). The site (Ultraplan, S-051-era, 2026-07-17) predates Tasks
+   Q/R/S/T/U/V/W/X. Summary of what changes:
    - **Q4(iii) ignition gate (Tasks S→W).** Gate holds. The μ̄=0.4 branch declines
      0.134→0.116→0.062→0.050→0.044→0.034 over n∈{4000..160000} and is **still declining**, not
      flattening: Cochran–Armitage trend on the pooled replicate + n=160000 gives z=−3.31,
@@ -28,6 +30,11 @@ mutability: live
      from any "known defects" list if the site has one.
    - Tasks Q and R are **DONE** (both AUDIT PASS) — see the Resolved block below. Present as
      results, not as open items.
+   - **The site's own "Open questions & decisions needed" chapter is 2/3 stale** (found S-058):
+     its "sampler bug caps how much panic can concentrate" item is fixed (Task Q, `c4ef634`;
+     Task X confirmed cap-free), and its "run an even larger network size to tighten the CI"
+     item was done (Task W, 7-point fit). Only "publication route: empirical vs. theoretical"
+     is genuinely still open — that's the real decision to put to Prof. Dhara.
    - `gh-axi` was installed (session tooling, not research) — not meeting-relevant, don't
      include.
    Figures to (re)embed as base64, same convention as the original 3: an updated

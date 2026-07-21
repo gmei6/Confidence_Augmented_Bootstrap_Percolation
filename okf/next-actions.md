@@ -10,23 +10,28 @@ mutability: live
 1. **Refresh `advisor-update-2026-07-22/index.html` with this session's results (NEW, 2026-07-18)
    — not yet done.** The site (built via Ultraplan, S-051-era) predates all of this session's
    work and needs updating before the meeting:
-   - Task S: Q4(iii) ignition gate extended to n∈{40000,80000}. Gate still holds; the μ̄=0.4
-     decline (0.134→0.116→0.062→0.050→0.044) looks like a finite-size transient flattening after
-     n=20000 (χ²=1.70, p≈0.43 homogeneity test on the n≥20000 triple) rather than true decay to
-     zero — worth a card of its own.
-   - Task T: Q3 ν re-fit at n=20000. ν(μ=0) dropped more than expected (8.65±1.04 → 6.29±0.39);
-     ν(μ=0.3) barely moved (4.54±0.26 → 4.90±0.22) and its raw width nearly flattened between
-     n=10000 and n=20000 — the **same flattening pattern as the Q4 series above**, which is
-     itself a notable cross-experiment observation worth surfacing to the advisor, not just
-     folding into a table.
+   - **Q4(iii) ignition gate (Tasks S→W).** Gate holds. The μ̄=0.4 branch declines
+     0.134→0.116→0.062→0.050→0.044→0.034 over n∈{4000..160000} and is **still declining**, not
+     flattening: Cochran–Armitage trend on the pooled replicate + n=160000 gives z=−3.31,
+     p=0.0009 (`docs/queue/reports/task_v_report.md`). ⚠️ The earlier "finite-size transient
+     flattening after n=20000 (χ²=1.70, p≈0.43)" reading is **superseded** — it came from a
+     single 500-trial series and does not survive doubling the trials. Do not put it on the site.
+   - **Q3 ν (Tasks T→W).** Current committed fit is **7-point**, n∈{1000..80000}:
+     **ν(μ=0)=5.61±0.18** (R²=0.953), **ν(μ=0.3)=4.82±0.15** (R²=0.978)
+     (`results/processed/task_a_nu_n10000.json`). ⚠️ T's n=20000 values (6.29±0.39, 4.90±0.22)
+     are **superseded** — do not cite them.
+   - ⚠️ **Do NOT present a "shared n≈20000 crossover" story.** Task W tested exactly that and
+     concluded the opposite: the apparent flattening is **not** a shared crossover — ν widths,
+     ignition point estimates, and the Task U slope all fail to flatten. The earlier
+     "same flattening pattern / notable cross-experiment observation" framing is retracted.
    - The `plot_fear_field_concentration` savefig/close bug is now fixed (`df0575d`) — can drop
      from any "known defects" list if the site has one.
-   - Tasks Q (ε-cap sampler fix) and Task R (cross-round remote-ignition tracker) are queued but
-     **not started** — still open items needing the advisor's awareness, not new results.
+   - Tasks Q and R are **DONE** (both AUDIT PASS) — see the Resolved block below. Present as
+     results, not as open items.
    - `gh-axi` was installed (session tooling, not research) — not meeting-relevant, don't
      include.
    Figures to (re)embed as base64, same convention as the original 3: an updated
-   `finite_size_scaling_r2_n10000.png` (regenerated, now 5-point) and, if a Q4-gate figure gets
+   `finite_size_scaling_r2_n10000.png` (regenerated, now 7-point) and, if a Q4-gate figure gets
    made, that too — check `results/figures/` after regenerating.
 2. **Email Prof. Dhara before 2026-07-22** — send once item 1's site refresh is done, so the
    email and the leave-behind site tell the same story.
@@ -35,9 +40,14 @@ mutability: live
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
    centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
    cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-4. **Queue hygiene — U/W still need a human at their verify gate.** Tasks U (Q5 duration
-   asymptotic form) and W (finite-size crossover) were committed (`d70dbd8`) but their task
-   files flag they need a human at `/verify`, not blind overnight. Not yet gate-cleared.
+4. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
+   records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
+   S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
+   series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual
+   caveat: U's and W's task files asked for a *human* at the gate and got a blind one — a
+   process gap, not an ungated result. ⚠️ Closure records for these tasks live in **commit
+   bodies and `okf/changes/`**, not in `docs/queue/reports/` — a missing report file does not
+   mean a task is open (this misread cost a session).
 
 **Resolved 2026-07-19 (S-056/S-057):**
 - **Task Q (S-054): merged `c4ef634`.** ε-cap water-filling fix landed; unblocked Task X.

@@ -43,3 +43,4 @@ mutability: append-only
 - [d-033-frontmatter-title-description](d-033-frontmatter-title-description.md)
 - [d-034-cache-dir](d-034-cache-dir.md)
 - [d-035-retire-cross-round-strict-clique-ztest](d-035-retire-cross-round-strict-clique-ztest.md)
+- [d-036-st-closed-by-supersession](d-036-st-closed-by-supersession.md)

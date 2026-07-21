@@ -22,6 +22,16 @@
 - **$\tau=2.5$ ignites at a bounded seed** in every cell — the dichotomy vs $\tau=3.5$ is stark and is the gate itself.
 - **Caveat for morning triage (n-direction):** the handoff's expected shape was "$\tau=2.5$ ignition stays $\Theta(1)$ or grows with $n$". At $\mu=0$ the branch is consistent with $\Theta(1)$ (~0.03 flat across a 5× range of $n$), but at $\bar\mu=0.4$ it *decreases* (0.134 → 0.062). Three $n$ points cannot separate slow decay from a positive limit; if the $\Theta(1)$ claim at $\bar\mu>0$ matters for the C-Q4 readout, extend the $n$-grid before citing it.
 
+> **SUPERSEDED 2026-07-19 (S-058).** The caveat above correctly flagged that three $n$ points
+> could not settle the $n$-direction. They now can. On the 6-point series
+> ($n \in \{4000..160000\}$) the $\mu=0$ branch is **not** $\Theta(1)$-flat: counts
+> 19,12,14,9,7,6 /500 give a Cochran–Armitage trend of $z=-3.11$, $p=0.0019$
+> (`results/processed/q4_ignition_analysis.json`, `trend_test_full`). The $\bar\mu=0.4$ branch
+> also keeps declining ($z=-3.31$, $p=0.0009$ pooled — `task_v_report.md`). The decline is
+> therefore present at **every** $\bar\mu$ including 0, so it is not fear-specific; fear acts
+> as an approximately constant multiplier (~3×) on ignition rather than changing its
+> $n$-scaling. Do not cite the "$\mu=0$ consistent with $\Theta(1)$ (~0.03 flat)" reading.
+
 ## Artifacts
 
 - Raw: `results/q4_ignition_{tau25,tau35}_n{4000,10000,20000}_raw.json` (runner-stamped, base_seed 42).

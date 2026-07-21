@@ -17,12 +17,21 @@ mutability: live
    things to look at: the 5-panel Q4 figure (widest element on the page) and the 7-column ν
    table — both sit in `overflow-x: auto` and *should* scroll rather than break, but that is
    reasoning, not observation.
-3. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
+3. **Task Y — test the candidate mechanism for the fear multiplier.** Derived 2026-07-21:
+   expected fear failures per round is `n·μ̄·(w₁a/n) = w₁·μ̄·a`, so **n cancels analytically** —
+   a candidate explanation for why the multiplier is constant in n and grows in μ̄ (constrained
+   fit `1 + 5.3·μ̄`, R²=0.98 on the four measured points). The discriminating test is that
+   ignition should depend on **w₁**, the most recent-round weight, even though D-006 says the
+   *boundary* is kernel-invariant. Queued as `docs/queue/task_Y_fear_multiplier_mechanism.md`.
+   ⚠️ This is a mean-field sketch, **not** a derivation — it does not carry through to ignition
+   *probability*, and a 4-point fit is weak. Present to Dhara as a hypothesis with a test
+   attached, never as a found mechanism.
+4. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
    to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
    centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
    cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-4. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
+5. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
    records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
    S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
    series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual
@@ -51,7 +60,7 @@ mutability: live
   size-biased collapse REFUTED (μ̄ ≻ μ*, ratio 2.05). Report: `docs/queue/reports/task_x_report.md`.
 - **Task R (S-057): DONE, AUDIT PASS.** Counting bug fixed (peeling, `e066fd8`); the strict-
   r_n-clique cross-round metric is structurally blind (D-035), z-test retired; C-Q5(i)
-  cross-round question stays OPEN (Option B is the valid test — item 3). Supersedes the
+  cross-round question stays OPEN (Option B is the valid test — item 4). Supersedes the
   S-055 block. Report: `docs/queue/reports/task_r_cross_round_report.md`.
 
 **Resolved 2026-07-18:** item 3 ("review and commit the S-046/S-047 primary-checkout working

@@ -21,6 +21,17 @@ Widths $w$ (logistic 10–90%, seed-multiple units) and 4-point fits $w \sim n^{
 - **The Task A headline is confirmed and sharpened:** global fear accelerates boundary sharpening — the $\mu=0.3$ exponent (4.54) is now separated from the $\mu=0$ baseline (8.65) by ~4 combined standard errors (the 3-pt fits overlapped within ~2).
 - The $\mu=0.3$ central value shifted down (5.33 → 4.54, ~1.5 old-SE): the $n=10000$ point pulls the fit toward faster sharpening; the 3-pt fit was extrapolating from a narrow $n$ range.
 
+> **SUPERSEDED 2026-07-18 (Task W, D-036).** The 4-point fits above are retired — do not cite
+> $\nu=8.65\pm1.04$ or $\nu=4.54\pm0.26$. The grid now runs to $n=80000$, and the 7-point fits
+> ($n\in\{1000,2000,5000,10000,20000,40000,80000\}$) give $\nu(\mu=0)=5.61\pm0.18$
+> ($R^2=0.953$) and $\nu(\mu=0.3)=4.82\pm0.15$ ($R^2=0.978$)
+> (`results/processed/task_a_nu_n10000.json`, `exponent_fits_by_mu`). The $\mu=0$ interval
+> tightened from ±1.04 to ±0.18 and its central value moved by ~3 old-SE — the 4-point fit was
+> still extrapolating. **The qualitative headline is unchanged:** fear accelerates boundary
+> sharpening, and the two exponents remain separated. Widths keep shrinking through $n=80000$
+> with residuals not one-signed (`one_signed_bend_at_large_n: false`), i.e. no flattening.
+> The figure `results/figures/finite_size_scaling_r2_n10000.png` is the 7-point version.
+
 ## Artifacts
 
 - Raw: `results/raw/finite_size_r2_n{1000,2000,5000,10000}.json` (runner-stamped).

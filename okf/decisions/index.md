@@ -44,3 +44,4 @@ mutability: append-only
 - [d-034-cache-dir](d-034-cache-dir.md)
 - [d-035-retire-cross-round-strict-clique-ztest](d-035-retire-cross-round-strict-clique-ztest.md)
 - [d-036-st-closed-by-supersession](d-036-st-closed-by-supersession.md)
+- [d-037-demote-task-p-super-hub](d-037-demote-task-p-super-hub.md)

@@ -58,3 +58,4 @@ mutability: append-only
 - [s-056-task-x-size-biased-collapse](s-056-task-x-size-biased-collapse.md)
 - [s-057-task-r-cross-round-structural](s-057-task-r-cross-round-structural.md)
 - [s-058-queue-audit-doc-corrections](s-058-queue-audit-doc-corrections.md)
+- [s-059-advisor-explainer-walkthrough](s-059-advisor-explainer-walkthrough.md)

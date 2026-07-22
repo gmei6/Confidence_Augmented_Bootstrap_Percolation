@@ -59,3 +59,4 @@ mutability: append-only
 - [s-057-task-r-cross-round-structural](s-057-task-r-cross-round-structural.md)
 - [s-058-queue-audit-doc-corrections](s-058-queue-audit-doc-corrections.md)
 - [s-059-advisor-explainer-walkthrough](s-059-advisor-explainer-walkthrough.md)
+- [S-060 — Advisor meeting 2026-07-22: poster directive, two-comparison framework, publication route resolved](s-060-advisor-meeting-2026-07-22.md)

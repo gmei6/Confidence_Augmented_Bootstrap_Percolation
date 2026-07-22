@@ -16,6 +16,7 @@ mutability: live
 - [Identity](identity.md)
 - [North Star](north-star.md)
 - [Lessons](lessons.md)
+- [Meeting Notes](meeting-notes/index.md)
 - [Architecture](architecture/index.md)
 - [Model](model/index.md)
 - [Benchmark](benchmark.md)

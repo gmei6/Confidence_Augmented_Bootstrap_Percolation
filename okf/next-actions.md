@@ -7,17 +7,41 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-1. **Email Prof. Dhara before 2026-07-22** — the only remaining pre-meeting action. The site
-   refresh it was gated on is **DONE** (see the Resolved block). The one genuinely open question
-   to put to him is the **publication route: empirical (real network data + fear channel) vs.
-   theoretical (simplified model + proof)** — every other item on the site's "open questions"
-   chapter was closed by Tasks Q/W/X.
-2. **Eyeball the refreshed site in a browser before sending.** Structure, hashes, and every
-   cited number were verified programmatically, but the rendered layout never was. The two
-   things to look at: the 5-panel Q4 figure (widest element on the page) and the 7-column ν
-   table — both sit in `overflow-x: auto` and *should* scroll rather than break, but that is
-   reasoning, not observation.
-3. **Task Z — widen the γ grid on the tilt experiment.** C-Q4(i) has only **three** γ points
+**Poster queue (D-038, advisor meeting 2026-07-22 — items 1–6 are the deliverable):**
+
+1. **ER family in the runner + baseline sweeps.** Erdős–Rényi is the poster's baseline
+   (justified by citing Janson) and currently has **zero runs** — it is the untested cell of
+   the site's 2×2. Wire `G(n,p)` (or `G(n,m)` for exact mean-degree matching) into
+   `runner.py` as a graph family; baseline P(systemic) sweeps at the ⟨k⟩ values the
+   comparisons will use.
+2. **Comparison 1 — effect of degree heterogeneity: ER vs configuration model.** Matched n
+   and average degree (identical mean, different degree distribution); plot number infected /
+   P(systemic) across the two families. One plot, one message.
+3. **Comparison 2 — effect of geometry: configuration model vs GIRG.** Wire GIRG into
+   `runner.py` (replacing the standalone O(n²) one-off; port to the bucket index for n
+   beyond ~2000), then set GIRG parameters so the **degree distribution matches** the
+   configuration model — one has geometry, one doesn't. Also ER vs GIRG at matched ⟨k⟩.
+   Side benefit: unblocks promoting the two preliminary GIRG cards (the `run_sweep` seed
+   floor `a ≥ r` still blocks the single-bank card separately).
+4. **Poster draft.** Narrative: Janson/ER framework → "here is what I build on it" → the two
+   comparisons kept separate (heterogeneity, geometry) → fear driven by localized events →
+   the **ISyE recommendation component** (Q9 — needs framing; see open-questions).
+5. **SNAP teaser.** Download one SNAP dataset, apply the framework, check qualitative match
+   against the inhomogeneous with/without-geometry expectations. Small-scope: "already
+   thinking about real-world data," not a full empirical study yet.
+6. **Optional — hard RGG dimension sweep.** Keep increasing dimension D and see whether the
+   results change. Advisor's nice-to-add, not core.
+
+**Carried over (deprioritized under the poster):**
+
+6b. **Restructure `.lavish/advisor-explainer.html` (Gary's plan, 2026-07-21).** The
+   card-by-card walkthrough is complete; corrections are applied but stacked as annotation
+   blocks, hard to read. Source of truth: `okf/cache/advisor-explainer-walkthrough-2026-07-21.md`
+   (temporary — delete after). Design cue: four inverted quantities (τ, ν, two decay slopes),
+   lead each card with a plain-language verdict line (see `okf/lessons.md` §5, S-059). The
+   site's known cosmetic issue (hero `<h1>` ~5px clip; fix `line-height: 1.12 → 1.24`) can be
+   folded in if the site is ever rebuilt — it served its meeting purpose 2026-07-22.
+7. **Task Z — widen the γ grid on the tilt experiment.** C-Q4(i) has only **three** γ points
    (−1, 0, +1) and they show a clearly **saturating** shape: at μ̄=0.4 the empirical critical
    seed runs 8.00 → 5.83 → 5.41, so γ=−1→0 buys 2.17 seeds while γ=0→+1 buys only 0.42.
    Three points cannot tell a saturating curve from a kink, a plateau, or an eventual reversal —
@@ -30,7 +54,7 @@ mutability: live
    any comparison (see `okf/lessons.md` §1). (b) At large **negative** γ, any degree-0 node gives
    weight ∞; `d_min=2` prevents this for the *drawn* sequence, but erasure can realize degree 0,
    so confirm the fear sampler is fed drawn degrees, not realized ones.
-4. **Task AA — fear-only percolation: does the critical seed scale like θn(1−μ̄)?** Gary's design
+8. **Task AA — fear-only percolation: does the critical seed scale like θn(1−μ̄)?** Gary's design
    (2026-07-21), from the μ̄-sweep result. Disable solvency entirely (`r = n+1`, or `r = 10⁹` as
    the pilot used) so the fear channel runs alone, then sweep the **seed size a** against μ̄ and n.
    **This has a derivable prediction, so it is a test and not a fishing trip.**
@@ -109,11 +133,11 @@ mutability: live
      — so "whole" may be unreachable at any g_0. Decide up front whether the target is θ=0.5 or a
      Janson-style n−β, and see the open question in
      `okf/handoff-lavish-explainer-session.md` before designing against "whole".
-   - **Not before the 2026-07-22 meeting.** The scaling prediction is derivable and reads better to
-     Dhara as "here is a prediction I can test" than as a rushed pilot. It is also a strong
-     candidate answer to the publication-route question (item 1): clean theoretical statement,
-     obvious empirical hook.
-5. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
+   - **Post-meeting status (2026-07-22):** the meeting resolved the publication route without
+     needing this card played (D-038). Task AA is now the leading candidate for the
+     **theoretical leg** of the frontier push — clean derivable prediction, obvious empirical
+     hook — but it sits *behind* the poster queue (items 1–6).
+9. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
    discriminating test (front-loaded kernel `[1,0,0,0,0]` vs uniform `[0.2×5]`, predicting a ~5×
    change in multiplier−1) **does not discriminate.** Exploratory paired pilot, n=4000, μ̄=0.4,
    400 trials/arm: uniform **0.147**, front-loaded **0.110** — no 5× effect, if anything the
@@ -127,12 +151,12 @@ mutability: live
    salvageable test:** the sketch predicts the multiplier is *linear* in μ̄ (`1 + 5.3·μ̄`, R²=0.98
    on four points) — extend the ignition μ̄-grid to 0.5/0.6/0.7 and see whether it stays linear or
    bends. Pilot is exploratory: nothing stamped, nothing committed, **not** a §5.6 result.
-6. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
+10. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
    to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
    (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
    centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
    cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-7. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
+11. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
    records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
    S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
    series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual

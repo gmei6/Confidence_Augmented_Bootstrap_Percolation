@@ -1,0 +1,50 @@
+{
+  "pinned_params": {
+    "n": 8000,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.9,
+      "d_min": 2
+    },
+    "fear": {
+      "gamma": 0.0
+    }
+  },
+  "scaling": {
+    "target_mean_degree": 4.0,
+    "n_ref": 10000,
+    "alpha": 0.6
+  },
+  "sweep": {
+    "mean_fear_grid": [
+      0.0,
+      0.15,
+      0.3,
+      0.45,
+      0.6,
+      0.75,
+      0.9
+    ],
+    "seed_multiples": [
+      0.026768372546336593
+    ],
+    "trials_per_cell": 500,
+    "base_seed": 42
+  },
+  "output": {
+    "raw_filepath": "results/q4_psys_boundary_n8000_tau2p9_raw.json"
+  },
+  "engine": "python"
+}

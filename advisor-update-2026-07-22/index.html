@@ -23,6 +23,12 @@
   --good-soft: rgba(75, 122, 63, 0.14);
   --bad: #a8434a;
   --bad-soft: rgba(168, 67, 74, 0.14);
+  /* Ordinal ramp for fear LEVEL (mu-bar 0.2 vs 0.4): two steps of ONE hue, because these
+     are two levels of one variable, not two categories. More fear = more intense.
+     Validated --mode light --ordinal and --pairs all (CVD dE 27.1). The previous pairing
+     (--accent-warm vs --bad) failed the normal-vision floor at dE 8.4. */
+  --fear-lo: #e28d5c;
+  --fear-hi: #8a3a16;
 
   --font-display: "Iowan Old Style", "Sitka Text", "Palatino Linotype", Palatino, Georgia, serif;
   --font-body: "Sitka Text", "Iowan Old Style", Georgia, serif;
@@ -50,6 +56,9 @@
     --good-soft: rgba(127, 191, 142, 0.16);
     --bad: #e0838f;
     --bad-soft: rgba(224, 131, 143, 0.16);
+    /* inverted on dark so "more fear" still reads as more intense */
+    --fear-lo: #b0603a;
+    --fear-hi: #f0a878;
   }
 }
 :root[data-theme="dark"] {
@@ -67,6 +76,9 @@
   --good-soft: rgba(127, 191, 142, 0.16);
   --bad: #e0838f;
   --bad-soft: rgba(224, 131, 143, 0.16);
+  /* inverted on dark so "more fear" still reads as more intense */
+  --fear-lo: #b0603a;
+  --fear-hi: #f0a878;
 }
 :root[data-theme="light"] {
   --bg: #f6f3ea;
@@ -83,6 +95,12 @@
   --good-soft: rgba(75, 122, 63, 0.14);
   --bad: #a8434a;
   --bad-soft: rgba(168, 67, 74, 0.14);
+  /* Ordinal ramp for fear LEVEL (mu-bar 0.2 vs 0.4): two steps of ONE hue, because these
+     are two levels of one variable, not two categories. More fear = more intense.
+     Validated --mode light --ordinal and --pairs all (CVD dE 27.1). The previous pairing
+     (--accent-warm vs --bad) failed the normal-vision floor at dE 8.4. */
+  --fear-lo: #e28d5c;
+  --fear-hi: #8a3a16;
 }
 
 * { box-sizing: border-box; }
@@ -426,6 +444,7 @@ th {
 .dg-bar { fill: var(--accent-cool-soft); stroke: var(--accent-cool); stroke-width: 1; }
 .dg-bar-hub { fill: var(--accent-warm-soft); stroke: var(--accent-warm); stroke-width: 1.5; }
 .dg-axis { stroke: var(--ink-soft); stroke-width: 1; }
+.dg-grid line { stroke: var(--line); stroke-width: 1; }
 .dg-erase { stroke: var(--bad); stroke-width: 2; stroke-linecap: round; }
 .legend { display: flex; gap: 1.2rem; flex-wrap: wrap; font-family: var(--font-label); font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.6rem; justify-content: center; }
 .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
@@ -1673,7 +1692,63 @@ def build_rgg_adjacency(points: np.ndarray, radius: float) -> List[List[int]]:
 <tr><td>32000</td><td>0.669</td><td>0.273</td><td>0.219</td><td>0.666</td><td>0.667</td></tr>
 </tbody>
 </table>
-</div></div></div></details></div><div class="card" data-model="rgg"><div class="card-head">
+</div></div>
+<figure class="diagram-figure">
+<svg class="impl-svg" viewBox="0 0 820 226" role="img" aria-labelledby="rggT1 rggD1">
+  <title id="rggT1">Ballistic ratio vs network size, by fear field</title>
+  <desc id="rggD1">The control and both local-fear series lie in one flat bundle near 0.67-0.69
+  at every size. Both global-fear series fall steadily as n grows, and the stronger field falls
+  further. Exact values are in the table above this figure.</desc>
+
+  <!-- gridlines + y ticks: scale is y = 236 - 280*value, so 0.7 is at y=40 and 0.2 at y=180 -->
+  <g class="dg-grid">
+    <line x1="60" y1="40" x2="590" y2="40"/><line x1="60" y1="68" x2="590" y2="68"/>
+    <line x1="60" y1="96" x2="590" y2="96"/><line x1="60" y1="124" x2="590" y2="124"/>
+    <line x1="60" y1="152" x2="590" y2="152"/>
+  </g>
+  <line x1="60" y1="40" x2="60" y2="180" class="dg-axis"/>
+  <line x1="60" y1="180" x2="590" y2="180" class="dg-axis"/>
+  <g class="dg-sub" text-anchor="end">
+    <text x="52" y="44">0.7</text><text x="52" y="72">0.6</text><text x="52" y="100">0.5</text>
+    <text x="52" y="128">0.4</text><text x="52" y="156">0.3</text><text x="52" y="184">0.2</text>
+  </g>
+
+  <!-- axis title: says WHAT the number is. It is a duration ratio, not a probability. -->
+  <text x="56" y="22" class="dg-sub">ballistic ratio T&#952;/&#8730;(n / log n)</text>
+
+  <text x="100" y="200" text-anchor="middle" class="dg-sub">n = 4k</text>
+  <text x="250" y="200" text-anchor="middle" class="dg-sub">n = 8k</text>
+  <text x="400" y="200" text-anchor="middle" class="dg-sub">n = 16k</text>
+  <text x="550" y="200" text-anchor="middle" class="dg-sub">n = 32k</text>
+
+  <!-- control + the two local-field series: one flat bundle, deliberately recessive -->
+  <path d="M 100,44.2 L 250,45.0 L 400,46.7 L 550,48.7" stroke="var(--ink-soft)" stroke-width="2" fill="none"/>
+  <path d="M 100,43.9 L 250,45.9 L 400,47.3 L 550,49.5" stroke="var(--ink-soft)" stroke-width="2" fill="none" stroke-dasharray="4 2"/>
+  <path d="M 100,46.2 L 250,45.6 L 400,47.0 L 550,49.2" stroke="var(--ink-soft)" stroke-width="2" fill="none" stroke-dasharray="2 2"/>
+
+  <!-- global mu-bar = 0.2 : ordinal step 1, circle markers -->
+  <path d="M 100,106.9 L 250,126.0 L 400,145.0 L 550,159.6" stroke="var(--fear-lo)" stroke-width="2.5" fill="none"/>
+  <g fill="var(--fear-lo)">
+    <circle cx="100" cy="106.9" r="4.5"/><circle cx="250" cy="126.0" r="4.5"/>
+    <circle cx="400" cy="145.0" r="4.5"/><circle cx="550" cy="159.6" r="4.5"/>
+  </g>
+
+  <!-- global mu-bar = 0.4 : ordinal step 2, SQUARE markers so shape also separates them -->
+  <path d="M 100,127.1 L 250,145.0 L 400,160.4 L 550,174.7" stroke="var(--fear-hi)" stroke-width="2.5" fill="none"/>
+  <g fill="var(--fear-hi)">
+    <rect x="95.5" y="122.6" width="9" height="9"/><rect x="245.5" y="140.5" width="9" height="9"/>
+    <rect x="395.5" y="155.9" width="9" height="9"/><rect x="545.5" y="170.2" width="9" height="9"/>
+  </g>
+
+  <!-- direct labels at the line ends: identity never rests on colour alone -->
+  <text x="600" y="44" class="dg-sub" fill="var(--ink-soft)">control &amp; local fear (flat)</text>
+  <text x="600" y="158" class="dg-sub" fill="var(--fear-lo)">global fear, &#956;&#772; = 0.2</text>
+  <text x="600" y="178" class="dg-sub" fill="var(--fear-hi)">global fear, &#956;&#772; = 0.4</text>
+</svg>
+<figcaption>Plotted from the table above. Lower means collapse outruns the ballistic rate; flat
+means it tracks it. The three grey lines &mdash; the control and both local fields &mdash; are
+indistinguishable, which is the result.</figcaption>
+</figure></div></details></div><div class="card" data-model="rgg"><div class="card-head">
 <p class="card-headline">Globally-spreading panic keeps outrunning the collapse front as the network grows — it's a stable power law, not a small-network illusion.</p>
 <div class="badges"><span class="badge" data-polarity="positive">Confirmed</span></div>
 </div><details><summary>Details</summary><div class="details-body">
@@ -1712,6 +1787,53 @@ def build_rgg_adjacency(points: np.ndarray, radius: float) -> List[List[int]]:
               </p>
 <p class="source-line">Task brief: <code>docs/queue/task_U_q5_duration_asymptotic_form.md</code>;
                 fit: <code>results/processed/task_u_duration_wide_analysis.json</code>.</p>
+
+<figure class="diagram-figure">
+<svg class="impl-svg" viewBox="-50 -20 950 280" role="img" aria-label="Local fear rides front, global fear outruns it">
+  <defs>
+    <radialGradient id="frontGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="var(--bad)" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="var(--bad)" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Left Panel: Local Fear -->
+  <g transform="translate(0,0)">
+    <text x="175" y="25" text-anchor="middle" class="dg-title">Local Fear: Rides the Front</text>
+    <rect x="50" y="50" width="250" height="150" class="dg-edge" />
+    <!-- Collapse front -->
+    <circle cx="175" cy="125" r="50" fill="url(#frontGrad)" />
+    <circle cx="175" cy="125" r="50" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="175" y="125" text-anchor="middle" class="dg-sub">Collapse</text>
+    
+    <!-- Fear only just outside -->
+    <circle cx="175" cy="125" r="65" fill="none" stroke="var(--accent-warm)" stroke-width="1.5" />
+    <text x="175" y="46" text-anchor="middle" class="dg-sub" fill="var(--accent-warm)">Fear zone (reaches just past the front)</text>
+  </g>
+  
+  <!-- Right Panel: Global Fear -->
+  <g transform="translate(350,0)">
+    <text x="175" y="25" text-anchor="middle" class="dg-title">Global Fear: Outruns the Front</text>
+    <rect x="50" y="50" width="250" height="150" class="dg-edge" />
+    <!-- fear field is everywhere: painted FIRST so it sits behind the marks -->
+    <rect x="50" y="50" width="250" height="150" fill="var(--accent-warm)" fill-opacity="0.1" />
+    <!-- Collapse front -->
+    <circle cx="175" cy="125" r="30" fill="url(#frontGrad)" />
+    <circle cx="175" cy="125" r="30" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="175" y="125" text-anchor="middle" class="dg-sub">Main front</text>
+    
+    <!-- New outbreak ahead -->
+    <circle cx="250" cy="80" r="15" fill="url(#frontGrad)" />
+    <circle cx="250" cy="80" r="15" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 2" />
+    <text x="250" y="60" text-anchor="middle" class="dg-sub">New outbreak</text>
+    
+    <circle cx="90" cy="160" r="10" fill="url(#frontGrad)" />
+    <circle cx="90" cy="160" r="10" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 2" />
+    
+  </g>
+</svg>
+<figcaption>Schematic of the mechanism, not measured geometry. Under a global field, panic ignites new outbreaks ahead of the main front, so collapse stops waiting for the front to arrive.</figcaption>
+</figure>
 </div></details></div><div class="card" data-model="rgg"><div class="card-head">
 <p class="card-headline">A test we built to see whether panic re-ignites near where it already burned turned out to be structurally incapable of detecting that — so the question is still open.</p>
 <div class="badges"><span class="badge" data-polarity="neutral">Open</span></div>
@@ -1750,6 +1872,52 @@ def build_rgg_adjacency(points: np.ndarray, radius: float) -> List[List[int]]:
               </p>
 
 <p class="source-line">Report: <code>docs/queue/reports/task_r_cross_round_report.md</code>.</p>
+
+<figure class="diagram-figure">
+<svg class="impl-svg" viewBox="-50 -20 1080 290" role="img" aria-label="Diagram showing why cross-round clusters never form due to exclusion zone">
+  <defs>
+    <radialGradient id="exclusionGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="var(--accent-cool)" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="var(--accent-cool)" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  
+  <g transform="translate(100, 0)">
+    <text x="250" y="25" text-anchor="middle" class="dg-title">Measurement Tautology: The r_n Exclusion Zone</text>
+    
+    <!-- Round 1 Failure -->
+    <circle cx="150" cy="125" r="8" fill="var(--bad)" />
+    <text x="150" y="145" text-anchor="middle" class="dg-sub">Round 1 failed node</text>
+    
+    <!-- Exclusion Zone -->
+    <circle cx="150" cy="125" r="80" fill="url(#exclusionGrad)" />
+    <circle cx="150" cy="125" r="80" fill="none" stroke="var(--accent-cool)" stroke-width="1.5" stroke-dasharray="5 3" />
+    <text x="150" y="55" text-anchor="middle" class="dg-sub" fill="var(--accent-cool)">Exclusion zone (r_n)</text>
+    
+    <!-- Null model point (allowed inside) -->
+    <circle cx="200" cy="100" r="8" fill="var(--ink-soft)" />
+    <text x="200" y="85" text-anchor="middle" class="dg-sub">Null point</text>
+    <path d="M 195 105 L 155 120" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="2 2" />
+    <text x="160" y="105" class="dg-sub" fill="var(--ink-soft)">&lt; r_n (cluster!)</text>
+    
+    <!-- Real model point (pushed outside) -->
+    <circle cx="280" cy="125" r="8" fill="var(--accent-warm)" />
+    <text x="280" y="145" text-anchor="middle" class="dg-sub">Round 2 remote node</text>
+    <path d="M 270 125 L 230 125" stroke="var(--accent-warm)" stroke-width="1.5" />
+    <text x="235" y="120" class="dg-sub" fill="var(--accent-warm)">&gt; r_n</text>
+    
+    <text x="400" y="100" class="dg-sub">
+      <tspan x="400" dy="0">By definition, a Round 2</tspan>
+      <tspan x="400" dy="20">outbreak is only "remote"</tspan>
+      <tspan x="400" dy="20">if it&#8217;s &gt; r_n from Round 1.</tspan>
+      <tspan x="400" dy="30">But a "cluster" requires</tspan>
+      <tspan x="400" dy="20">points to be &lt; r_n apart.</tspan>
+      <tspan x="400" dy="30" font-weight="bold" fill="var(--bad)">Real process count = 0</tspan>
+    </text>
+  </g>
+</svg>
+<figcaption>Schematic of why the measurement cannot see what it was built to see: the definition of &#8220;remote&#8221; and the definition of &#8220;cluster&#8221; exclude each other by construction.</figcaption>
+</figure>
 </div></details><details><summary>Additional notes</summary><div class="details-body"><div class="callout">
 <strong>Why this is on the list</strong>
                 It would have been easy to publish this as a clean negative result about the

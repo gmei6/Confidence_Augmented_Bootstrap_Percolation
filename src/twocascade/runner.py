@@ -31,6 +31,10 @@ from twocascade.graphs import (
     sample_configuration_model,
     sample_degree_dependent_fears
 )
+from twocascade.girg import (
+    sample_powerlaw_weights,
+    sample_girg_adjacency
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CPP_BIN = REPO_ROOT / "cpp" / "build" / "twocascade_run"
@@ -140,6 +144,14 @@ def run_single_trial(args) -> tuple[float, int]:
         fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
         if graph_type == "gnp":
             adj = sample_gnp_adjacency(n, p, rng_pair)
+        elif graph_type == "girg":
+            # GIRG has no hard connection radius: P(i~j) falls off with distance
+            # and rises with the weight product, so it does not use r_n at all.
+            points = sample_torus_points(n, rng_graph)
+            weights_girg = sample_powerlaw_weights(
+                n, graph_cfg["tau"], graph_cfg.get("w_min", 1.0), rng_graph)
+            adj = sample_girg_adjacency(
+                points, weights_girg, graph_cfg.get("alpha_g", 1.2), rng_pair)
         else:
             points = sample_torus_points(n, rng_graph)
             c = graph_cfg.get("mean_degree_c", 2.0)
@@ -251,9 +263,30 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
     ac0 = janson_a_c(n, p, r)
     
     mean_fear_grid = sweep["mean_fear_grid"]
-    seed_multiples = sweep["seed_multiples"]
     trials_per_cell = sweep["trials_per_cell"]
     base_seed = sweep["base_seed"]
+
+    # Seed sizes may be given either as multiples of the Janson critical seed
+    # (the historical path, floored at r) or as absolute counts. The absolute
+    # path exists because the multiple path cannot express a < r at all, and a
+    # single-node seed (a=1) is a legitimate experiment.
+    seed_multiples_cfg = sweep.get("seed_multiples")
+    seed_sizes_cfg = sweep.get("seed_sizes")
+    if (seed_multiples_cfg is None) == (seed_sizes_cfg is None):
+        raise ValueError(
+            "config must set exactly one of sweep.seed_multiples or sweep.seed_sizes")
+    if seed_sizes_cfg is not None:
+        seed_size_grid = [int(a) for a in seed_sizes_cfg]
+        if any(a < 1 for a in seed_size_grid):
+            raise ValueError(f"seed_sizes must all be >= 1, got {seed_size_grid}")
+        if any(a > n for a in seed_size_grid):
+            raise ValueError(f"seed_sizes must all be <= n={n}, got {seed_size_grid}")
+        # Keep the recorded multiple meaningful so downstream analysis that reads
+        # seed_multiple still sees "fraction of the Janson critical seed".
+        seed_multiples = [a / ac0 for a in seed_size_grid]
+    else:
+        seed_multiples = list(seed_multiples_cfg)
+        seed_size_grid = [max(r, round(m * ac0)) for m in seed_multiples]
     
     # Seeding setup
     ss = np.random.SeedSequence(base_seed)
@@ -268,8 +301,9 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
       },
       "sweep_parameters": {
         "mean_fear_grid": mean_fear_grid,
-        "seed_multiples": sweep["seed_multiples"],
-        "seed_size_grid": [max(r, round(m * ac0)) for m in seed_multiples]
+        "seed_multiples": seed_multiples,
+        "seed_size_grid": seed_size_grid,
+        "seed_size_source": "seed_sizes" if seed_sizes_cfg is not None else "seed_multiples"
       },
       "results": []
     }
@@ -278,8 +312,7 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
     cell_info = []
     
     for i, mu in enumerate(mean_fear_grid):
-        for j, mult in enumerate(seed_multiples):
-            a = max(r, round(mult * ac0))
+        for j, (mult, a) in enumerate(zip(seed_multiples, seed_size_grid)):
             cell_info.append((i, j, mu, mult, a))
             
     num_cells = len(cell_info)

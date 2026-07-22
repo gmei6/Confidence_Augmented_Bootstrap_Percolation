@@ -2,12 +2,14 @@
 
 [![Interactive Visualizer](https://img.shields.io/badge/Interactive%20Visualizer-Live%20on%20GitHub%20Pages-blue?style=for-the-badge)](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/)
 [![Section 2 Study Site](https://img.shields.io/badge/Section%202%20Proofs-Live%20on%20GitHub%20Pages-green?style=for-the-badge)](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/section2-reformulation/)
+[![Advisor Update](https://img.shields.io/badge/Advisor%20Update-Live%20on%20GitHub%20Pages-orange?style=for-the-badge)](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/advisor-update-2026-07-22/)
 
 This repository houses the simulation environment and analytical tools for **A Two-Channel Cascade Model of Bank Failure**. The project investigates the propagation of systemic failures on financial networks by coupling a local threshold rule (solvency failure) with a self-reinforcing global feedback field (panic/fear channel).
 
 👉 **[Interactive Visualizer & Guided Tutorial](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/)** — step through a worked cascade example and explore the sandbox.
 
 👉 **[Section 2 Reformulation Study Site](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/section2-reformulation/)** — the two-channel Janson §2 reformulation with proofs, annotation mode, and audience mode.
+👉 **[Advisor Update — Changes Since July 1, 2026](https://gmei6.github.io/Confidence_Augmented_Bootstrap_Percolation/advisor-update-2026-07-22/)** — implementation changes, experiment results (several marked preliminary), scope decisions, and open questions since the last meeting.
 
 > 📌 **TODO (reminder):** Run a full validation pass with **Opus** over `section2-reformulation/index.html` — check the $B_k$ reformulation (definitions, fear field, Sequential Bridge), the newly added derivation `<details>` blocks, and the SVG figures for mathematical correctness before the next Pages deploy.
 

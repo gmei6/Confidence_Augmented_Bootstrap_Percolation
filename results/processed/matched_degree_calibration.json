@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "script": "scripts/calibrate_matched_degree.py",
+    "git_commit": "ba2bf6f445b6cbac45785b72f3824f2b920de09a",
+    "timestamp": "2026-07-27T14:24:40.193617",
+    "base_seed": 20260727,
+    "replicates": 20
+  },
+  "configuration_model": {
+    "n": 10000,
+    "tau": 2.5,
+    "d_min": 2,
+    "drawn_mean_degree": 4.6187700000000005,
+    "drawn_se": 0.03684467904167724,
+    "realised_mean_degree": 4.53317,
+    "realised_se": 0.025646032934221172,
+    "erasure_loss": 0.08560000000000034
+  },
+  "erdos_renyi_matched": {
+    "n": 10000,
+    "alpha": 0.6,
+    "n_ref": 10000,
+    "target_mean_degree": 4.533623362336234,
+    "p": 0.0004533623362336234,
+    "realised_mean_degree": 4.533170000000001
+  }
+}

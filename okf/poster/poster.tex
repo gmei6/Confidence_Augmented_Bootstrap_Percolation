@@ -1,0 +1,350 @@
+%%%% TwoCascade — SURS poster, Better Poster format
+%%%%
+%%%% Base template: Rafael Bailo, betterposter-latex-template (GNU GPL v3.0)
+%%%%   https://github.com/rafaelbailo/betterposter-latex-template
+%%%% Original design: Mike Morrison, https://twitter.com/mikemorrison
+%%%%
+%%%% TwoCascade adaptation — Gary Mei, Georgia Tech ISyE (SURS).
+%%%% Directive: okf/decisions/d-038-advisor-poster-two-comparisons.md
+%%%% Slot plan and evidence provenance: okf/poster/poster-plan.md
+\documentclass[fleqn]{betterposter}
+
+\usepackage{geometry}
+\usepackage{tikz}
+\usepackage{enumitem}
+\geometry{paperwidth=36in, paperheight=48in}
+
+\usepackage{xcolor}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PALETTE — matches the advisor-update site and the .lavish artifacts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{tcCream}{HTML}{F6F3EA}   % page / side-column background
+\definecolor{tcInk}{HTML}{1E2530}     % body text
+\definecolor{tcInkSoft}{HTML}{5B6672} % secondary text
+\definecolor{tcTeal}{HTML}{2E6E76}    % cool accent — structure, geometry
+\definecolor{tcRust}{HTML}{BD5A2E}    % warm accent — fear
+\definecolor{tcRule}{HTML}{D8D2C2}    % hairlines
+
+%% Third CATEGORICAL colour, for the GIRG family in the hero figure.
+%% Not tcInkSoft: grey reads as "disabled/secondary" next to two saturated hues,
+%% and grey-vs-teal was the pair most likely to collapse at viewing distance.
+%% This is the Okabe-Ito reddish-purple, darkened for contrast on cream --
+%% chosen because purple is the standard third that stays separable from both
+%% orange and blue-green under deuteranopia and protanopia.
+\definecolor{tcPlum}{HTML}{8E4A72}    % third family — geometry (GIRG)
+
+%% Side columns: cream ground, ink type.
+\renewcommand{\columnbackgroundcolor}{tcCream}
+\renewcommand{\columnfontcolor}{tcInk}
+
+%% Main column: deep teal ground, cream type.
+\renewcommand{\maincolumnbackgroundcolor}{tcTeal}
+\renewcommand{\maincolumnfontcolor}{tcCream}
+
+\begin{document}
+\betterposter{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% MAIN COLUMN — headline and core finding visual
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\maincolumn{
+%%%% Main space: Headline INFORMS, figure below SHOWS the finding.
+%%
+%% "how easily", NOT "whether". The figure below shows all six curves reaching
+%% P = 1.00, i.e. structure shifts HOW MUCH SEED YOU NEED -- it does not show a
+%% family that cannot ignite at all. The genuine "whether" result is the tau=3.5
+%% total gate (0 systemic in 3000 trials), which is a different tau from the CM
+%% arm plotted here and so is not evidence for this figure's claim. Restore
+%% "whether" only if a flat-at-zero tau=3.5 curve is added to the plot.
+%% Bonus: "how easily" / "how far" is a parallel construction; "whether" / "how
+%% far" was not.
+%%
+%% Baselineskip was 0, which is why the two rendered lines had that large uneven
+%% gap -- TeX falls back to \lineskip when \baselineskip cannot be honoured.
+{\fontsize{80}{88}\selectfont
+\textbf{Who} you are connected to decides
+\textbf{how easily} a panic ignites.
+\textbf{Fear} decides \textbf{how far} it gets.
+}% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
+\vspace{3cm}
+
+%% [SIMULATED PLACEHOLDER FIGURE — item 2, the heterogeneity comparison]
+%%
+%% SHAPE. This placeholder is deliberately shaped like the experiment that will
+%% actually fill it, so the layout is not sized for the wrong plot:
+%%   x = seed size a          (the swept quantity)
+%%   y = P(systemic)          (the advisor's "probability of infection")
+%%   SIX curves = 3 families x 2 fear levels.
+%% Mean degree is NOT an axis here -- it is the quantity the comparison holds
+%% CONSTANT across all three families (see okf/next-actions.md §10 item 1).
+%%
+%% ⚠ OPEN, and worth recording as a decision either way: putting ER, CM and GIRG
+%% on ONE axis merges the two comparisons D-038 asked to keep SEPARATE ("the
+%% effect of heterogeneity; the effect of geometry"). It also puts GIRG -- the
+%% only piece needing src/ work, since girg.py's sampler is still Theta(n^2) --
+%% on the critical path for the poster's centrepiece rather than a side panel.
+%%
+%% ENCODING. Colour carries the family (the poster's headline claim); line style
+%% carries fear. Never the other way round -- the headline is about who you are
+%% connected to, so family must be the more salient channel.
+%%
+%% HEIGHT-CONSTRAINED, not width-constrained: \resizebox{1.0\linewidth}{!} let
+%% the height run free and pushed the x-axis labels off the bottom of the main
+%% column. Fixing the height and letting width follow keeps it inside the panel.
+\begin{center}
+\resizebox{!}{0.6\textheight}{%
+\begin{tikzpicture}[font=\sffamily\bfseries, x=1.5cm, y=1.0cm]
+  % Cream panel: the figure reads as a FIGURE sitting on the teal, matching the
+  % side columns and the right-column boxes. The old ink-over-teal wash produced
+  % a muddy grey-green that is not in the palette.
+  \fill[tcCream, rounded corners=12pt] (-2.6,-3.2) rectangle (17.4, 22.4);
+
+  % Background grid
+  \draw[tcRule, thin, dashed, step=2.0] (0,0) grid (16,20);
+
+  % Main axes
+  \draw[tcInk, line width=4pt, ->] (0,0) -- (16.8,0);
+  \draw[tcInk, line width=4pt, ->] (0,0) -- (0,20.8);
+
+  % Axis labels -- y rotated onto its own axis where a reader expects it,
+  % instead of floating detached above the panel.
+  \node[tcInk, font=\fontsize{22}{26}\selectfont] at (8,-2.5) {Seed size ($a$)};
+  \node[tcInk, font=\fontsize{22}{26}\selectfont, rotate=90] at (-2.0,10) {P(systemic)};
+
+  % X ticks
+  \foreach \x/\lab in {4/8, 8/16, 12/24, 16/32} {
+    \draw[tcInk, line width=3pt] (\x,0) -- (\x,-0.3) node[below, tcInk, font=\fontsize{16}{18}\selectfont] {\lab};
+  }
+  % Y ticks
+  \foreach \y/\lab in {5.0/0.25, 10.0/0.50, 15.0/0.75, 20.0/1.00} {
+    \draw[tcInk, line width=3pt] (0,\y) -- (-0.3,\y) node[left, tcInk, font=\fontsize{16}{18}\selectfont] {\lab};
+  }
+
+  % --- Configuration model (heavy tail) : RUST. Ignites from a small seed. ---
+  \draw[tcRust, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
+    (0,0.2) (1.5,1.5) (3.0,10.0) (5.0,17.5) (8.0,19.4) (16,19.9)
+  };
+  \draw[tcRust, line width=8pt] plot[smooth, tension=0.5] coordinates {
+    (0,0.1) (2.5,1.0) (4.5,9.0) (7.0,17.0) (10.0,19.2) (16,19.7)
+  };
+
+  % --- Erdos-Renyi (homogeneous) : TEAL. Needs a much larger seed. ---
+  \draw[tcTeal, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
+    (0,0.1) (6.0,0.6) (8.5,6.0) (11.0,16.0) (13.5,19.0) (16,19.6)
+  };
+  \draw[tcTeal, line width=8pt] plot[smooth, tension=0.5] coordinates {
+    (0,0.05) (7.5,0.4) (10.0,5.0) (12.5,15.0) (15.0,18.8) (16,19.4)
+  };
+
+  % --- Geometric model (GIRG) : INKSOFT. Intermediate ignition. ---
+  \draw[tcPlum, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
+    (0,0.1) (3.5,0.8) (6.0,8.0) (8.5,16.5) (11.5,19.2) (16,19.8)
+  };
+  \draw[tcPlum, line width=8pt] plot[smooth, tension=0.5] coordinates {
+    (0,0.05) (4.5,0.6) (7.5,7.0) (10.0,16.0) (13.0,19.0) (16,19.6)
+  };
+
+  % Header label
+  %% Header names what the figure actually shows. It said "DEGREE HETEROGENEITY"
+  %% while plotting GIRG too, i.e. geometry as well -- so it is network structure
+  %% in general, not heterogeneity alone.
+  \node[tcInk, font=\fontsize{24}{28}\selectfont] at (8, 21.5) {[ SIMULATED : EFFECT OF NETWORK STRUCTURE ]};
+
+  
+\end{tikzpicture}%
+}
+
+\vspace{0em}
+
+%% NEW SEPARATED LEGEND
+\resizebox{!}{0.08\textheight}{%
+\begin{tikzpicture}[font=\sffamily\bfseries]
+  \fill[tcCream, rounded corners=12pt] (0, 0) rectangle (32, 4);
+  
+  \draw[tcRust, line width=8pt, dashed] (1, 2.8) -- (2.5, 2.8);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (2.8, 2.8) {Config.\ model, $\bar\mu > 0$};
+  \draw[tcRust, line width=8pt] (1, 1.2) -- (2.5, 1.2);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (2.8, 1.2) {Config.\ model, $\bar\mu = 0$};
+
+  \draw[tcPlum, line width=8pt, dashed] (11.5, 2.8) -- (13.0, 2.8);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (13.3, 2.8) {Geometric (GIRG), $\bar\mu > 0$};
+  \draw[tcPlum, line width=8pt] (11.5, 1.2) -- (13.0, 1.2);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (13.3, 1.2) {Geometric (GIRG), $\bar\mu = 0$};
+
+  \draw[tcTeal, line width=8pt, dashed] (22, 2.8) -- (23.5, 2.8);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (23.8, 2.8) {Erd\H{o}s--R\'enyi, $\bar\mu > 0$};
+  \draw[tcTeal, line width=8pt] (22, 1.2) -- (23.5, 1.2);
+  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (23.8, 1.2) {Erd\H{o}s--R\'enyi, $\bar\mu = 0$};
+\end{tikzpicture}%
+}
+\end{center}
+\vfill
+}{
+%%%% Bottom space of center column left intentionally clean
+
+}% Disclaimer -- was truncated mid-sentence, ending on a bare semicolon.
+Simulated placeholder for layout evaluation only. Matched $n$ and mean degree;
+awaiting poster-queue items 1--3.
+
+}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% LEFT COLUMN — the argument, in reading order
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Confidence \\
+Augmented\\
+Bootstrap \\
+Percolation\vspace{-0.4em}}  % <-- Pulls your name up closer to the title!
+
+\author{Gary Mei\vspace{-0.1em}}  % <-- Pulls the institution line up!
+
+\institution{Georgia Tech ISyE - SURS\\
+Advisor: Prof.\ Souvik Dhara}
+
+%% Place \raggedright HERE, after the header block, to wrap body text cleanly!
+\raggedright
+
+%% Pulls "The Setup" section up closer to the advisor line!
+\vspace{-2.0em}
+
+\section{The Setup}
+\vspace{-0.3em}
+The existing baseline (Janson) gives a bank exactly \textbf{one way to fail}: enough of its neighbors have already activated.
+
+\vspace{0.3em}
+Janson et al.\ solved that case on the Erd\H{o}s--R\'enyi graph, as bootstrap percolation with threshold $r$. I add a \textbf{second way for nodes to activate}.
+
+\vspace{-1.5em}
+\section{The Model}
+\vspace{-0.3em}
+A node is activated if either condition is met:
+\vspace{0.2em}
+% Converted equations to inline math ($...$) to save ~2 inches of vertical space!
+\begin{enumerate}[leftmargin=*, nosep, itemsep=0.3em]
+\item \textbf{Percolation:} At least $r$ of its neighbors have failed ($|\{j \sim i : j \in A_t\}| \geq r$).
+\item \textbf{Fear:} A Bernoulli variable with probability $f_ig_t$ that a node activates ($U_i < f_i\, g_t$).
+\end{enumerate}
+
+\vspace{-1.5em}
+\section{The Comparisons}
+\vspace{-0.3em}
+We hold network size $n$ and average degree constant across all tests to isolate three items:
+\vspace{0.2em}
+\begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
+  \item \textbf{Heterogeneity (ER vs.\ CM):} Homogeneous degree distribution vs.\ heavy-tailed hubs.
+  \item \textbf{Geometry (CM vs.\ GIRG):} Pure random connections vs.\ local spatial clustering.
+  \item \textbf{Fear ($\bar\mu = 0$ vs.\ $\bar\mu > 0$):} Baseline bootstrap percolation vs.\ confidence augmentation.
+\end{itemize}
+
+\vfill
+
+%% QR Code relocated to the bottom of the left column (Side-by-Side Layout)
+\begin{center}
+\fcolorbox{tcRule}{tcCream}{%
+  \begin{minipage}{1\linewidth}
+    \vspace{1em}
+    \begin{minipage}[c]{0.58\linewidth}      % <-- Giant QR code container
+      \centering
+      \includegraphics[width=1.0\linewidth]{img/qrcode}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[c]{0.38\linewidth}      % <-- Text container
+      \raggedright
+      \color{tcInk}%\bfseries
+      \fontsize{36}{42}\selectfont           % <-- MANUAL SIZE DIAL: Dial up or down!
+      Scan to \\
+      interact \\
+      with live \\
+      graphs                                 % <-- Hyphenated to survive massive font scale
+    \end{minipage}
+    \vspace{0.8em}
+  \end{minipage}%
+}
+\end{center}
+
+}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% RIGHT COLUMN — supporting evidence and the ISyE recommendation.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\raggedright
+
+\vspace{-1.5em}
+
+\section{Fear Amplifies}
+%% ⚠ DO NOT DROP THE SECOND SENTENCE. Without it this reads as a flat "always
+%% 3x", which is the exact claim S-058 caught and retracted on the advisor site:
+%% the multiplier is ~3x at moderate mu-bar but only ~1.5x at mu-bar = 0.1. It is
+%% constant IN n at fixed mu-bar -- not constant ACROSS mu-bar. See
+%% okf/next-actions.md, "Multiplier claim qualified".
+Fear multiplies the ignition probability by roughly $3\times$, and that multiplier
+is \textbf{flat in $n$} at fixed $\bar\mu$; fear changes the \emph{level} of
+ignition, not its \textbf{scaling}.
+
+\vspace{0.3em}
+The multiplier is \emph{not} constant across $\bar\mu$ --- it falls to about
+$1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a constant.
+
+\begin{center}
+\fcolorbox{tcRule}{tcCream}{%
+  %% 7in, not 2.2in: at 2.2in on a 48in poster these read as thin strips and left
+  %% the right column at roughly 40% of the left column's ink density.
+  \begin{minipage}[t][7in][c]{0.95\linewidth}
+    \centering
+    \color{tcInkSoft}\bfseries\Large
+    [ FIGURE 1 : FEAR AS A MULTIPLIER ] \\[0.5em]
+    \normalfont\small Placeholder --- ignition rate vs.\ $n$, one line per $\bar\mu$.\\
+    Source: \texttt{results/figures/q4\_mumap\_ignition.png}
+  \end{minipage}%
+}
+\end{center}
+
+\vspace{-1.5em}
+
+\section{Sharper Transition}
+%% The lead-in was commented out, which left the two nu values printing with no
+%% n-range and no statement of what nu is. A reader got two bare numbers.
+Fear makes the systemic boundary \textbf{sharper}, leaving the system less
+forgiving of small perturbations. Over $n = 10^3$ to $8\!\times\!10^4$ the
+finite-size exponent $\nu$ --- the rate at which the transition window narrows
+as the network grows --- contracts:
+\begin{align*}
+  \nu(\mu = 0)   &= 5.61 \pm 0.18 \\
+  \nu(\mu = 0.3) &= 4.82 \pm 0.15
+\end{align*}
+
+\begin{center}
+\fcolorbox{tcRule}{tcCream}{%
+  \begin{minipage}[t][7in][c]{0.95\linewidth}
+    \centering
+    \color{tcInkSoft}\bfseries\Large
+    [ FIGURE 2 : FINITE-SIZE SHARPENING ] \\[0.5em]
+    \normalfont\small Placeholder --- transition width vs.\ $n$, 7-point fit.\\
+    Source: \texttt{results/figures/finite\_size\_scaling\_r2\_n10000.png}
+  \end{minipage}%
+}
+\end{center}
+
+\vspace{-1.5em}
+
+\section{Where To Intervene}
+%% ⚠ KEEP THIS LEAD-IN. Without it the section opens on "Calm the hubs" and reads
+%% as a settled recommendation. It is not one -- Q9 is open (okf/open-questions),
+%% and "calm the hubs" is the OBVIOUS lever, not a demonstrated optimal one.
+How to allocate a fixed calming budget optimally is still an \textbf{open
+question} --- it is what this work is now pointed at. The model does expose two
+levers:
+\vspace{0.3em}
+\begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
+  \item \textbf{Calm the hubs:} Tilting fear reduction toward high-degree nodes lowers the critical seed monotonically.
+  \item \textbf{Limit visibility:} When the fear field is \textbf{local} rather than global, cascades behave like the zero-fear baseline. Panic requires a global audience.
+\end{itemize}
+
+\vspace{-1.5em}
+
+\section{Next Steps}
+We are applying this framework to real-world SNAP networks.
+
+\vfill
+
+}
+\end{document}

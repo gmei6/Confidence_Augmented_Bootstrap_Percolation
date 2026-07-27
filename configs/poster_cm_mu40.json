@@ -25,7 +25,7 @@
   "sweep": {
     "mean_fear_grid": [0.4],
     "seed_sizes": [1, 2, 3, 4, 6, 8, 10, 12, 16, 24, 48],
-    "trials_per_cell": 200,
+    "trials_per_cell": 500,
     "base_seed": 42
   },
   "output": {

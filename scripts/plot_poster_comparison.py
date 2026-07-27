@@ -75,7 +75,9 @@ def main() -> None:
         y_low = np.array([it["wilson_ci_lower"] for it in items])
         y_high = np.array([it["wilson_ci_upper"] for it in items])
 
-        yerr = np.vstack([y - y_low, y_high - y])
+        yerr_lower = np.maximum(0.0, y - y_low)
+        yerr_upper = np.maximum(0.0, y_high - y)
+        yerr = np.vstack([yerr_lower, yerr_upper])
 
         ax.errorbar(
             x, y, yerr=yerr,

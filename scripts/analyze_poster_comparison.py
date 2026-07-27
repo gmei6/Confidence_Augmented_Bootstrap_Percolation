@@ -1,4 +1,5 @@
-"""Analyze poster comparison sweep raw results and output Wilson score intervals."""
+"""Analyze poster comparison sweep raw results and output Wilson score intervals,
+crossings with propagated Wilson uncertainty, D-012 floor checks, and inflation factors."""
 
 import json
 import os
@@ -38,6 +39,23 @@ def wilson_score_interval(k: int, n: int, confidence: float = 0.95) -> tuple[flo
     return float(p_hat), ci_lower, ci_upper
 
 
+def interpolate_crossing(x_arr: np.ndarray, y_arr: np.ndarray, target: float = 0.5) -> float:
+    for i in range(len(y_arr) - 1):
+        if y_arr[i] == target:
+            return float(x_arr[i])
+        if (y_arr[i] < target <= y_arr[i + 1]) or (y_arr[i] > target >= y_arr[i + 1]):
+            dy = y_arr[i + 1] - y_arr[i]
+            if dy == 0:
+                return float(x_arr[i])
+            frac = (target - y_arr[i]) / dy
+            return float(x_arr[i] + frac * (x_arr[i + 1] - x_arr[i]))
+    if y_arr[0] > target:
+        return float(x_arr[0])
+    if y_arr[-1] < target:
+        return float(x_arr[-1])
+    return float("nan")
+
+
 def main() -> None:
     os.chdir(base_dir)
     proc_dir = os.path.join(base_dir, "results", "processed")
@@ -47,6 +65,7 @@ def main() -> None:
     source_raws = []
     commits = set()
     janson_ac_map = {}
+    curves_summary = {}
 
     for spec in CONFIG_SPECS:
         raw_path = os.path.join(base_dir, spec["raw"])
@@ -61,12 +80,16 @@ def main() -> None:
         if "git_commit" in md:
             commits.add(md["git_commit"])
 
+        engine_resolved = md.get("engine_resolved", md.get("engine", "unknown"))
+
         n = md.get("n", 10000)
         p = md.get("p", 0.00045336)
         r = md.get("r", 2)
         ac0 = janson_a_c(n, p, r)
         janson_ac_map[spec["key"]] = ac0
 
+        curve_records = []
+        realized_mus = []
         for cell in raw_data["results"]:
             seed_size = cell["seed_size"]
             a_over_ac = float(seed_size / ac0)
@@ -76,7 +99,14 @@ def main() -> None:
             
             p_hat, ci_lower, ci_upper = wilson_score_interval(n_systemic, n_trials)
             
-            records.append({
+            if "realized_fear" in cell and cell["realized_fear"] is not None:
+                rf = cell["realized_fear"]
+                if isinstance(rf, list):
+                    realized_mus.extend(rf)
+                else:
+                    realized_mus.append(rf)
+
+            rec = {
                 "config_key": spec["key"],
                 "family": spec["family"],
                 "mean_fear": spec["mu"],
@@ -88,7 +118,83 @@ def main() -> None:
                 "p_systemic": p_hat,
                 "wilson_ci_lower": ci_lower,
                 "wilson_ci_upper": ci_upper,
+            }
+            records.append(rec)
+            curve_records.append(rec)
+
+        curve_records.sort(key=lambda x: x["seed_size"])
+        seed_sizes = np.array([cr["seed_size"] for cr in curve_records], dtype=float)
+        p_sys = np.array([cr["p_systemic"] for cr in curve_records], dtype=float)
+        ci_low = np.array([cr["wilson_ci_lower"] for cr in curve_records], dtype=float)
+        ci_upp = np.array([cr["wilson_ci_upper"] for cr in curve_records], dtype=float)
+
+        interior_mask = (p_sys > 0.05) & (p_sys < 0.95)
+        interior_count = int(np.sum(interior_mask))
+        reliable = bool(interior_count >= 3)
+
+        a05_point = interpolate_crossing(seed_sizes, p_sys, 0.5)
+        a05_low = interpolate_crossing(seed_sizes, ci_upp, 0.5)
+        a05_high = interpolate_crossing(seed_sizes, ci_low, 0.5)
+
+        avg_realized_mu = float(np.mean(realized_mus)) if len(realized_mus) > 0 else spec["mu"]
+
+        curves_summary[spec["key"]] = {
+            "key": spec["key"],
+            "family": spec["family"],
+            "mean_fear": spec["mu"],
+            "engine_resolved": engine_resolved,
+            "realized_mu_bar": avg_realized_mu,
+            "janson_a_c": ac0,
+            "interior_point_count": interior_count,
+            "reliable": reliable,
+            "a05_point": a05_point,
+            "a05_ci_lower": a05_low,
+            "a05_ci_upper": a05_high,
+            "a_over_ac_point": a05_point / ac0,
+            "a_over_ac_ci_lower": a05_low / ac0,
+            "a_over_ac_ci_upper": a05_high / ac0,
+        }
+
+    # D-012 scaling prediction table calculation
+    # Formula: a_c(mu) = a_c(0) * (1 - mu)^(r / (r - 1)) = a_c(0) * (1 - mu)^2 for r=2
+    d012_table = []
+    for fam in ["erdos_renyi", "configuration_model"]:
+        anchor_key = f"poster_er_mu0" if fam == "erdos_renyi" else "poster_cm_mu0"
+        anchor_crossing = curves_summary[anchor_key]["a05_point"]
+        
+        for mu in [0.0, 0.4, 0.7]:
+            key = f"poster_{'er' if fam=='erdos_renyi' else 'cm'}_mu{int(mu*100)}"
+            cur = curves_summary[key]
+            meas = cur["a05_point"]
+            meas_low = cur["a05_ci_lower"]
+            meas_high = cur["a05_ci_upper"]
+
+            pred = anchor_crossing * ((1.0 - mu) ** 2)
+            ratio = meas / pred if pred > 0 else np.nan
+            below_floor = bool(pred < 2.0)
+
+            d012_table.append({
+                "family": fam,
+                "mean_fear": mu,
+                "key": key,
+                "measured_crossing": meas,
+                "measured_ci_lower": meas_low,
+                "measured_ci_upper": meas_high,
+                "measured_a_over_ac": cur["a_over_ac_point"],
+                "measured_a_over_ac_ci_lower": cur["a_over_ac_ci_lower"],
+                "measured_a_over_ac_ci_upper": cur["a_over_ac_ci_upper"],
+                "predicted_crossing": pred,
+                "ratio": ratio,
+                "below_floor": below_floor,
+                "interior_count": cur["interior_point_count"],
             })
+
+    # Finite size inflation factor for ER mu=0
+    er_mu0_cur = curves_summary["poster_er_mu0"]
+    ac0_er = er_mu0_cur["janson_a_c"]
+    inflation_point = er_mu0_cur["a05_point"] / ac0_er
+    inflation_low = er_mu0_cur["a05_ci_lower"] / ac0_er
+    inflation_high = er_mu0_cur["a05_ci_upper"] / ac0_er
 
     output_payload = {
         "metadata": {
@@ -99,6 +205,14 @@ def main() -> None:
             "systemic_threshold_theta": THETA,
             "janson_a_c_map": janson_ac_map,
         },
+        "curves_summary": curves_summary,
+        "d012_table": d012_table,
+        "inflation_factor_er_mu0": {
+            "point": inflation_point,
+            "ci_lower": inflation_low,
+            "ci_upper": inflation_high,
+            "janson_a_c": ac0_er,
+        },
         "records": records,
     }
 
@@ -107,7 +221,20 @@ def main() -> None:
         json.dump(output_payload, f, indent=2)
 
     print(f"Analysis complete. Processed data saved to {out_path}")
+    print("\n--- SUMMARY TABLE ---")
+    print(f"{'Key':<16} {'Engine':<8} {'mu_real':<8} {'Interior':<8} {'a_0.5 (Point)':<14} {'a_0.5 (95% CI)':<20} {'a/a_c (Point)':<14} {'a/a_c (95% CI)':<20}")
+    for k, v in curves_summary.items():
+        print(f"{k:<16} {v['engine_resolved']:<8} {v['realized_mu_bar']:<8.3f} {v['interior_point_count']:<8} {v['a05_point']:<14.2f} [{v['a05_ci_lower']:.2f}, {v['a05_ci_upper']:.2f}] {'':<3} {v['a_over_ac_point']:<14.4f} [{v['a_over_ac_ci_lower']:.4f}, {v['a_over_ac_ci_upper']:.4f}]")
+
+    print("\n--- D-012 COMPARISON TABLE ---")
+    print(f"{'Family':<22} {'mu':<5} {'Measured (CI)':<26} {'Predicted':<12} {'Ratio':<8} {'Below Floor (<r=2)?':<20}")
+    for row in d012_table:
+        ci_str = f"{row['measured_crossing']:.2f} [{row['measured_ci_lower']:.2f}, {row['measured_ci_upper']:.2f}]"
+        print(f"{row['family']:<22} {row['mean_fear']:<5.1f} {ci_str:<26} {row['predicted_crossing']:<12.2f} {row['ratio']:<8.3f} {str(row['below_floor']):<20}")
+
+    print(f"\nER mu=0 Inflation Factor over Janson a_c ({ac0_er:.2f}): {inflation_point:.3f} [{inflation_low:.3f}, {inflation_high:.3f}]")
 
 
 if __name__ == "__main__":
     main()
+

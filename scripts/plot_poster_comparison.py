@@ -92,7 +92,15 @@ def main() -> None:
     ax.legend(frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR, fontsize=10, loc="best")
 
     plt.tight_layout()
-    fig.savefig(out_png, dpi=300, facecolor=BG_COLOR, metadata={"Creation Time": None})
+    # Suppress BOTH default PNG text chunks. "Creation Time" alone is not enough:
+    # matplotlib also writes a "Software" chunk containing its own version string
+    # ("Matplotlib version3.10.8, ..."), which makes the file differ across matplotlib
+    # versions even when the plotted data is identical -- so the §5.6 "figure
+    # regenerates" check would fail on any environment with a different matplotlib.
+    fig.savefig(
+        out_png, dpi=300, facecolor=BG_COLOR,
+        metadata={"Creation Time": None, "Software": None},
+    )
     plt.close(fig)
     print(f"Plot saved to {out_png}")
 

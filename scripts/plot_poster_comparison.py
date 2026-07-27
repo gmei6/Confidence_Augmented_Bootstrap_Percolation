@@ -59,8 +59,10 @@ def main() -> None:
     series_config = [
         {"family": "configuration_model", "mu": 0.0, "color": COLOR_CM, "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.0$"},
         {"family": "configuration_model", "mu": 0.4, "color": COLOR_CM, "ls": "--", "marker": "s", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.4$"},
+        {"family": "configuration_model", "mu": 0.7, "color": COLOR_CM, "ls": ":", "marker": "D", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.7$"},
         {"family": "erdos_renyi", "mu": 0.0, "color": COLOR_ER, "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
         {"family": "erdos_renyi", "mu": 0.4, "color": COLOR_ER, "ls": "--", "marker": "v", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
+        {"family": "erdos_renyi", "mu": 0.7, "color": COLOR_ER, "ls": ":", "marker": "<", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
     ]
 
     for cfg in series_config:
@@ -68,7 +70,7 @@ def main() -> None:
         if key not in grouped:
             continue
         items = grouped[key]
-        x = np.array([it["seed_size"] for it in items])
+        x = np.array([it.get("a_over_ac", it["seed_size"] / it["janson_a_c"]) for it in items])
         y = np.array([it["p_systemic"] for it in items])
         y_low = np.array([it["wilson_ci_lower"] for it in items])
         y_high = np.array([it["wilson_ci_upper"] for it in items])
@@ -82,7 +84,7 @@ def main() -> None:
             label=cfg["label"]
         )
 
-    ax.set_xlabel("Seed Size $a$", fontsize=12, fontweight="bold", labelpad=8)
+    ax.set_xlabel("Seed size relative to Janson prediction (a / a_c)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylabel("P(systemic)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylim(-0.03, 1.03)
     ax.set_title("Degree Heterogeneity Effect on Cascade Ignition ($n=10000$, $\\langle k \\rangle \\approx 4.53$)",
@@ -92,11 +94,6 @@ def main() -> None:
     ax.legend(frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR, fontsize=10, loc="best")
 
     plt.tight_layout()
-    # Suppress BOTH default PNG text chunks. "Creation Time" alone is not enough:
-    # matplotlib also writes a "Software" chunk containing its own version string
-    # ("Matplotlib version3.10.8, ..."), which makes the file differ across matplotlib
-    # versions even when the plotted data is identical -- so the §5.6 "figure
-    # regenerates" check would fail on any environment with a different matplotlib.
     fig.savefig(
         out_png, dpi=300, facecolor=BG_COLOR,
         metadata={"Creation Time": None, "Software": None},

@@ -9,12 +9,15 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(base_dir, "src"))
 
 from twocascade.runner import get_git_commit_hash
+from twocascade.model import janson_a_c
 
 CONFIG_SPECS = [
     {"key": "poster_er_mu0", "family": "erdos_renyi", "mu": 0.0, "raw": "results/poster_er_mu0_raw.json"},
     {"key": "poster_er_mu40", "family": "erdos_renyi", "mu": 0.4, "raw": "results/poster_er_mu40_raw.json"},
+    {"key": "poster_er_mu70", "family": "erdos_renyi", "mu": 0.7, "raw": "results/poster_er_mu70_raw.json"},
     {"key": "poster_cm_mu0", "family": "configuration_model", "mu": 0.0, "raw": "results/poster_cm_mu0_raw.json"},
     {"key": "poster_cm_mu40", "family": "configuration_model", "mu": 0.4, "raw": "results/poster_cm_mu40_raw.json"},
+    {"key": "poster_cm_mu70", "family": "configuration_model", "mu": 0.7, "raw": "results/poster_cm_mu70_raw.json"},
 ]
 
 THETA = 0.5  # systemic cascade threshold
@@ -43,6 +46,7 @@ def main() -> None:
     records = []
     source_raws = []
     commits = set()
+    janson_ac_map = {}
 
     for spec in CONFIG_SPECS:
         raw_path = os.path.join(base_dir, spec["raw"])
@@ -57,8 +61,15 @@ def main() -> None:
         if "git_commit" in md:
             commits.add(md["git_commit"])
 
+        n = md.get("n", 10000)
+        p = md.get("p", 0.00045336)
+        r = md.get("r", 2)
+        ac0 = janson_a_c(n, p, r)
+        janson_ac_map[spec["key"]] = ac0
+
         for cell in raw_data["results"]:
             seed_size = cell["seed_size"]
+            a_over_ac = float(seed_size / ac0)
             failed_fracs = np.asarray(cell["failed_fractions"])
             n_trials = len(failed_fracs)
             n_systemic = int(np.sum(failed_fracs >= THETA))
@@ -70,6 +81,8 @@ def main() -> None:
                 "family": spec["family"],
                 "mean_fear": spec["mu"],
                 "seed_size": seed_size,
+                "janson_a_c": ac0,
+                "a_over_ac": a_over_ac,
                 "n_trials": n_trials,
                 "n_systemic": n_systemic,
                 "p_systemic": p_hat,
@@ -84,6 +97,7 @@ def main() -> None:
             "source_raws": source_raws,
             "git_commits_in_raws": sorted(commits),
             "systemic_threshold_theta": THETA,
+            "janson_a_c_map": janson_ac_map,
         },
         "records": records,
     }

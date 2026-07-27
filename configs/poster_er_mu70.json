@@ -14,12 +14,12 @@
     "alpha": 0.6
   },
   "sweep": {
-    "mean_fear_grid": [0.4],
+    "mean_fear_grid": [0.7],
     "seed_sizes": [120, 170, 220, 270, 320, 370, 420, 490, 570, 680, 800],
     "trials_per_cell": 50,
     "base_seed": 42
   },
   "output": {
-    "raw_filepath": "results/poster_er_mu40_raw.json"
+    "raw_filepath": "results/poster_er_mu70_raw.json"
   }
 }

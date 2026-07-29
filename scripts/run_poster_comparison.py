@@ -11,12 +11,19 @@ from twocascade.runner import run_sweep, get_git_commit_hash
 
 ALL_CONFIGS = [
     "poster_er_mu0",
+    "poster_er_mu10",
+    "poster_er_mu20",
+    "poster_er_mu30",
     "poster_er_mu40",
     "poster_er_mu70",
     "poster_cm_mu0",
+    "poster_cm_mu10",
+    "poster_cm_mu20",
+    "poster_cm_mu30",
     "poster_cm_mu40",
     "poster_cm_mu70",
 ]
+
 
 
 def main() -> None:

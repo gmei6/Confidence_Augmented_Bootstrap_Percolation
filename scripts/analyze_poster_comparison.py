@@ -14,12 +14,19 @@ from twocascade.model import janson_a_c
 
 CONFIG_SPECS = [
     {"key": "poster_er_mu0", "family": "erdos_renyi", "mu": 0.0, "raw": "results/poster_er_mu0_raw.json"},
+    {"key": "poster_er_mu10", "family": "erdos_renyi", "mu": 0.1, "raw": "results/poster_er_mu10_raw.json"},
+    {"key": "poster_er_mu20", "family": "erdos_renyi", "mu": 0.2, "raw": "results/poster_er_mu20_raw.json"},
+    {"key": "poster_er_mu30", "family": "erdos_renyi", "mu": 0.3, "raw": "results/poster_er_mu30_raw.json"},
     {"key": "poster_er_mu40", "family": "erdos_renyi", "mu": 0.4, "raw": "results/poster_er_mu40_raw.json"},
     {"key": "poster_er_mu70", "family": "erdos_renyi", "mu": 0.7, "raw": "results/poster_er_mu70_raw.json"},
     {"key": "poster_cm_mu0", "family": "configuration_model", "mu": 0.0, "raw": "results/poster_cm_mu0_raw.json"},
+    {"key": "poster_cm_mu10", "family": "configuration_model", "mu": 0.1, "raw": "results/poster_cm_mu10_raw.json"},
+    {"key": "poster_cm_mu20", "family": "configuration_model", "mu": 0.2, "raw": "results/poster_cm_mu20_raw.json"},
+    {"key": "poster_cm_mu30", "family": "configuration_model", "mu": 0.3, "raw": "results/poster_cm_mu30_raw.json"},
     {"key": "poster_cm_mu40", "family": "configuration_model", "mu": 0.4, "raw": "results/poster_cm_mu40_raw.json"},
     {"key": "poster_cm_mu70", "family": "configuration_model", "mu": 0.7, "raw": "results/poster_cm_mu70_raw.json"},
 ]
+
 
 THETA = 0.5  # systemic cascade threshold
 
@@ -162,8 +169,8 @@ def main() -> None:
         anchor_key = f"poster_er_mu0" if fam == "erdos_renyi" else "poster_cm_mu0"
         anchor_crossing = curves_summary[anchor_key]["a05_point"]
         
-        for mu in [0.0, 0.4, 0.7]:
-            key = f"poster_{'er' if fam=='erdos_renyi' else 'cm'}_mu{int(mu*100)}"
+        for mu in [0.0, 0.1, 0.2, 0.3, 0.4, 0.7]:
+            key = f"poster_{'er' if fam=='erdos_renyi' else 'cm'}_mu{int(round(mu*100))}"
             cur = curves_summary[key]
             meas = cur["a05_point"]
             meas_low = cur["a05_ci_lower"]
@@ -173,6 +180,10 @@ def main() -> None:
             ratio = meas / pred if pred > 0 else np.nan
             below_floor = bool(pred < 2.0)
 
+            ratio_to_mu0 = meas / anchor_crossing if anchor_crossing > 0 else np.nan
+            ratio_to_mu0_low = meas_low / anchor_crossing if anchor_crossing > 0 else np.nan
+            ratio_to_mu0_high = meas_high / anchor_crossing if anchor_crossing > 0 else np.nan
+
             d012_table.append({
                 "family": fam,
                 "mean_fear": mu,
@@ -180,6 +191,9 @@ def main() -> None:
                 "measured_crossing": meas,
                 "measured_ci_lower": meas_low,
                 "measured_ci_upper": meas_high,
+                "measured_ratio_to_mu0": ratio_to_mu0,
+                "measured_ratio_to_mu0_ci_lower": ratio_to_mu0_low,
+                "measured_ratio_to_mu0_ci_upper": ratio_to_mu0_high,
                 "measured_a_over_ac": cur["a_over_ac_point"],
                 "measured_a_over_ac_ci_lower": cur["a_over_ac_ci_lower"],
                 "measured_a_over_ac_ci_upper": cur["a_over_ac_ci_upper"],
@@ -188,6 +202,7 @@ def main() -> None:
                 "below_floor": below_floor,
                 "interior_count": cur["interior_point_count"],
             })
+
 
     # Finite size inflation factor for ER mu=0
     er_mu0_cur = curves_summary["poster_er_mu0"]

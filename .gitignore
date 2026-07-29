@@ -36,6 +36,14 @@ results/*.csv
 !results/figures/.gitkeep
 !results/analysis/.gitkeep
 !results/processed/.gitkeep
+!results/poster_*_raw.json
+# ...but not the superseded partial chunks; the merged *_raw.json files supersede them.
+results/poster_*_part*_raw.json
+results/poster_*_chunk*_raw.json
+
+# Third-party poster templates: the .pptx is a 39 MB binary and does not belong in
+# history. The (148 KB) LaTeX template PDF is tracked; re-download the pptx if needed.
+okf/poster/*.pptx
 
 # Editor — optional; keep if you want shared settings, remove if not
 # .vscode/

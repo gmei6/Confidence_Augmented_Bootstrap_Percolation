@@ -141,7 +141,6 @@ def run_single_trial(args) -> tuple[float, int]:
         gamma = fear_cfg.get("gamma", 0.0)
         fears, stats = sample_degree_dependent_fears(degrees, mu, gamma, kappa, rng_fear)
     else:
-        fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
         if graph_type == "gnp":
             adj = sample_gnp_adjacency(n, p, rng_pair)
         elif graph_type == "girg":
@@ -163,7 +162,14 @@ def run_single_trial(args) -> tuple[float, int]:
                 adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng_pair)
             else:
                 raise ValueError(f"Unknown graph type: {graph_type}")
-                
+
+        if graph_type == "girg":
+            gamma = fear_cfg.get("gamma", 0.0)
+            fears, fear_stats = sample_degree_dependent_fears(
+                weights_girg, mu, gamma, kappa, rng_fear)
+        else:
+            fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
+
     nodes = make_nodes(fears)
     
     if seed_layout == "disc":

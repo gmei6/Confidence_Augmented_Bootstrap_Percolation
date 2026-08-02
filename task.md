@@ -1,23 +1,37 @@
-# Task C1 — GIRG sampler performance port (Python)
+# Task C3a — wire GIRG to degree-dependent fears
 
-**Queue item:** okf/next-actions.md §10 item 3(a) (poster Comparison 2 critical path).
-**Conjecture affected:** none directly — this is infrastructure. It unblocks the geometry
-comparison (CM vs GIRG) whose eventual claims live under Q6/D-038. No threshold behavior
-changes; the sampled distribution must be **identical** to the current implementation.
+**Queue item:** poster Comparison 2 (D-038 geometry comparison), fear-model decision of
+2026-08-02: GIRG gets degree-dependent fears, same family as the configuration model, so
+that geometry is the only difference between the CM and GIRG arms.
 
-## Invariant under test
+**Conjecture affected:** none directly — wiring, not physics. Downstream claims live under
+Q6/D-038. The fear DISTRIBUTION for gamma != 0 must come from the Task Q water-filling
+sampler (`graphs.sample_degree_dependent_fears`), NOT the pre-Q implementation that still
+sits in `girg.py` — that local copy has the epsilon-cap undershoot bias Task Q was
+verified to remove (7-28% at gamma > 0 on heavy tails).
 
-`sample_girg_adjacency` must keep sampling from exactly the GIRG measure defined by the
-existing code: for each unordered pair (i,j) at torus distance d,
-`p_ij = min(1, (w_i * w_j / (n * d^2)) ** alpha_g)`, independently across pairs.
-The rewrite may change the RNG consumption order (statistical, not bit-level, equivalence —
-same standard as the §5.4 C++ checks) but not the per-pair distribution.
+## Invariants under test
+
+1. GIRG trials sample fears via `graphs.sample_degree_dependent_fears(weights, mu, gamma,
+   kappa, rng_fear)` — weights as the drawn-degree analogue. The `(w/mean)^gamma` tilt is
+   scale-invariant, so the w_min scale factor cancels.
+2. Every other graph family's behavior is unchanged: gnp/rgg/soft_rgg keep
+   `sample_individual_fears`; configuration_model keeps its existing path. RNG streams are
+   per-purpose (`rng_graph`/`rng_pair`/`rng_fear`/`rng_casc`), so reordering statements
+   must not change any other family's draws.
+3. Task Q invariant holds on the GIRG path: realized mu-bar matches nominal (exact under
+   water-filling unless `infeasible`).
+4. `reference.py` untouched. No C++ changes (no GIRG path exists there).
 
 ## Acceptance
 
-1. New sampler is deterministic given (inputs, seed).
-2. Two-sample statistical agreement with the old sampler at small n (edge count, degree
-   distribution), across independent seeds.
-3. Benchmark at n=10000 makes an 11-point × 500-trial arm feasible in hours, not days.
-4. No dense n×n matrix materialized (constitution §I) — block-wise evaluation only.
-5. `src/twocascade/reference.py` untouched. No C++ changes (no GIRG path exists there).
+Gate test `tests/test_girg_fear_wiring.py` (pre-written) passes; full non-slow suite
+passes; girg trials deterministic given seed; gamma=0 GIRG fears statistically match the
+old homogeneous distribution (same Beta(mu*kappa, (1-mu)*kappa) marginal).
+
+## Reproducibility note (recorded, not hidden)
+
+Old GIRG runs used homogeneous fears drawn in a different stream order; after this change
+they regenerate statistically, not bit-identically. Acceptable because no §5.6-stamped
+GIRG result exists (Task P was demoted to non-result, D-037); noted here so the break is
+documented rather than discovered.

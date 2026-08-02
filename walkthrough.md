@@ -1,118 +1,67 @@
-# Walkthrough — C1 GIRG sampler performance port
+# Walkthrough — C3a GIRG degree-dependent fear wiring
 
 ## Scope actually touched
 
-Only `src/twocascade/girg.py` was edited. `implementation_plan.md`, `task.md`, and
-`tests/test_girg_fast_equivalence.py` were pre-existing (untracked, spec-only) and were not
-modified. `scripts/bench_girg.py` and this file are new deliverables, as specified.
-`src/twocascade/reference.py`, `runner.py`, and the C++ tree were not touched.
+Only `src/twocascade/runner.py` was edited (the `run_single_trial` else-branch, as
+scoped). `task.md`, `implementation_plan.md`, and
+`tests/test_girg_fear_wiring.py` were pre-existing spec/gate files in the worktree at
+session start and were **not** modified — confirmed by reading them first and diffing
+only `runner.py` below. `girg.py`, `reference.py`, and the C++ tree were not touched.
+
+Note on `git diff`: the full worktree diff (pasted below, per instruction) also shows
+`task.md` and `implementation_plan.md` differing from HEAD. That state was already
+present in the worktree before this session began (this task's spec superseding a prior
+task's spec, uncommitted) — not something this session produced. The only hunk this
+session is responsible for is the `src/twocascade/runner.py` one.
 
 ## What changed
 
-`git diff -- src/twocascade/girg.py` (worktree was clean at start of session):
+Restructured the non-configuration-model `else` branch of `run_single_trial`: graph
+dispatch now runs first (unchanged, for every type), then fear sampling — GIRG routes to
+`sample_degree_dependent_fears(weights_girg, mu, gamma, kappa, rng_fear)` (the water-filling
+sampler from `graphs.py`, already imported at module top), every other type keeps
+`sample_individual_fears` exactly as before.
+
+`src/twocascade/runner.py` diff (from `git diff`):
 
 ```diff
-diff --git a/src/twocascade/girg.py b/src/twocascade/girg.py
-index c26fffa..df3c8b0 100644
---- a/src/twocascade/girg.py
-+++ b/src/twocascade/girg.py
-@@ -9,7 +9,7 @@ def sample_powerlaw_weights(n: int, tau: float, w_min: float, rng: np.random.Gen
-     u = rng.uniform(0, 1, n)
-     return w_min * (u ** (-1.0 / (tau - 1.0)))
- 
--def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
-+def sample_girg_adjacency_slow(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
-     n = len(points)
-     adj = [[] for _ in range(n)]
-     for i in range(n):
-@@ -27,6 +27,65 @@ def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: floa
-                 adj[j].append(i)
-     return adj
- 
-+def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
-+    """Block-vectorized, exact GIRG adjacency sampler.
+diff --git a/src/twocascade/runner.py b/src/twocascade/runner.py
+index 0938667..f6523cc 100644
+--- a/src/twocascade/runner.py
++++ b/src/twocascade/runner.py
+@@ -141,7 +141,6 @@ def run_single_trial(args) -> tuple[float, int]:
+         gamma = fear_cfg.get("gamma", 0.0)
+         fears, stats = sample_degree_dependent_fears(degrees, mu, gamma, kappa, rng_fear)
+     else:
+-        fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
+         if graph_type == "gnp":
+             adj = sample_gnp_adjacency(n, p, rng_pair)
+         elif graph_type == "girg":
+@@ -163,7 +162,14 @@ def run_single_trial(args) -> tuple[float, int]:
+                 adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng_pair)
+             else:
+                 raise ValueError(f"Unknown graph type: {graph_type}")
+-                
 +
-+    Samples from exactly the same per-pair measure as sample_girg_adjacency_slow:
-+    p_ij = min(1, (w_i * w_j / (n * d^2)) ** alpha_g) with torus distance d,
-+    independently across pairs (i, j). RNG consumption order differs from the
-+    scalar loop (one block draw per row-block instead of one draw per pair), so
-+    equivalence is statistical, not bit-identical — same standard as the C++
-+    cross-validation checks (constitution §5.4).
++        if graph_type == "girg":
++            gamma = fear_cfg.get("gamma", 0.0)
++            fears, fear_stats = sample_degree_dependent_fears(
++                weights_girg, mu, gamma, kappa, rng_fear)
++        else:
++            fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
 +
-+    Constitution §I (no dense n x n adjacency): this function never
-+    materializes an (n, n) array. Per-block temporaries are shape
-+    (block_rows, n - start) at most, with block_rows << n, so peak memory is
-+    O(block * n), not O(n^2).
-+    """
-+    n = len(points)
-+    adj = [[] for _ in range(n)]
-+    if n < 2:
-+        return adj
-+
-+    x = points[:, 0]
-+    y = points[:, 1]
-+    block_size = 512
-+
-+    for start in range(0, n, block_size):
-+        end = min(start + block_size, n)
-+        rows = np.arange(start, end)          # row indices in this block
-+        cols = np.arange(start, n)            # only j >= start can satisfy j > i for i in [start, end)
-+
-+        # Block temporary of shape (block_rows, len(cols)) <= (block_size, n) —
-+        # never the full n x n matrix. Satisfies the no-dense-adjacency rule.
-+        dx = np.abs(x[rows, None] - x[None, cols])
-+        dx = np.minimum(dx, 1.0 - dx)
-+        dy = np.abs(y[rows, None] - y[None, cols])
-+        dy = np.minimum(dy, 1.0 - dy)
-+        d2 = dx * dx + dy * dy
-+
-+        zero_dist = (d2 == 0.0)
-+        d2_safe = np.where(zero_dist, 1.0, d2)  # avoid div-by-zero; overwritten below
-+
-+        wi = weights[rows, None]
-+        wj = weights[None, cols]
-+        p = np.minimum(1.0, (wi * wj) / (n * d2_safe)) ** alpha_g
-+
-+        # Only j > i pairs are valid; zero-distance pairs are skipped, matching
-+        # the slow loop's `if dist_sq == 0: continue`.
-+        j_gt_i = cols[None, :] > rows[:, None]
-+        p = np.where(j_gt_i & ~zero_dist, p, 0.0)
-+
-+        u = rng.random(p.shape)  # one rng call per block
-+        local_rows, local_cols = np.nonzero(u < p)
-+        for lr, lc in zip(local_rows, local_cols):
-+            i = start + int(lr)
-+            j = start + int(lc)
-+            adj[i].append(j)
-+            adj[j].append(i)
-+
-+    return adj
-+
- def sample_degree_dependent_fears(weights: np.ndarray, mu_bar: float, gamma: float, kappa: float, rng: np.random.Generator) -> List[float]:
-     n = len(weights)
-     mean_w = np.mean(weights)
+     nodes = make_nodes(fears)
 ```
 
-Notes on the approach:
-- `sample_girg_adjacency_slow` is the original body, renamed only — verified byte-identical
-  in behavior by the gate test's `test_slow_sampler_is_verbatim_pre_port`, which reimplements
-  the original scalar loop independently and asserts exact adjacency-list equality.
-- `sample_girg_adjacency` iterates row blocks of size 512 (within the spec's 256–1024
-  range). For block `[start, end)`, only columns `[start, n)` are evaluated (smaller j is
-  provably invalid since j must be > i ≥ start), which cuts compute roughly in half versus
-  evaluating full-width `(block, n)` blocks every time, while still never materializing an
-  n×n array — the largest temporary is `(block_size, n - start) ≤ (512, n)`.
-- One `rng.random(p.shape)` call per block (not per pair), matching the "one rng call per
-  block" instruction. This changes RNG consumption order vs. the scalar loop, which is why
-  equivalence is validated statistically, not bit-for-bit (per task.md and the plan).
-- `d2 == 0` pairs are excluded via an explicit mask (`zero_dist`), matching the original's
-  `if dist_sq == 0: continue`, with a `d2_safe` substitution used only to avoid a
-  divide-by-zero warning before the mask is applied — the substituted values are always
-  overwritten to `p = 0.0` afterward, so they cannot affect output.
+No import changes: `sample_degree_dependent_fears` was already imported from
+`twocascade.graphs` at module top (line 29-33); the `twocascade.girg` import (lines
+34-37) only ever pulled `sample_powerlaw_weights` and `sample_girg_adjacency` — it never
+imported a stale fear sampler, so nothing needed removing there. `configuration_model`
+branch untouched, as scoped.
 
-## Gate test output
+## Gate test output (measured)
 
-Command: `arch -arm64 python3 -m pytest tests/test_girg_fast_equivalence.py -v`
+Command: `arch -arm64 python3 -m pytest tests/test_girg_fear_wiring.py -v`
 
 ```
 ============================= test session starts ==============================
@@ -121,153 +70,260 @@ cachedir: .pytest_cache
 rootdir: /Users/garymei/Downloads/projects/tc-work
 configfile: pytest.ini
 plugins: anyio-4.12.1, jaxtyping-0.3.9, langsmith-0.7.25
-collecting ... collected 3 items
+collecting ... collected 5 items
 
-tests/test_girg_fast_equivalence.py::test_determinism_and_invariants PASSED [ 33%]
-tests/test_girg_fast_equivalence.py::test_statistical_equivalence_with_slow_sampler PASSED [ 66%]
-tests/test_girg_fast_equivalence.py::test_slow_sampler_is_verbatim_pre_port PASSED [100%]
+tests/test_girg_fear_wiring.py::test_runner_does_not_use_stale_girg_fear_sampler PASSED [ 20%]
+tests/test_girg_fear_wiring.py::test_girg_uses_water_filling_fears_with_weights PASSED [ 40%]
+tests/test_girg_fear_wiring.py::test_gnp_path_unchanged PASSED           [ 60%]
+tests/test_girg_fear_wiring.py::test_girg_trial_deterministic PASSED     [ 80%]
+tests/test_girg_fear_wiring.py::test_girg_gamma_zero_mean_fear_matches_mu PASSED [100%]
 
-============================== 3 passed in 3.39s ===============================
+============================== 5 passed in 0.16s ===============================
 ```
 
-All 3 gate tests pass: determinism/invariants (no self-loops, no duplicates, symmetric,
-deterministic given seed), statistical equivalence to the slow sampler (edge count, mean
-degree, degree histogram chi-square), and byte-exact verbatim-ness of the renamed slow
-sampler against an independent reimplementation of the pre-port loop.
+All 5 gate assertions pass as-written; none were altered (per instruction, none looked
+wrong — they matched the plan's spec exactly: import-hygiene check, weights-not-degrees
+spy check on the girg path, gnp-path-untouched spy check, determinism, gamma=0 mean-fear
+sanity).
 
-## Full suite
+## Full non-slow suite output (measured)
 
-`pytest-timeout` is not installed in this environment, so `--timeout` was dropped as the
-task instructions allow.
-
-**First attempt** (`arch -arm64 python3 -m pytest tests/ -x -q`, unfiltered) was still
-running after ~7 minutes of CPU time with no output — the output was fully buffered by the
-trailing `| tail -15`/`| tail -20` pipe, so nothing would print until the whole run
-finished, and it did not finish within a reasonable window. This is **not** related to
-`girg.py`: `tests/test_pairwise_decoupling.py` has two `@pytest.mark.slow`-marked tests
-(lines 152, 260) which are the only slow-marked tests in the suite and are the evident
-cause. Per the coordinator's explicit instruction, I killed that run (it produced only a
-partial, non-terminated line of dots/`s` on kill and no summary line — not a usable result,
-discarded) and reran excluding slow tests.
-
-**Second attempt**, excluding slow tests:
-
-Command: `arch -arm64 python3 -m pytest tests/ -x -q -m "not slow"`
+Command: `arch -arm64 python3 -m pytest tests/ -q -m "not slow"`
 
 ```
-.............sssssssssss........................s.............           [100%]
-50 passed, 12 skipped, 2 deselected in 34.78s
+.............sssssssssss..................................s............. [100%]
+60 passed, 12 skipped, 2 deselected in 47.11s
 ```
 
-50 passed, 12 skipped (pre-existing skip conditions, unrelated to this change — not
-investigated further per "touch nothing else"), 2 deselected (the two `slow`-marked tests
-in `test_pairwise_decoupling.py`, confirmed via `grep -rn "pytest.mark.slow" tests/`).
-**The two slow-marked tests were not run in this session.** They live in
-`test_pairwise_decoupling.py`, have no relation to `girg.py`, and were excluded solely
-because the unfiltered run did not complete in a practical amount of time — stated
-explicitly here per the instruction to report anything skipped.
+60 passed, 12 skipped, 2 deselected (the `slow`-marked tests, per the `-m "not slow"`
+filter). No failures. No pre-existing failures to report this run.
 
-No failures in either run. Nothing in the passing 50 touches `girg.py` behavior beyond what
-the dedicated gate test already covers (grep confirms `test_girg_fast_equivalence.py` is the
-only test file importing from `twocascade.girg`).
+## `git diff` (full worktree, as requested)
 
-## Benchmark
-
-Script: `scripts/bench_girg.py`. Times single-graph sampling with a fixed seed via
-`time.perf_counter`; slow sampler at n=10000 is extrapolated quadratically from the n=2000
-measurement (not run directly — see script docstring) rather than executed, since the
-O(n²) scalar loop at n=10000 would take on the order of a minute per call and isn't needed
-for the projection.
-
-Command: `PYTHONPATH=/Users/garymei/Downloads/projects/tc-work/src arch -arm64 python3 scripts/bench_girg.py`
-
-(Note: the interpreter on this machine resolves a bare `twocascade` import to
-`/Users/garymei/Downloads/projects/CABP/src/twocascade` via a path entry ahead of the
-worktree, unrelated to this change — `pytest.ini`'s `pythonpath = src` setting handles this
-automatically for pytest, but the standalone benchmark script needed `PYTHONPATH` set
-explicitly to pick up the worktree's `girg.py` instead of the main repo's. Verified via
-`python3 -c "import twocascade; print(twocascade.__file__)"` before and after setting
-`PYTHONPATH`.)
-
-Raw output:
-
+```diff
+diff --git a/implementation_plan.md b/implementation_plan.md
+index 7134698..0291d62 100644
+--- a/implementation_plan.md
++++ b/implementation_plan.md
+@@ -1,47 +1,37 @@
+-# Implementation plan — C1 GIRG sampler performance port
++# Implementation plan — C3a GIRG degree-dependent fear wiring
+ 
+ ## Scope
+ 
+-One file: `src/twocascade/girg.py`. Replace the body of `sample_girg_adjacency` with an
+-exact, block-vectorized evaluation; keep the current implementation available as
+-`sample_girg_adjacency_slow` for cross-validation. Public name and signature unchanged, so
+-`runner.py:147-154` needs no edit.
++One file: `src/twocascade/runner.py`, the `run_single_trial` graph dispatch only.
+ 
+-## Parity scope — explicit, per §IV
+-
+-- **C++ parity: NOT in scope this session.** The C++ engine has no GIRG path (`runner.py`
+-  routes GIRG to Python only); there is nothing to keep in parity with. If a C++ GIRG path
+-  is ever added, THIS Python implementation becomes its §5.4 oracle.
+-- **Python reference (`reference.py`): untouched.** It contains no GIRG code; the oracle
+-  for this change is the existing O(n²) loop, retained as `sample_girg_adjacency_slow`.
++Current structure samples homogeneous fears at the top of the non-CM else-branch, before
++the graph exists. Change: within the else-branch, dispatch the graph first; then
+ 
+-## Approach (decided — not the delegate's to re-open)
++- `graph_type == "girg"`: `gamma = fear_cfg.get("gamma", 0.0)`;
++  `fears, fear_stats = sample_degree_dependent_fears(weights_girg, mu, gamma, kappa, rng_fear)`
++  (the `graphs.py` water-filling import already present at the top of runner.py — do NOT
++  import anything from `girg.py`'s stale fear sampler).
++- every other type in the else-branch: `sample_individual_fears` exactly as before.
+ 
+-Exact chunked vectorization, NOT approximate bucket pruning: the kernel
+-`p = min(1, (w_i w_j / (n d²))^α)` has a long-range tail, so every pair has p > 0 and any
+-cell-skip scheme changes the sampled distribution. Evaluate all pairs, but in numpy blocks:
+-for row-block I (size ~256–1024 rows), compute torus distances to all j > i vectorized,
+-form p, draw uniforms, emit edges. Peak memory O(block × n), never n×n (constitution §I
+-forbids a dense n×n adjacency; block-wise temporaries of shape (b, n) with b ≪ n are
+-acceptable and must be documented in the code).
++Statement reordering is safe for other families because each purpose has its own
++Generator; moving the fear draw after the graph draw does not change what either stream
++yields.
+ 
+-RNG: vectorized draws consume the stream differently from the scalar loop — statistical
+-equivalence is the standard (same as §5.4 cross-language checks), bit-identity is not.
+-Determinism given (inputs, seed) is still required.
+-
+-## Validation (gate test pre-written, delegate may not edit)
++## Parity scope — explicit, per §IV
+ 
+-`tests/test_girg_fast_equivalence.py`: determinism, symmetry/no-self-loop/no-duplicate
+-invariants, and two-sample statistical agreement (edge count, mean degree, degree histogram)
+-old-vs-new at n=400 over fixed seed sets.
++- **C++ parity: NOT in scope.** No C++ GIRG path exists (`runner.py` GIRG runs Python
++  only). Nothing to mirror.
++- **Python reference (`reference.py`): untouched.** `sample_individual_fears` continues to
++  be imported from it for the unchanged paths.
+ 
+-## Benchmark
++## Out of scope (do not do)
+ 
+-Time one graph at n=2000, n=10000 for both samplers (slow one extrapolated from n=2000 if
+-needed); report seconds/graph and projected time for an 11-point × 500-trial arm.
++- No changes to `girg.py` (its stale `sample_degree_dependent_fears` stays as-is this
++  session; removal is a separate cleanup decision).
++- No config file changes, no sweep runs, no C++ code.
+ 
+-## Deliverables
++## Validation
+ 
+-Diff in `src/twocascade/girg.py`, passing gate test, benchmark numbers, `walkthrough.md`
+-with all of the above (commands + raw output). Verify gate (blind reviewer → critic →
+-auditor) runs after, fed the walkthrough.
++Pre-written gate `tests/test_girg_fear_wiring.py`: spy asserts the girg path calls the
++water-filling sampler with the weights array and that gnp does not; realized mu-bar
++invariant; determinism; gamma=0 mean-fear sanity. Then the full non-slow suite.
+diff --git a/src/twocascade/runner.py b/src/twocascade/runner.py
+index 0938667..f6523cc 100644
+--- a/src/twocascade/runner.py
++++ b/src/twocascade/runner.py
+@@ -141,7 +141,6 @@ def run_single_trial(args) -> tuple[float, int]:
+         gamma = fear_cfg.get("gamma", 0.0)
+         fears, stats = sample_degree_dependent_fears(degrees, mu, gamma, kappa, rng_fear)
+     else:
+-        fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
+         if graph_type == "gnp":
+             adj = sample_gnp_adjacency(n, p, rng_pair)
+         elif graph_type == "girg":
+@@ -163,7 +162,14 @@ def run_single_trial(args) -> tuple[float, int]:
+                 adj = build_soft_rgg_adjacency(points, r_n, alpha_g, rng_pair)
+             else:
+                 raise ValueError(f"Unknown graph type: {graph_type}")
+-                
++
++        if graph_type == "girg":
++            gamma = fear_cfg.get("gamma", 0.0)
++            fears, fear_stats = sample_degree_dependent_fears(
++                weights_girg, mu, gamma, kappa, rng_fear)
++        else:
++            fears = sample_individual_fears(n, mean_fear=mu, concentration=kappa, rng=rng_fear)
++
+     nodes = make_nodes(fears)
+     
+     if seed_layout == "disc":
+diff --git a/task.md b/task.md
+index 3bab3ee..7bbf073 100644
+--- a/task.md
++++ b/task.md
+@@ -1,23 +1,37 @@
+-# Task C1 — GIRG sampler performance port (Python)
++# Task C3a — wire GIRG to degree-dependent fears
+ 
+-**Queue item:** okf/next-actions.md §10 item 3(a) (poster Comparison 2 critical path).
+-**Conjecture affected:** none directly — this is infrastructure. It unblocks the geometry
+-comparison (CM vs GIRG) whose eventual claims live under Q6/D-038. No threshold behavior
+-changes; the sampled distribution must be **identical** to the current implementation.
++**Queue item:** poster Comparison 2 (D-038 geometry comparison), fear-model decision of
++2026-08-02: GIRG gets degree-dependent fears, same family as the configuration model, so
++that geometry is the only difference between the CM and GIRG arms.
+ 
+-## Invariant under test
++**Conjecture affected:** none directly — wiring, not physics. Downstream claims live under
++Q6/D-038. The fear DISTRIBUTION for gamma != 0 must come from the Task Q water-filling
++sampler (`graphs.sample_degree_dependent_fears`), NOT the pre-Q implementation that still
++sits in `girg.py` — that local copy has the epsilon-cap undershoot bias Task Q was
++verified to remove (7-28% at gamma > 0 on heavy tails).
+ 
+-`sample_girg_adjacency` must keep sampling from exactly the GIRG measure defined by the
+-existing code: for each unordered pair (i,j) at torus distance d,
+-`p_ij = min(1, (w_i * w_j / (n * d^2)) ** alpha_g)`, independently across pairs.
+-The rewrite may change the RNG consumption order (statistical, not bit-level, equivalence —
+-same standard as the §5.4 C++ checks) but not the per-pair distribution.
++## Invariants under test
++
++1. GIRG trials sample fears via `graphs.sample_degree_dependent_fears(weights, mu, gamma,
++   kappa, rng_fear)` — weights as the drawn-degree analogue. The `(w/mean)^gamma` tilt is
++   scale-invariant, so the w_min scale factor cancels.
++2. Every other graph family's behavior is unchanged: gnp/rgg/soft_rgg keep
++   `sample_individual_fears`; configuration_model keeps its existing path. RNG streams are
++   per-purpose (`rng_graph`/`rng_pair`/`rng_fear`/`rng_casc`), so reordering statements
++   must not change any other family's draws.
++3. Task Q invariant holds on the GIRG path: realized mu-bar matches nominal (exact under
++   water-filling unless `infeasible`).
++4. `reference.py` untouched. No C++ changes (no GIRG path exists there).
+ 
+ ## Acceptance
+ 
+-1. New sampler is deterministic given (inputs, seed).
+-2. Two-sample statistical agreement with the old sampler at small n (edge count, degree
+-   distribution), across independent seeds.
+-3. Benchmark at n=10000 makes an 11-point × 500-trial arm feasible in hours, not days.
+-4. No dense n×n matrix materialized (constitution §I) — block-wise evaluation only.
+-5. `src/twocascade/reference.py` untouched. No C++ changes (no GIRG path exists there).
++Gate test `tests/test_girg_fear_wiring.py` (pre-written) passes; full non-slow suite
++passes; girg trials deterministic given seed; gamma=0 GIRG fears statistically match the
++old homogeneous distribution (same Beta(mu*kappa, (1-mu)*kappa) marginal).
++
++## Reproducibility note (recorded, not hidden)
++
++Old GIRG runs used homogeneous fears drawn in a different stream order; after this change
++they regenerate statistically, not bit-identically. Acceptable because no §5.6-stamped
++GIRG result exists (Task P was demoted to non-result, D-037); noted here so the break is
++documented rather than discovered.
 ```
-Timing slow sampler...
-  slow n=1000: 0.6219 s
-  slow n=2000: 2.4478 s
-Timing fast sampler...
-  fast n=1000: 0.0280 s
-  fast n=2000: 0.0826 s
-  fast n=10000: 1.3817 s
 
-============================================================
-sampler        n    sec/graph  note
-------------------------------------------------------------
-slow        1000       0.6219  measured
-slow        2000       2.4478  measured
-slow       10000      61.1946  extrapolated (quadratic from n=2000)
-fast        1000       0.0280  measured
-fast        2000       0.0826  measured
-fast       10000       1.3817  measured
-============================================================
+(The `task.md`/`implementation_plan.md` hunks above were already present, uncommitted, in
+the worktree before this session started — this session did not create or edit them, and
+per the assignment they are "not mine to edit." Only the `runner.py` hunk is this
+session's work.)
 
-Speedup at n=2000: 29.6x (slow 2.4478s / fast 0.0826s)
-Projected speedup at n=10000: 44.3x (slow extrap 61.1946s / fast measured 1.3817s)
+## Claims: measured vs asserted
 
-Projected sampling-only cost for 11 grid points x 500 trials x 3 fear arms = 16500 graphs at n=10000:
-  fast sampler:          6.333 hours (22798.5 s)
-  slow sampler (extrap): 280.5 hours (1009710.7 s)
-```
+- **Measured:** gate test tally `5 passed in 0.16s` (pasted terminal output above, exact).
+- **Measured:** full non-slow suite tally `60 passed, 12 skipped, 2 deselected in 47.11s`
+  (pasted terminal output above, exact).
+- **Measured:** `git diff` output (pasted above, exact, full worktree).
+- **Asserted (by the pre-written gate test, not independently re-derived here):** the
+  girg path is fed GIRG weights (non-integer, min near `w_min`) rather than graph degrees;
+  the realized mu-bar matches nominal under water-filling; gamma=0 fears' sample mean is
+  within tolerance of `mu`. These are the gate test's own assertions, which passed; I did
+  not separately hand-verify the statistical claims outside what the gate test checks.
+- **Not run / out of scope:** the two `slow`-marked tests (excluded by `-m "not slow"` per
+  instruction) — not evaluated this session, no claim made either way about their status.
+- **No pre-existing failures observed** in the non-slow suite this run — nothing to report
+  as "pre-existing but unrelated."
 
-Interpretation: 29.6x measured speedup at n=2000, ~44x projected at n=10000. The fast
-sampler brings the target 11-point × 500-trial × 3-fear-arm sweep at n=10000 from a
-projected ~280 hours (slow, extrapolated — infeasible) down to a projected ~6.3 hours
-(sampling cost only; does not include cascade simulation time on top of sampling).
+## Summary against task.md invariants
 
-## Summary against acceptance criteria (task.md)
+1. GIRG trials call `graphs.sample_degree_dependent_fears(weights_girg, mu, gamma, kappa,
+   rng_fear)` — verified by `test_girg_uses_water_filling_fears_with_weights` (PASS),
+   including the weights-not-degrees and mu_bar/gamma/kappa argument checks.
+2. Every other family unchanged — verified by `test_gnp_path_unchanged` (PASS, spy shows
+   zero calls to the water-filling sampler) and by the full non-slow suite passing with no
+   new failures. `configuration_model` branch was not touched (diff shows no change to
+   those lines).
+3. Task Q invariant (realized mu-bar == nominal unless infeasible) — verified by the
+   `stats["realized_mu_bar"]` assertion inside `test_girg_uses_water_filling_fears_with_weights`
+   (PASS).
+4. `reference.py` untouched, no C++ changes — confirmed by the diff (only `runner.py`
+   touched by this session; `reference.py` and `cpp/` do not appear in the diff at all).
 
-1. Deterministic given (inputs, seed) — verified by
-   `test_determinism_and_invariants` (PASS).
-2. Two-sample statistical agreement (edge count, degree distribution) at small n across
-   independent seeds — verified by `test_statistical_equivalence_with_slow_sampler` (PASS).
-3. n=10000 benchmark makes an 11-point × 500-trial arm feasible in hours, not days —
-   6.3 projected hours for sampling across all 3 fear arms (task.md says "an" arm; my table
-   reports the full 3-arm total per the task's own benchmark instruction — per-arm alone is
-   ~2.1 hours). Either reading is comfortably "hours, not days."
-4. No dense n×n matrix — largest temporary per block is `(512, n)`, documented in-code.
-5. `reference.py` untouched; no C++ changes — confirmed, `git status` shows only
-   `girg.py` modified plus the new `scripts/bench_girg.py` and this file.
+## Out-of-scope items confirmed untouched
 
-## Honesty notes / what was skipped or uncertain
-
-- The two `@pytest.mark.slow` tests in `test_pairwise_decoupling.py` were not run this
-  session (see "Full suite" above) — excluded on explicit instruction after the unfiltered
-  run failed to complete in a practical window. They are unrelated to `girg.py`.
-- The first full-suite attempt was killed mid-run and produced no usable summary; no
-  pass/fail result is claimed from it.
-- The 12 skipped tests in the filtered run were not investigated (pre-existing, not part of
-  this task's scope, "touch nothing else").
-- The n=10000 slow-sampler timing is an extrapolation, not a measurement, as explicitly
-  permitted by the task instructions.
-- This file (`walkthrough.md`) previously contained unrelated content from a different,
-  earlier task in this worktree (a Q4 P(systemic) boundary-fit writeup). It has been
-  overwritten with this task's content, as instructed ("Write ... walkthrough.md").
+- `girg.py` — not in the diff; its stale `sample_degree_dependent_fears` was left as-is.
+- No config file changes, no sweep runs, no C++ code — confirmed, diff shows only the
+  three markdown/python files listed above.
 
 ---
 
-## Addendum — post-review hardening (orchestrator, after reviewer + critic passes)
+## Addendum — post-review gate hardening (orchestrator, after reviewer + critic)
 
-The blind critic showed the original gate test never exercised the multi-block path
-(all cases n <= 512 = one block): a mutant dropping every cross-block edge passed the
-gate (its harness: scratchpad/critic/mutate.py). Two remedies applied before audit:
+The blind critic demonstrated the gate passed a mutation that wires the correct sampler to
+the WRONG rng stream (rng_casc instead of rng_fear) — the spy never saw the generator.
+Remedy: `test_girg_fear_stream_discipline` added to the gate — recomputes the expected
+fears offline from SeedSequence(seed).spawn(4) child 2 (after consuming child 0 in the
+runner's points-then-weights order) and requires bit-identity with the spy capture. This
+pins stream AND order; the critic's mutation now fails the gate.
 
-1. `tests/test_girg_fast_equivalence.py`: added `test_multiblock_level_set_identity` —
-   constant-threshold stub RNG at n=1300 (three blocks, uneven last), edge-set identity
-   fast-vs-slow at c in {1e-6, 0.3, 0.9}. This deterministically catches cross-block
-   edge loss and constant-factor probability errors (verified by the critic's mutants).
-2. `src/twocascade/girg.py`: one-line `assert alpha_g > 0` guarding the only parameter
-   region where the min/power reordering diverges (unreachable in any current config).
+Re-run after remedy: `arch -arm64 python3 -m pytest tests/test_girg_fear_wiring.py -q` →
+`6 passed`.
 
-Re-run after remedies:
-- `arch -arm64 python3 -m pytest tests/test_girg_fast_equivalence.py -q` → `4 passed in 8.65s`
-- `arch -arm64 python3 -m pytest tests/ -q -m "not slow"` → `51 passed, 12 skipped, 2 deselected in 39.80s`
+Follow-ups recorded for the queue (pre-existing, NOT this change): (a) girg + local fear
+raises UnboundLocalError on r_n in base; (b) CM and girg branches both discard the fear
+stats dict incl. the `infeasible` flag; (c) explicit engine:"cpp" override with a girg
+config would silently simulate gnp — auto-detect already guards, override does not.

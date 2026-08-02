@@ -1,37 +1,41 @@
-# Implementation plan — C3a GIRG degree-dependent fear wiring
+# Implementation plan — C3b-obs sweep progress output
 
 ## Scope
 
-One file: `src/twocascade/runner.py`, the `run_single_trial` graph dispatch only.
+One file: `src/twocascade/runner.py`, the Python-engine branch of `run_sweep` only
+(the `pool.map(run_single_trial, ...)` call around line 372).
 
-Current structure samples homogeneous fears at the top of the non-CM else-branch, before
-the graph exists. Change: within the else-branch, dispatch the graph first; then
+Replace `pool.map` with ordered `pool.imap` (same `chunksize`), collected via a loop
+that appends to `results_flat` and prints a progress line roughly every 5% of tasks
+(`max(1, len(tasks)//20)` completions) plus a final line:
 
-- `graph_type == "girg"`: `gamma = fear_cfg.get("gamma", 0.0)`;
-  `fears, fear_stats = sample_degree_dependent_fears(weights_girg, mu, gamma, kappa, rng_fear)`
-  (the `graphs.py` water-filling import already present at the top of runner.py — do NOT
-  import anything from `girg.py`'s stale fear sampler).
-- every other type in the else-branch: `sample_individual_fears` exactly as before.
+    progress: 840/2400 tasks (35%), elapsed 312s, est. remaining 580s
 
-Statement reordering is safe for other families because each purpose has its own
-Generator; moving the fear draw after the graph draw does not change what either stream
-yields.
+Elapsed from `time.monotonic()` captured before the loop; estimated remaining =
+elapsed / done * (total - done). Every print `flush=True` so background logs stream.
 
 ## Parity scope — explicit, per §IV
 
-- **C++ parity: NOT in scope.** No C++ GIRG path exists (`runner.py` GIRG runs Python
-  only). Nothing to mirror.
-- **Python reference (`reference.py`): untouched.** `sample_individual_fears` continues to
-  be imported from it for the unchanged paths.
+- C++ parity: NOT in scope — the C++ cell path keeps its `pool.map` untouched (its
+  tasks are per-cell, already coarse; changing it buys little and risks §5.4 churn).
+- `reference.py`: untouched.
 
-## Out of scope (do not do)
+## Why imap and not imap_unordered
 
-- No changes to `girg.py` (its stale `sample_degree_dependent_fears` stays as-is this
-  session; removal is a separate cleanup decision).
-- No config file changes, no sweep runs, no C++ code.
+The python path aggregates `results_flat` by index into per-cell lists downstream;
+`imap_unordered` would permute trial results across cells — silent data corruption.
+`imap` preserves `map` ordering exactly; with the same chunksize the work
+distribution is equivalent and per-task results are independent of scheduling.
+
+## Out of scope
+
+No changes to seeds, task construction, output schema, C++ path, configs, or any
+other file.
 
 ## Validation
 
-Pre-written gate `tests/test_girg_fear_wiring.py`: spy asserts the girg path calls the
-water-filling sampler with the weights array and that gnp does not; realized mu-bar
-invariant; determinism; gamma=0 mean-fear sanity. Then the full non-slow suite.
+Pre-written gate `tests/test_sweep_progress.py`: runs a tiny gnp sweep (n=200,
+forced python engine) through `run_sweep` twice into temp paths — asserts identical
+raw results (determinism), progress lines present with increasing counts and a
+final-total line, and `imap_unordered` absent from the source. Then the full
+non-slow suite.

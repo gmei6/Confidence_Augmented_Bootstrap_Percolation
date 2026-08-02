@@ -6,6 +6,7 @@ import json
 import datetime
 import os
 import subprocess
+import time
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import numpy as np
@@ -369,9 +370,25 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         n_workers = num_processes if num_processes else os.cpu_count() or 4
         chunksize = max(1, len(tasks) // (n_workers * 4))
         
+        total_tasks = len(tasks)
+        progress_interval = max(1, total_tasks // 20)
+        results_flat = []
+        start_time = time.monotonic()
         with Pool(processes=num_processes) as pool:
-            results_flat = pool.map(run_single_trial, tasks, chunksize=chunksize)
-            
+            for done, result in enumerate(
+                pool.imap(run_single_trial, tasks, chunksize=chunksize), start=1
+            ):
+                results_flat.append(result)
+                if done % progress_interval == 0 or done == total_tasks:
+                    elapsed = time.monotonic() - start_time
+                    pct = int(done / total_tasks * 100)
+                    remaining = elapsed / done * (total_tasks - done)
+                    print(
+                        f"progress: {done}/{total_tasks} tasks ({pct}%), "
+                        f"elapsed {elapsed:.0f}s, est. remaining {remaining:.0f}s",
+                        flush=True,
+                    )
+
         result_idx = 0
         for i, j, mu, mult, a in cell_info:
             failed_fractions = []

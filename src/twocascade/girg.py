@@ -9,7 +9,7 @@ def sample_powerlaw_weights(n: int, tau: float, w_min: float, rng: np.random.Gen
     u = rng.uniform(0, 1, n)
     return w_min * (u ** (-1.0 / (tau - 1.0)))
 
-def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
+def sample_girg_adjacency_slow(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
     n = len(points)
     adj = [[] for _ in range(n)]
     for i in range(n):
@@ -25,6 +25,67 @@ def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: floa
             if rng.random() < p:
                 adj[i].append(j)
                 adj[j].append(i)
+    return adj
+
+def sample_girg_adjacency(points: np.ndarray, weights: np.ndarray, alpha_g: float, rng: np.random.Generator) -> List[List[int]]:
+    """Block-vectorized, exact GIRG adjacency sampler.
+
+    Samples from exactly the same per-pair measure as sample_girg_adjacency_slow:
+    p_ij = min(1, (w_i * w_j / (n * d^2)) ** alpha_g) with torus distance d,
+    independently across pairs (i, j). RNG consumption order differs from the
+    scalar loop (one block draw per row-block instead of one draw per pair), so
+    equivalence is statistical, not bit-identical — same standard as the C++
+    cross-validation checks (constitution §5.4).
+
+    Constitution §I (no dense n x n adjacency): this function never
+    materializes an (n, n) array. Per-block temporaries are shape
+    (block_rows, n - start) at most, with block_rows << n, so peak memory is
+    O(block * n), not O(n^2).
+    """
+    n = len(points)
+    # min(1, x)**a == min(1, x**a) only for a > 0; the model requires it anyway.
+    assert alpha_g > 0, "sample_girg_adjacency requires alpha_g > 0"
+    adj = [[] for _ in range(n)]
+    if n < 2:
+        return adj
+
+    x = points[:, 0]
+    y = points[:, 1]
+    block_size = 512
+
+    for start in range(0, n, block_size):
+        end = min(start + block_size, n)
+        rows = np.arange(start, end)          # row indices in this block
+        cols = np.arange(start, n)            # only j >= start can satisfy j > i for i in [start, end)
+
+        # Block temporary of shape (block_rows, len(cols)) <= (block_size, n) —
+        # never the full n x n matrix. Satisfies the no-dense-adjacency rule.
+        dx = np.abs(x[rows, None] - x[None, cols])
+        dx = np.minimum(dx, 1.0 - dx)
+        dy = np.abs(y[rows, None] - y[None, cols])
+        dy = np.minimum(dy, 1.0 - dy)
+        d2 = dx * dx + dy * dy
+
+        zero_dist = (d2 == 0.0)
+        d2_safe = np.where(zero_dist, 1.0, d2)  # avoid div-by-zero; overwritten below
+
+        wi = weights[rows, None]
+        wj = weights[None, cols]
+        p = np.minimum(1.0, (wi * wj) / (n * d2_safe)) ** alpha_g
+
+        # Only j > i pairs are valid; zero-distance pairs are skipped, matching
+        # the slow loop's `if dist_sq == 0: continue`.
+        j_gt_i = cols[None, :] > rows[:, None]
+        p = np.where(j_gt_i & ~zero_dist, p, 0.0)
+
+        u = rng.random(p.shape)  # one rng call per block
+        local_rows, local_cols = np.nonzero(u < p)
+        for lr, lc in zip(local_rows, local_cols):
+            i = start + int(lr)
+            j = start + int(lc)
+            adj[i].append(j)
+            adj[j].append(i)
+
     return adj
 
 def sample_degree_dependent_fears(weights: np.ndarray, mu_bar: float, gamma: float, kappa: float, rng: np.random.Generator) -> List[float]:

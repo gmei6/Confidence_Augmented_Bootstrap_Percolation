@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "script": "scripts/calibrate_girg_degree.py",
+    "git_commit": "6c5491a1ece223674b624b523503c665d430b9b2",
+    "timestamp": "2026-08-02T14:10:07.726228",
+    "base_seed": 20260802,
+    "replicates": 20,
+    "tol": 0.02
+  },
+  "girg": {
+    "n": 10000,
+    "tau": 2.5,
+    "alpha_g": 1.2,
+    "w_min": 0.18637695312499997,
+    "achieved_mean_degree": 4.52242,
+    "achieved_se": 0.0771575174902819,
+    "iterations": 11,
+    "converged": true,
+    "w_lo": 0.1,
+    "w_hi": 3.0,
+    "mean_at_w_lo": 1.37532,
+    "mean_at_w_hi": 645.2013099999999,
+    "trace": [
+      {
+        "iteration": 0,
+        "w_min": 0.1,
+        "achieved_mean_degree": 1.37532,
+        "achieved_se": 0.026443526319508272,
+        "note": "bracket_lo"
+      },
+      {
+        "iteration": 0,
+        "w_min": 3.0,
+        "achieved_mean_degree": 645.2013099999999,
+        "achieved_se": 3.1780383752601717,
+        "note": "bracket_hi"
+      },
+      {
+        "iteration": 1,
+        "w_min": 1.55,
+        "achieved_mean_degree": 215.30103000000003,
+        "achieved_se": 1.681247354748066
+      },
+      {
+        "iteration": 2,
+        "w_min": 0.8250000000000001,
+        "achieved_mean_degree": 71.05483999999998,
+        "achieved_se": 0.7657824564800574
+      },
+      {
+        "iteration": 3,
+        "w_min": 0.4625,
+        "achieved_mean_degree": 24.791290000000004,
+        "achieved_se": 0.33173784338175666
+      },
+      {
+        "iteration": 4,
+        "w_min": 0.28125,
+        "achieved_mean_degree": 9.816469999999999,
+        "achieved_se": 0.15100595057985736
+      },
+      {
+        "iteration": 5,
+        "w_min": 0.190625,
+        "achieved_mean_degree": 4.72013,
+        "achieved_se": 0.08002008994456854
+      },
+      {
+        "iteration": 6,
+        "w_min": 0.1453125,
+        "achieved_mean_degree": 2.8164400000000005,
+        "achieved_se": 0.0507577354229201
+      },
+      {
+        "iteration": 7,
+        "w_min": 0.16796875,
+        "achieved_mean_degree": 3.7106299999999997,
+        "achieved_se": 0.06549013630029776
+      },
+      {
+        "iteration": 8,
+        "w_min": 0.179296875,
+        "achieved_mean_degree": 4.20247,
+        "achieved_se": 0.07234720126984145
+      },
+      {
+        "iteration": 9,
+        "w_min": 0.18496093749999998,
+        "achieved_mean_degree": 4.4571,
+        "achieved_se": 0.07613944893555853
+      },
+      {
+        "iteration": 10,
+        "w_min": 0.18779296874999998,
+        "achieved_mean_degree": 4.58742,
+        "achieved_se": 0.07829746100608882
+      },
+      {
+        "iteration": 11,
+        "w_min": 0.18637695312499997,
+        "achieved_mean_degree": 4.52242,
+        "achieved_se": 0.0771575174902819
+      }
+    ]
+  },
+  "target": {
+    "source": "results/processed/matched_degree_calibration.json",
+    "cm_realised_mean_degree": 4.53317,
+    "cm_realised_se": 0.025646032934221172
+  }
+}

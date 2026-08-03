@@ -257,6 +257,34 @@ void test_bkl_pair_work_grows_slower_than_quadratically() {
     std::cout << "test_bkl_pair_work_grows_slower_than_quadratically passed!" << std::endl;
 }
 
+void test_all_points_coincident_produces_no_edges() {
+    std::cout << "Running test_all_points_coincident_produces_no_edges..." << std::endl;
+    // Every pairwise distance is exactly 0 (d^2 == 0 is a skip, not a
+    // saturating edge -- RISKS.md #2), so BOTH variants must produce an empty
+    // graph even with weights large enough to saturate p to 1 everywhere a
+    // distance were nonzero. This is the degenerate case where BKL's cell
+    // grid collapses every point into the SAME cell at every level (there is
+    // never a non-touching cell pair to route through the geometric-skip
+    // path), so it also exercises "the deepest-level same-cell loop correctly
+    // finds zero edges" rather than crashing or hanging.
+    int n = 50;
+    std::vector<Point2D> pts(n, Point2D{0.37, 0.61});
+    std::vector<double> w(n, 1e9);
+
+    ConstantUniformSource src_direct(0.0); // accept everything not skipped
+    auto adj_direct = sample_girg_adjacency_direct(pts, w, 1.2, src_direct);
+    for (auto& nbrs : adj_direct) {
+        TEST_ASSERT(nbrs.empty());
+    }
+
+    ConstantUniformSource src_bkl(0.0);
+    auto adj_bkl = sample_girg_adjacency_bkl(pts, w, 1.2, src_bkl);
+    for (auto& nbrs : adj_bkl) {
+        TEST_ASSERT(nbrs.empty());
+    }
+    std::cout << "test_all_points_coincident_produces_no_edges passed!" << std::endl;
+}
+
 void test_girg_pair_probability_bounds() {
     std::cout << "Running test_girg_pair_probability_bounds..." << std::endl;
     Point2D a{0.1, 0.1};
@@ -286,6 +314,7 @@ int main() {
     test_bkl_degenerate_weights_fall_back_to_direct();
     test_bkl_vs_direct_level_set_identity_high_threshold();
     test_bkl_pair_work_grows_slower_than_quadratically();
+    test_all_points_coincident_produces_no_edges();
     std::cout << "All GIRG tests passed!" << std::endl;
     return 0;
 }

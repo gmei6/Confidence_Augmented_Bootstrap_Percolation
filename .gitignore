@@ -57,3 +57,9 @@ overnight_*.log
 
 # Personal reference material — not project documentation
 EXPLAINER.md
+
+# managed by the overnight skill
+overnight-runs/
+!overnight-runs/*/index.md
+!overnight-runs/*/handoff.md
+!overnight-runs/*/ledger.jsonl

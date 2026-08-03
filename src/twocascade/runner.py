@@ -210,6 +210,49 @@ def run_single_trial(args) -> tuple[float, int]:
     
     return res.final_failed_fraction, res.rounds_completed
 
+def _validate_cpp_engine_support(graph_cfg: Dict[str, Any], fear_cfg: Dict[str, Any]) -> None:
+    """Raise if an explicit engine="cpp" request pairs with a graph/fear combination
+    the C++ binary cannot actually run.
+
+    Before this check existed, `run_sweep`'s explicit-engine path (below) trusted
+    the caller: it dispatched to `run_single_cell_cpp` for ANY graph_cfg, but that
+    worker only ever builds `--n`/`--p` G(n,p) via the C++ binary's `sample_gnp_adjacency`
+    path. A config with graph.type="girg" (or "configuration_model", or fear.type=
+    "local") and an explicit engine="cpp" would silently sample G(n,p) with a
+    Janson-formula p that means nothing for the requested model, and report the
+    result as if it were that model — a silent wrong-model bug, not a crash
+    (cpp-girg-plan implementation_plan.md "Current state"). The auto-detect path
+    (the `else` branch below) already falls back to python for anything other than
+    gnp+global; this closes the same gap for the explicit-request path, which had
+    no such guard.
+    """
+    graph_type = graph_cfg.get("type", "gnp")
+    fear_type = fear_cfg.get("type", "global")
+    gamma = fear_cfg.get("gamma", 0.0)
+
+    if fear_type != "global":
+        raise ValueError(
+            f"C++ engine does not support fear.type={fear_type!r}; only 'global' fear "
+            "has a C++ implementation. Use engine='python' for local fear."
+        )
+    if graph_type == "gnp":
+        return
+    if graph_type == "girg":
+        if gamma != 0.0:
+            raise ValueError(
+                "C++ engine's GIRG path only supports fear.gamma == 0.0 (at gamma=0, "
+                "degree-dependent fear reduces exactly to the existing global-kappa "
+                f"model already ported to C++); got gamma={gamma}. Use engine='python' "
+                "for gamma != 0."
+            )
+        return
+    raise ValueError(
+        f"C++ engine does not support graph.type={graph_type!r}. "
+        "Supported graph types: 'gnp', 'girg' (fear.gamma == 0.0 only). "
+        "Use engine='python' for anything else (e.g. 'configuration_model', 'rgg', 'soft_rgg')."
+    )
+
+
 def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Optional[str] = None) -> None:
     """Run a grid sweep based on a config file and save raw outcomes to JSON."""
     if not os.path.exists(config_path):
@@ -240,6 +283,7 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         if engine_requested == "cpp":
             if not CPP_BIN.exists():
                 raise FileNotFoundError(f"C++ engine binary not found at {CPP_BIN}. Please build the C++ engine first.")
+            _validate_cpp_engine_support(graph_cfg, fear_cfg)
             resolved_engine = "cpp"
         elif engine_requested == "python":
             resolved_engine = "python"

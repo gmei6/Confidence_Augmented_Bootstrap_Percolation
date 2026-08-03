@@ -184,39 +184,67 @@ void test_bkl_degenerate_weights_fall_back_to_direct() {
     std::cout << "test_bkl_degenerate_weights_fall_back_to_direct passed!" << std::endl;
 }
 
+static long symmetric_difference_count(const std::vector<std::vector<int>>& a,
+                                        const std::vector<std::vector<int>>& b) {
+    std::set<std::pair<int, int>> ea, eb;
+    for (size_t i = 0; i < a.size(); ++i) {
+        for (int j : a[i]) {
+            if (j > static_cast<int>(i)) ea.insert({static_cast<int>(i), j});
+        }
+    }
+    for (size_t i = 0; i < b.size(); ++i) {
+        for (int j : b[i]) {
+            if (j > static_cast<int>(i)) eb.insert({static_cast<int>(i), j});
+        }
+    }
+    long diff = 0;
+    for (auto& e : ea) if (!eb.count(e)) ++diff;
+    for (auto& e : eb) if (!ea.count(e)) ++diff;
+    return diff;
+}
+
 void test_bkl_vs_direct_level_set_identity_high_threshold() {
     std::cout << "Running test_bkl_vs_direct_level_set_identity_high_threshold..." << std::endl;
-    // CORRECTED SCOPE, recorded here because it contradicts what RISKS.md #1
-    // originally assumed and the record needs to survive past this session
-    // (okf/lessons.md convention: don't silently narrow a documented
-    // invariant). RISKS.md claimed a constant-c stub would make direct and
-    // bkl agree "at literally every threshold c" the way it does for C1's
-    // fast-vs-slow port. That is true ONLY while every visited cell-pair
-    // group has p_bar >= 1 (the exact-enumeration branch, tested separately
-    // by test_bkl_complete_graph_coverage above). Once p_bar < 1, bkl's
-    // geometric-skip walk consumes u.next() to pick a SKIP DISTANCE, not to
-    // threshold an individual pair's probability -- under a real RNG this is
-    // calibrated to reproduce the right per-pair marginals statistically
-    // (verified separately: direct/bkl edge counts agree within ~1-2% under
-    // real RNG at n=400/2000, scratch-verified during G2 implementation),
-    // but under a CONSTANT source it visits a deterministic strided subset of
-    // {0..na*nb-1} that has no reason to coincide with "pairs whose own
-    // exact_p exceeds c". This is a property of the BKL algorithm itself, not
-    // a bug in this port: reproduced empirically against `b140e01`'s own
-    // Python BKL vs its O(n^2) reference under an identical ConstantRng
-    // (same n=331 fixture, same c grid) -- b140e01 shows the SAME pattern
-    // (mismatch at c=1e-6 and c=0.3, exact match at c=0.9), which is why this
-    // test only asserts the region where the invariant genuinely holds.
+    // TWICE-CORRECTED SCOPE -- recorded here because the first correction
+    // (this test originally asserted exact identity at c in {1e-6,0.3,0.9})
+    // was itself only PARTIALLY right, and the record needs to survive past
+    // this session (okf/lessons.md: don't silently narrow, or re-widen, a
+    // documented invariant without saying so).
     //
-    // Empirically (this fixture): direct/bkl edge sets match exactly for
-    // c >= ~0.9 and diverge below that, with the divergence growing as c
-    // shrinks (mismatch is a handful of edges at c=0.7-0.8, and total
-    // (54615 vs 2115 edges) at c=1e-6) -- consistent with "fewer and fewer
-    // pairs resolve via the exact branch as c drops". The non-saturating
-    // regime's correctness is instead covered by the (required, separate)
-    // statistical battery in tests/test_cpp_girg_validation.py (G5): edge
-    // count, degree histogram, distance-binned edges, all compared against
-    // the Python oracle under real RNG.
+    // First correction (G2): RISKS.md #1 assumed a constant-c stub makes
+    // direct and bkl agree "at literally every threshold c", the way it does
+    // for C1's fast-vs-slow port. That is only true while every visited
+    // cell-pair group has p_bar >= 1 (the exact-enumeration branch, tested
+    // separately and reliably by test_bkl_complete_graph_coverage above).
+    //
+    // Second correction (G5, this fixture): "high c" is not by itself
+    // sufficient either, and the reason is exact, not approximate. Once
+    // p_bar < 1 for a group, bkl's geometric-skip branch accepts a candidate
+    // pair iff u.next() < exact_p(i,j) / p_bar. Since p_bar < 1 by
+    // construction of that branch, exact_p/p_bar > exact_p for any
+    // exact_p > 0 -- so the skip branch's accept condition is PROVABLY WEAKER
+    // than the direct kernel's u.next() < exact_p(i,j) at the SAME constant
+    // u, for any c whatsoever, including c close to 1. A pair with a tiny
+    // absolute exact_p can still cross a high c if its ratio to its own
+    // group's (necessarily larger) upper bound is high enough. This was
+    // missed in G2 because that session's one embedded fixture happened not
+    // to contain such a pair at c in {0.9,0.95,0.99} -- fixture luck, not a
+    // guarantee (confirmed by deriving a concrete counterexample against the
+    // Python oracle during G5: n=200, c=0.9, a pair with exact_p ~ 0.054 and
+    // group p_bar ~ 0.060, giving ratio ~0.90+ and one spurious bkl edge).
+    //
+    // So: exact identity holds ONLY in the p_bar>=1-forced regime (covered
+    // separately, deterministically, by test_bkl_complete_graph_coverage).
+    // Elsewhere, this test checks a BOUNDED small symmetric difference at
+    // high c, not zero -- a real partition bug (a doubled or dropped cell
+    // pair) still shows up as a LARGE, systematic difference (thousands of
+    // edges, as seen at c=1e-6 during G2's investigation), so a tight bound
+    // here still catches that failure mode while not asserting a false
+    // exact-equality guarantee. The non-saturating regime's overall
+    // correctness is covered by the (separate, required) statistical battery
+    // in tests/test_cpp_girg_validation.py (G5): edge count, degree
+    // histogram, distance-binned edges, all against the Python oracle under
+    // real RNG.
     //
     // n=331 deliberately spans multiple non-power-of-two-friendly cell grids
     // across the level range (L is >=2 for n this size), exercising the
@@ -225,15 +253,14 @@ void test_bkl_vs_direct_level_set_identity_high_threshold() {
     std::vector<Point2D> pts = make_points(331, rng);
     std::vector<double> w = sample_powerlaw_weights(331, 2.5, 0.245, rng);
 
+    const long kMaxSymmetricDiff = 3; // small and fixed, not tuned per-c to pass
     for (double c : {0.9, 0.95, 0.99}) {
         ConstantUniformSource src_direct(c);
         ConstantUniformSource src_bkl(c);
         auto adj_direct = sample_girg_adjacency_direct(pts, w, 1.2, src_direct);
         auto adj_bkl = sample_girg_adjacency_bkl(pts, w, 1.2, src_bkl);
-        TEST_ASSERT(adj_direct.size() == adj_bkl.size());
-        for (size_t i = 0; i < adj_direct.size(); ++i) {
-            TEST_ASSERT(adj_direct[i] == adj_bkl[i]);
-        }
+        long diff = symmetric_difference_count(adj_direct, adj_bkl);
+        TEST_ASSERT(diff <= kMaxSymmetricDiff);
     }
     std::cout << "test_bkl_vs_direct_level_set_identity_high_threshold passed!" << std::endl;
 }

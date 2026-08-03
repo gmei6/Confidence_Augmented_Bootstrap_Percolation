@@ -46,3 +46,4 @@ mutability: append-only
 - [d-036-st-closed-by-supersession](d-036-st-closed-by-supersession.md)
 - [d-037-demote-task-p-super-hub](d-037-demote-task-p-super-hub.md)
 - [D-038 — Advisor directive: poster with two matched-degree comparisons; ER/Janson baseline; publication route resolved](d-038-advisor-poster-two-comparisons.md)
+- [D-039 — Poster evidentiary choices: engine asymmetry closed by §5.4 disclosure, not re-run; 9-curve single-axis hero figure](d-039-poster-evidentiary-choices.md)

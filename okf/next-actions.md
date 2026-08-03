@@ -8,89 +8,103 @@ mutability: live
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
 **Poster queue (D-038, advisor meeting 2026-07-22 — items 1–7 are the deliverable).**
-Review surface for this queue: `.lavish/poster-remaining-work.html` (2026-07-29).
+Review surface for this queue: `.lavish/poster-remaining-work.html` (2026-07-29, may itself
+now be stale — items 1–3 below closed after that surface was last written).
 
 1. ✅ **DONE — ER family in the runner + matched-degree baseline** (`68adadb`, `301d560`,
    `ba2bf6f`). ⟨k⟩=4.533 matched across ER and CM via
-   `results/processed/matched_degree_calibration.json`. **Superseded:** this item's former
-   "Erdős–Rényi currently has zero runs" text was stale by two sessions.
-2. **Comparison 1 — heterogeneity (ER vs configuration model): TWO COMMANDS FROM DONE.**
-   Pilot #5's sweeps ran but were never analysed (see `okf/status.md`). Run, in order:
-   `arch -arm64 python3 scripts/analyze_poster_comparison.py`
-   `arch -arm64 python3 scripts/plot_scaling_law_departure.py`
-   This turns the D-012 departure from **one** data point into a five-point curve over
-   $\bar\mu\in\{0,0.1,0.2,0.3,0.4\}$, all clear of the $r=2$ structural floor — the single
-   highest-value item left on the poster. ⚠️ **Verify, don't assume:** the CM seed grid was
-   reused unchanged from $\bar\mu=0.4$; check each new row's interior-point count before
-   comparing (<3 interior points is not a resolved crossing). Config-only, no `src/` change,
-   autonomous-safe.
-2b. **Commit the poster working tree.** 17 untracked + 3 modified files, including every
-   pilot-#5 config and raw. Not §5.6-reproducible until committed. Decide the raw layout
-   while doing it: poster raws sit at `results/` top level rather than `results/raw/`, with
-   `_part1`/`_part2`/`_chunk0` intermediates beside the merged files.
-2c. **Name or measure away the cpp/python engine asymmetry** in Comparison 1 — every ER curve
-   ran on the C++ engine, every CM curve on Python (see `okf/status.md`). Cite §5.4 on the
-   poster, or run one CM cell on both engines and show agreement.
-3. **Comparison 2 — geometry (configuration model vs GIRG): BLOCKED, and not on anything
-   small.** GIRG is *already* dispatched by `runner.py:147`, so this item previously read as
-   further along than it is; the obstacle is that `sample_girg_adjacency` is a pure-Python
-   O(n²) double loop (~2.7×10¹¹ pair evaluations for an 11×500 sweep at n=10000 — see
-   `okf/status.md`). Three steps, in order:
-   (a) **port `sample_girg_adjacency` to a spatial bucket index** — a `src/` change, so
-   worktree + full `/verify`; per §IV the `implementation_plan.md` must state parity scope
-   **explicitly** (GIRG has no C++ path, so the answer is likely "no C++ parity in scope this
-   session" — but write it down rather than leaving it implicit);
-   (b) **calibrate GIRG to ⟨k⟩=4.533 at τ=2.5** so geometry is the only difference between the
-   families — the existing calibration covers ER↔CM only;
-   (c) sweeps + figure; optionally ER vs GIRG at matched ⟨k⟩ as well.
-   Budget this as the largest single item on the poster. Side benefit: unblocks promoting the
-   two preliminary GIRG cards (the `run_sweep` seed floor `a ≥ r` still blocks the single-bank
-   card separately).
-4. **Frame Q9 — the ISyE recommendation component.** Independent of all compute, so it can
-   proceed **in parallel** with item 3 rather than behind it. Three candidate hooks, each an
-   existing AUDIT-PASS result restated as an intervention: the **ignition gate** (τ=3.5 →
-   0/3000 trials, i.e. structural immunity to bounded shocks), **tilt monotonicity** (calming
-   the hubs beats calming the leaves), and the **local-vs-global fear dichotomy** (localizing
-   panic removes its systemic effect entirely). Build the panel from these rather than from
-   new runs — new runs would put the policy claim on weaker evidence than the physics claim.
-5. **Poster draft.** `okf/poster/poster.tex` already exists (15KB, 2026-07-27) with the Better
-   Poster template alongside it. Narrative: Janson/ER framework → "here is what I build on it"
-   → the two comparisons kept separate (heterogeneity, geometry) → fear driven by localized
-   events → the Q9 recommendation component. Blocked on items 2, 3, and 4 for figures and the
-   closing panel.
+   `results/processed/matched_degree_calibration.json`.
+2. ✅ **DONE — Comparison 1 (heterogeneity: ER vs configuration model), closed 2026-07-29
+   (`d9edf19`).** The two queued commands (`analyze_poster_comparison.py`,
+   `plot_scaling_law_departure.py`) ran; the D-012 departure claim is now a five-point
+   monotone trend over $\bar\mu\in\{0.1,0.2,0.3,0.4\}$ (ratios 1.128/1.248/1.514/1.839), all
+   clear of the $r=2$ structural floor, plus the excluded $\bar\mu=0.7$ point. Figure:
+   `results/figures/scaling_law_departure.png` (generated, not just claimed — verified by
+   mtime against its `source_raws` in this catch-up). ⚠️ Still **not** blind-`/verify`-gated
+   — Antigravity-driven pilots, self-checked via byte-identity reproduction only.
+2b. ✅ **DONE — poster working tree committed.** `git status --short` now shows only
+   `.gitignore`/`pytest.ini` (unrelated, orthogonal `overnight`-skill fix). Raw layout landed
+   as poster-prefixed files at `results/` top level (`results/poster_*_raw.json`), not
+   `results/raw/`; `_part`/`_part2`/`_chunk0` intermediates stayed gitignored, as intended.
+2c. ✅ **DONE — engine asymmetry named, not eliminated (`2024c23`).** `okf/poster/poster.tex`
+   now carries the §5.4 disclosure: ER ran on the C++ engine, configuration model **and**
+   GIRG on the Python reference. No cell was re-run on both engines; the poster cites §5.4
+   instead, which is the alternative the item itself offered.
+3. ✅ **DONE — Comparison 2 (geometry: configuration model vs GIRG), closed 2026-08-02
+   (arc C1–C3b: `6c5491a`, `c1dcd84`, `8956d75`, `0179110`, `2024c23`).** All three planned
+   steps landed:
+   (a) **GIRG sampler ported to block-vectorized numpy** (`6c5491a`, ~44× at n=10000,
+   worktree `c1-girg-fast-sampler`, blind reviewer→critic→auditor AUDIT PASS);
+   (b) **GIRG calibrated to ⟨k⟩=4.533 at τ=2.5** ($w_{\min}=0.186377$, `c1dcd84`; own test
+   suite 4/4, not blind-gated — a config/script change, not `src/`);
+   (c) **sweeps + figure delivered** (`8956d75` fear wiring AUDIT PASS, `0179110` progress
+   instrumentation AUDIT PASS, `2024c23` production sweep + analysis + 9-curve poster
+   figure — **this last step is UNGATED**, see `okf/status.md` and `EVIDENCE.md`). ER vs
+   GIRG at matched ⟨k⟩ is included for free: all three families share ⟨k⟩=4.53.
+   **Result: geometry barely moves ignition** (GIRG ~11.7% above CM at $\bar\mu=0$, vs a
+   ~30× gap to ER from heterogeneity alone) — see `okf/open-questions.md` Q6.
+   ⚠️ **Housekeeping left open:** the isolation worktree for C3b-obs is still checked out at
+   `/Users/garymei/Downloads/projects/tc-work` (branch `c3b-sweep-progress`) — clean, but
+   never removed. Run `git worktree remove` (or archive it) once nothing depends on it.
+3b. **Gate C3b before print — run `/verify` on `2024c23`'s analysis step (added 2026-08-03,
+   Gary-approved).** The headline "geometry barely moves ignition" number, the 9-curve hero
+   figure, and the poster prose were self-checked only (delegated agent vs pre-delegation
+   snapshots; see `okf/changes/s-062-*.md` and its EVIDENCE trail). Run blind
+   reviewer→critic→auditor on the analysis/figure/poster-text step — or record an equivalent
+   independent re-derivation — before the physical poster is printed. Until it clears, cite
+   Comparison 2 as strong preliminary and keep Q9's load-bearing claims on the three
+   AUDIT-PASS hooks (see item 4 and D-039).
+4. **Frame Q9 — the ISyE recommendation component.** Still open; independent of compute, so
+   it can proceed **immediately** now that items 2 and 3 are both done rather than only one.
+   Three candidate hooks, each an existing AUDIT-PASS result restated as an intervention: the
+   **ignition gate** (τ=3.5 → 0/3000 trials, i.e. structural immunity to bounded shocks),
+   **tilt monotonicity** (calming the hubs beats calming the leaves), and the **local-vs-global
+   fear dichotomy** (localizing panic removes its systemic effect entirely). A fourth,
+   lower-confidence candidate is now available from Comparison 2 (`2024c23`, UNGATED): *hubs,
+   not distance, set the threshold* — degree heterogeneity moves ignition ~30×, geometry only
+   ~12%, which argues policy attention belongs on high-degree nodes regardless of their
+   physical/network position. Build the panel from AUDIT-PASS results first; treat the fourth
+   hook as supporting color, not the load-bearing claim, until C3b clears a gate.
+5. **Poster draft.** `okf/poster/poster.tex` (11KB as of `2024c23`, 2026-08-02) now has the
+   Better Poster template, the 9-curve hero figure, the §5.4 engine disclosure, and both
+   comparisons narrated. Blocked only on item 4 (Q9 panel) for the closing section — items 2
+   and 3 that used to block the figures are done.
 6. **SNAP teaser.** Download one SNAP dataset, apply the framework, check qualitative match
-   against the inhomogeneous with/without-geometry expectations. Small-scope: "already
-   thinking about real-world data," not a full empirical study yet. Independent of everything
-   above; also the empirical leg of the post-poster frontier push.
+   against the inhomogeneous with/without-geometry expectations. No evidence of work started
+   on this in the 2026-07-27–08-02 sprint. Independent of everything above; also the empirical
+   leg of the post-poster frontier push.
 7. **Optional — hard RGG dimension sweep.** Keep increasing dimension D and see whether the
-   results change. Advisor's nice-to-add, not core.
+   results change. Advisor's nice-to-add, not core. No evidence of work started.
 
 **Carried over (deprioritized under the poster):**
 
-C1. **Restructure `.lavish/advisor-explainer.html` (Gary's plan, 2026-07-21).** The
-   card-by-card walkthrough is complete; corrections are applied but stacked as annotation
-   blocks, hard to read. Source of truth: `okf/cache/advisor-explainer-walkthrough-2026-07-21.md`
-   (temporary — delete after). Design cue: four inverted quantities (τ, ν, two decay slopes),
-   lead each card with a plain-language verdict line (see `okf/lessons.md` §5, S-059). The
-   site's known cosmetic issue (hero `<h1>` ~5px clip; fix `line-height: 1.12 → 1.24`) can be
-   folded in if the site is ever rebuilt — it served its meeting purpose 2026-07-22.
-C2. **Task Z — widen the γ grid on the tilt experiment.** C-Q4(i) has only **three** γ points
-   (−1, 0, +1) and they show a clearly **saturating** shape: at μ̄=0.4 the empirical critical
-   seed runs 8.00 → 5.83 → 5.41, so γ=−1→0 buys 2.17 seeds while γ=0→+1 buys only 0.42.
-   Three points cannot tell a saturating curve from a kink, a plateau, or an eventual reversal —
-   **the same "too few grid points" trap that produced the retracted Θ(1) claim** (Task S/W).
-   Proposed: γ ∈ {−2, −1.5, −1, −0.5, 0, +0.5, +1, +1.5, +2} at τ=2.5, n=10000, paired on
-   `base_seed=42`, across the existing μ̄ rows. Config-only, no `src/` change, autonomous-safe.
+C1. **Restructure `.lavish/advisor-explainer.html` (Gary's plan, 2026-07-21).** Unchanged since
+   S-059 — no evidence this was touched during the poster sprint. The card-by-card walkthrough
+   is complete; corrections are applied but stacked as annotation blocks, hard to read. Source
+   of truth: `okf/cache/advisor-explainer-walkthrough-2026-07-21.md` (temporary — delete after).
+   Design cue: four inverted quantities (τ, ν, two decay slopes), lead each card with a
+   plain-language verdict line (see `okf/lessons.md` §5, S-059). The site's known cosmetic issue
+   (hero `<h1>` ~5px clip; fix `line-height: 1.12 → 1.24`) can be folded in if the site is ever
+   rebuilt — it served its meeting purpose 2026-07-22.
+C2. **Task Z — widen the γ grid on the tilt experiment.** Unchanged since S-059. C-Q4(i) has
+   only **three** γ points (−1, 0, +1) and they show a clearly **saturating** shape: at μ̄=0.4
+   the empirical critical seed runs 8.00 → 5.83 → 5.41, so γ=−1→0 buys 2.17 seeds while γ=0→+1
+   buys only 0.42. Three points cannot tell a saturating curve from a kink, a plateau, or an
+   eventual reversal — **the same "too few grid points" trap that produced the retracted Θ(1)
+   claim** (Task S/W; also the trap Comparison 1's pilot #5 explicitly avoided by going to five
+   points). Proposed: γ ∈ {−2, −1.5, −1, −0.5, 0, +0.5, +1, +1.5, +2} at τ=2.5, n=10000, paired
+   on `base_seed=42`, across the existing μ̄ rows. Config-only, no `src/` change, autonomous-safe.
    ⚠️ **Two things this task must check, not assume:** (a) at large **positive** γ the ε-cap
    becomes binding again — the very bug Task Q fixed; the water-filling path handles it, but every
    cell must report `stats["realized_mu_bar"]` against nominal and flag cap-affected rows before
    any comparison (see `okf/lessons.md` §1). (b) At large **negative** γ, any degree-0 node gives
    weight ∞; `d_min=2` prevents this for the *drawn* sequence, but erasure can realize degree 0,
    so confirm the fear sampler is fed drawn degrees, not realized ones.
-C3. **Task AA — fear-only percolation: does the critical seed scale like θn(1−μ̄)?** Gary's design
-   (2026-07-21), from the μ̄-sweep result. Disable solvency entirely (`r = n+1`, or `r = 10⁹` as
-   the pilot used) so the fear channel runs alone, then sweep the **seed size a** against μ̄ and n.
-   **This has a derivable prediction, so it is a test and not a fishing trip.**
+C3. **Task AA — fear-only percolation: does the critical seed scale like θn(1−μ̄)?** Unchanged
+   since S-059. Gary's design (2026-07-21), from the μ̄-sweep result. Disable solvency entirely
+   (`r = n+1`, or `r = 10⁹` as the pilot used) so the fear channel runs alone, then sweep the
+   **seed size a** against μ̄ and n. **This has a derivable prediction, so it is a test and not a
+   fishing trip.**
    - With solvency off, fear is a branching process with reproduction number exactly
      `R_fear = μ̄·Σwₖ = μ̄` — subcritical for every μ̄ < 1. Expected **total** progeny from a
      ancestors is `a/(1−μ̄)`. Systemic needs θn, so
@@ -169,34 +183,41 @@ C3. **Task AA — fear-only percolation: does the critical seed scale like θn(1
    - **Post-meeting status (2026-07-22):** the meeting resolved the publication route without
      needing this card played (D-038). Task AA is now the leading candidate for the
      **theoretical leg** of the frontier push — clean derivable prediction, obvious empirical
-     hook — but it sits *behind* the poster queue (items 1–7).
-C4. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** The queued
-   discriminating test (front-loaded kernel `[1,0,0,0,0]` vs uniform `[0.2×5]`, predicting a ~5×
-   change in multiplier−1) **does not discriminate.** Exploratory paired pilot, n=4000, μ̄=0.4,
-   400 trials/arm: uniform **0.147**, front-loaded **0.110** — no 5× effect, if anything the
-   opposite direction (Fisher p=0.14, so read as "no effect", not a reversal). Cause: both
-   kernels have Σwₖ=1, so total fear offspring is identical (D-006 kernel-mass invariance); the
-   transient w₁ argument does not survive a multi-round cascade with permanent failures and
-   cumulative neighbour counts. ⚠️ `docs/queue/task_Y_fear_multiplier_mechanism.md` still carries
-   the pre-registered 5× prediction and **needs an appended correction** before anyone picks it
-   up. **What survives:** the n-cancellation `n·μ̄·(Σwₖa/n) = μ̄·Σwₖa` holds for *any* kernel, so
-   "why is the multiplier flat in n" is answered by algebra and needs no experiment. **The one
-   salvageable test:** the sketch predicts the multiplier is *linear* in μ̄ (`1 + 5.3·μ̄`, R²=0.98
-   on four points) — extend the ignition μ̄-grid to 0.5/0.6/0.7 and see whether it stays linear or
-   bends. Pilot is exploratory: nothing stamped, nothing committed, **not** a §5.6 result.
-C5. **Optional future — Task R Option B (supra-r_n cross-round test).** The *only* valid way
-   to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n cross-type statistic
-   (pair-correlation g(d) / Ripley cross-K between early- and late-round remote-nucleus
-   centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor wants a
-   cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN until then.
-C6. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** `d70dbd8`'s commit body
-   records V, W, and U as having cleared `/verify` (reviewer sign-off, critic PASS, AUDIT PASS).
-   S and T have no gate of their own but were **superseded** by W, which was gated: S's ignition
-   series is now the 6-point run to n=160000, T's ν fit is now the 7-point fit above. Residual
-   caveat: U's and W's task files asked for a *human* at the gate and got a blind one — a
-   process gap, not an ungated result. ⚠️ Closure records for these tasks live in **commit
-   bodies and `okf/changes/`**, not in `docs/queue/reports/` — a missing report file does not
-   mean a task is open (this misread cost a session).
+     hook — but it sits *behind* the poster queue (items 1–7). No evidence it moved during the
+     poster sprint.
+C4. **Task Y — largely invalidated 2026-07-21; rewrite or retire before running.** Unchanged
+   since S-059. The queued discriminating test (front-loaded kernel `[1,0,0,0,0]` vs uniform
+   `[0.2×5]`, predicting a ~5× change in multiplier−1) **does not discriminate.** Exploratory
+   paired pilot, n=4000, μ̄=0.4, 400 trials/arm: uniform **0.147**, front-loaded **0.110** — no 5×
+   effect, if anything the opposite direction (Fisher p=0.14, so read as "no effect", not a
+   reversal). Cause: both kernels have Σwₖ=1, so total fear offspring is identical (D-006
+   kernel-mass invariance); the transient w₁ argument does not survive a multi-round cascade with
+   permanent failures and cumulative neighbour counts. ⚠️ `docs/queue/task_Y_fear_multiplier_mechanism.md`
+   still carries the pre-registered 5× prediction and **needs an appended correction** before
+   anyone picks it up. **What survives:** the n-cancellation `n·μ̄·(Σwₖa/n) = μ̄·Σwₖa` holds for
+   *any* kernel, so "why is the multiplier flat in n" is answered by algebra and needs no
+   experiment. **The one salvageable test:** the sketch predicts the multiplier is *linear* in μ̄
+   (`1 + 5.3·μ̄`, R²=0.98 on four points) — extend the ignition μ̄-grid to 0.5/0.6/0.7 and see
+   whether it stays linear or bends. Pilot is exploratory: nothing stamped, nothing committed,
+   **not** a §5.6 result.
+C5. **Optional future — Task R Option B (supra-r_n cross-round test).** Unchanged since S-059.
+   The *only* valid way to actually test C-Q5(i) cross-round spatial correlation is a supra-r_n
+   cross-type statistic (pair-correlation g(d) / Ripley cross-K between early- and late-round
+   remote-nucleus centroids at d ∈ (r_n, k·r_n]). Deferred (D-035); pick up only if the advisor
+   wants a cross-round correlation probe. Task O's cross-round lower-bound caveat stays OPEN
+   until then.
+C6. **Queue hygiene — the queue is empty; S/T/U/V/W all closed.** Unchanged since S-058/S-059.
+   `d70dbd8`'s commit body records V, W, and U as having cleared `/verify` (reviewer sign-off,
+   critic PASS, AUDIT PASS). S and T have no gate of their own but were **superseded** by W,
+   which was gated: S's ignition series is now the 6-point run to n=160000, T's ν fit is now the
+   7-point fit above. Residual caveat: U's and W's task files asked for a *human* at the gate and
+   got a blind one — a process gap, not an ungated result. ⚠️ Closure records for these tasks
+   live in **commit bodies and `okf/changes/`**, not in `docs/queue/reports/` — a missing report
+   file does not mean a task is open (this misread cost a session).
+
+**Resolved 2026-07-27–2026-08-02 (this catch-up; see `okf/changes/s-061-*.md`, `s-062-*.md`):**
+- Items 1, 2, 2b, 2c, 3 above (Comparison 1 and Comparison 2, both matched-degree poster
+  comparisons) — full detail in the items themselves, not repeated here.
 
 **Resolved 2026-07-21 (S-058) — advisor site refreshed (`2f61275`, pushed):**
 - **All stale claims corrected.** The Θ(1) caveat replaced with the settled n-direction result;

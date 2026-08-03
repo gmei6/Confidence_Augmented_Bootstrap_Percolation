@@ -54,7 +54,7 @@ endif()
 find_package(OpenMP)
 
 # Define twocascade core library
-add_library(twocascade_core src/engine.cpp)
+add_library(twocascade_core src/engine.cpp src/girg.cpp)
 target_include_directories(twocascade_core PUBLIC include)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(twocascade_core PUBLIC OpenMP::OpenMP_CXX)
@@ -68,6 +68,10 @@ target_link_libraries(twocascade_run PRIVATE twocascade_core)
 add_executable(test_engine tests/test_engine.cpp)
 target_link_libraries(test_engine PRIVATE twocascade_core)
 
+add_executable(test_girg tests/test_girg.cpp)
+target_link_libraries(test_girg PRIVATE twocascade_core)
+
 # CTest integration
 enable_testing()
 add_test(NAME engine COMMAND test_engine)
+add_test(NAME girg COMMAND test_girg)

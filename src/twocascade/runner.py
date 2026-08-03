@@ -56,11 +56,11 @@ def get_git_commit_hash() -> str:
 
 def run_single_cell_cpp(args) -> List[tuple[float, int]]:
     """Worker task to run a single cell's trials using C++ engine."""
-    (n, p, r, mu, kappa, a, trials_per_cell, window_len, weights, cell_seed, cpp_bin_str) = args
-    
+    (n, p, r, mu, kappa, a, trials_per_cell, window_len, weights, graph_cfg, cell_seed, cpp_bin_str) = args
+
     # Generate 64-bit seed from SeedSequence
     seed_val = int(cell_seed.generate_state(1, dtype=np.uint64)[0])
-    
+
     cmd = [
         cpp_bin_str,
         "--n", str(n),
@@ -75,7 +75,21 @@ def run_single_cell_cpp(args) -> List[tuple[float, int]]:
     ]
     if weights is not None and len(weights) > 0:
         cmd.extend(["--weights", ",".join(map(str, weights))])
-        
+
+    # G4: GIRG-shaped cells (gamma=0.0 only; _validate_cpp_engine_support has
+    # already rejected anything else before a cell task is ever built) sample
+    # their own graph internally in C++ via --graph-type girg, mirroring
+    # run_single_trial's Python-side girg branch rather than the default
+    # G(n,p) path -- --p above is simply unused by the C++ binary in this mode.
+    graph_type = (graph_cfg or {}).get("type", "gnp")
+    if graph_type == "girg":
+        cmd.extend([
+            "--graph-type", "girg",
+            "--tau", str(graph_cfg["tau"]),
+            "--w-min", str(graph_cfg.get("w_min", 1.0)),
+            "--alpha-g", str(graph_cfg.get("alpha_g", 1.2)),
+        ])
+
     env = {**os.environ, "OMP_NUM_THREADS": "1"}
     
     try:
@@ -373,7 +387,7 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         for idx, (i, j, mu, mult, a) in enumerate(cell_info):
             tasks.append((
                 n, p, r, mu, kappa, a, trials_per_cell,
-                window_len, weights, cell_seeds[idx], str(CPP_BIN)
+                window_len, weights, graph_cfg, cell_seeds[idx], str(CPP_BIN)
             ))
             
         print(f"Starting sweep simulation (C++) with {len(tasks)} cell tasks...")

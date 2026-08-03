@@ -180,6 +180,16 @@ int main(int argc, char* argv[]) {
     std::string rng_source = "real";     // "real" | "constant"
     double constant_c = 0.0;
 
+    // GIRG production graph source (cpp-girg-plan G4): --graph-type girg makes
+    // the normal sweep/simulation loop below sample a GIRG internally, using
+    // the BKL sampler (Variant B), instead of building/loading G(n,p).
+    // Fear generation is unchanged (sample_individual_fears): at the gamma=0
+    // scope this task targets, degree-dependent fear reduces exactly to the
+    // existing global-kappa model (implementation_plan.md "Current state").
+    std::string graph_type = "gnp"; // "gnp" | "girg"
+    double tau = 2.5;
+    double w_min = 1.0;
+
     try {
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -204,6 +214,9 @@ int main(int argc, char* argv[]) {
             else if (arg == "--girg-variant" && i + 1 < argc) girg_variant = argv[++i];
             else if (arg == "--rng-source" && i + 1 < argc) rng_source = argv[++i];
             else if (arg == "--constant-c" && i + 1 < argc) constant_c = std::stod(argv[++i]);
+            else if (arg == "--graph-type" && i + 1 < argc) graph_type = argv[++i];
+            else if (arg == "--tau" && i + 1 < argc) tau = std::stod(argv[++i]);
+            else if (arg == "--w-min" && i + 1 < argc) w_min = std::stod(argv[++i]);
             else {
                 std::cerr << "Unknown or incomplete argument: " << arg << "\n";
                 return 1;
@@ -259,14 +272,45 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        if (graph_type != "gnp" && graph_type != "girg") {
+            std::cerr << "Error: --graph-type must be 'gnp' or 'girg', got '" << graph_type << "'.\n";
+            return 1;
+        }
+        if (!graph_file.empty() && graph_type != "gnp") {
+            std::cerr << "Error: --graph-file loads a static pre-generated graph; --graph-type "
+                       << graph_type << " samples its own graph internally and cannot be combined "
+                       << "with --graph-file.\n";
+            return 1;
+        }
+
         // Validate basic parameter limits
         if (graph_file.empty() && n <= 0) {
             std::cerr << "Error: --n must be positive when generating a random graph.\n";
             return 1;
         }
-        if (graph_file.empty() && (p < 0.0 || p > 1.0)) {
-            std::cerr << "Error: --p must be in [0, 1] when generating a random graph.\n";
+        if (graph_file.empty() && graph_type == "gnp" && (p < 0.0 || p > 1.0)) {
+            std::cerr << "Error: --p must be in [0, 1] when generating a G(n,p) graph.\n";
             return 1;
+        }
+        if (graph_file.empty() && graph_type == "girg") {
+            if (!(tau > 1.0)) {
+                std::cerr << "Error: --tau must be > 1 for the GIRG power-law weight sampler.\n";
+                return 1;
+            }
+            if (!(w_min > 0.0)) {
+                std::cerr << "Error: --w-min must be positive.\n";
+                return 1;
+            }
+            if (!(alpha_g > 0.0)) {
+                // The BKL upper-bound rejection scheme requires x -> x^alpha_g
+                // monotone increasing (RISKS.md #3); sample_girg_adjacency_bkl
+                // itself falls back to the direct kernel for alpha_g <= 0, so
+                // this is not a correctness gap, but production sweeps that
+                // hit it silently lose the performance this port exists for
+                // -- surface it instead.
+                std::cerr << "Error: --alpha-g must be positive for --graph-type girg.\n";
+                return 1;
+            }
         }
         if (r < 2) {
             std::cerr << "Error: --r must be >= 2.\n";
@@ -371,7 +415,15 @@ int main(int argc, char* argv[]) {
                 // Binding run_graph as a const reference to avoid full CSRGraph copies.
                 CSRGraph generated_graph;
                 if (!has_static_graph) {
-                    generated_graph = sample_gnp_adjacency(n, p, rng);
+                    if (graph_type == "girg") {
+                        std::vector<Point2D> girg_points = sample_torus_points(n, rng);
+                        std::vector<double> girg_weights = sample_powerlaw_weights(n, tau, w_min, rng);
+                        Mt19937UniformSource girg_src(rng);
+                        generated_graph = convert_to_csr(
+                            sample_girg_adjacency_bkl(girg_points, girg_weights, alpha_g, girg_src));
+                    } else {
+                        generated_graph = sample_gnp_adjacency(n, p, rng);
+                    }
                 }
                 const CSRGraph& run_graph = has_static_graph ? static_graph : generated_graph;
                 

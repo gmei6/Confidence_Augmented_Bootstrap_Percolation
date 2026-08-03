@@ -25,6 +25,9 @@ CONFIG_SPECS = [
     {"key": "poster_cm_mu30", "family": "configuration_model", "mu": 0.3, "raw": "results/poster_cm_mu30_raw.json"},
     {"key": "poster_cm_mu40", "family": "configuration_model", "mu": 0.4, "raw": "results/poster_cm_mu40_raw.json"},
     {"key": "poster_cm_mu70", "family": "configuration_model", "mu": 0.7, "raw": "results/poster_cm_mu70_raw.json"},
+    {"key": "poster_girg_mu0", "family": "girg", "mu": 0.0, "raw": "results/poster_girg_mu0_raw.json"},
+    {"key": "poster_girg_mu40", "family": "girg", "mu": 0.4, "raw": "results/poster_girg_mu40_raw.json"},
+    {"key": "poster_girg_mu70", "family": "girg", "mu": 0.7, "raw": "results/poster_girg_mu70_raw.json"},
 ]
 
 
@@ -164,13 +167,22 @@ def main() -> None:
 
     # D-012 scaling prediction table calculation
     # Formula: a_c(mu) = a_c(0) * (1 - mu)^(r / (r - 1)) = a_c(0) * (1 - mu)^2 for r=2
+    # Each family is anchored at its own mu=0 arm (mirrors the CM/ER anchor
+    # selection); girg only has mu in {0.0, 0.4, 0.7} in this sweep.
     d012_table = []
-    for fam in ["erdos_renyi", "configuration_model"]:
-        anchor_key = f"poster_er_mu0" if fam == "erdos_renyi" else "poster_cm_mu0"
+    family_key_prefix = {"erdos_renyi": "er", "configuration_model": "cm", "girg": "girg"}
+    family_mus = {
+        "erdos_renyi": [0.0, 0.1, 0.2, 0.3, 0.4, 0.7],
+        "configuration_model": [0.0, 0.1, 0.2, 0.3, 0.4, 0.7],
+        "girg": [0.0, 0.4, 0.7],
+    }
+    for fam in ["erdos_renyi", "configuration_model", "girg"]:
+        prefix = family_key_prefix[fam]
+        anchor_key = f"poster_{prefix}_mu0"
         anchor_crossing = curves_summary[anchor_key]["a05_point"]
-        
-        for mu in [0.0, 0.1, 0.2, 0.3, 0.4, 0.7]:
-            key = f"poster_{'er' if fam=='erdos_renyi' else 'cm'}_mu{int(round(mu*100))}"
+
+        for mu in family_mus[fam]:
+            key = f"poster_{prefix}_mu{int(round(mu*100))}"
             cur = curves_summary[key]
             meas = cur["a05_point"]
             meas_low = cur["a05_ci_lower"]

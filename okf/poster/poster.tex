@@ -69,123 +69,39 @@
 }% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
 \vspace{3cm}
 
-%% [SIMULATED PLACEHOLDER FIGURE — item 2, the heterogeneity comparison]
+%% [REAL FIGURE — Comparison 1, heterogeneity (ER vs CM), n=10000, 500 trials/pt]
 %%
-%% SHAPE. This placeholder is deliberately shaped like the experiment that will
-%% actually fill it, so the layout is not sized for the wrong plot:
-%%   x = seed size a          (the swept quantity)
-%%   y = P(systemic)          (the advisor's "probability of infection")
-%%   SIX curves = 3 families x 2 fear levels.
-%% Mean degree is NOT an axis here -- it is the quantity the comparison holds
-%% CONSTANT across all three families (see okf/next-actions.md §10 item 1).
+%% Source: results/figures/poster_comparison.png, regenerable from
+%% results/processed/poster_comparison.json (hero data 301d560, five-point
+%% departure analysis d9edf19). Legend and fear encoding are baked into the PNG.
 %%
-%% ⚠ OPEN, and worth recording as a decision either way: putting ER, CM and GIRG
-%% on ONE axis merges the two comparisons D-038 asked to keep SEPARATE ("the
-%% effect of heterogeneity; the effect of geometry"). It also puts GIRG -- the
-%% only piece needing src/ work, since girg.py's sampler is still Theta(n^2) --
-%% on the critical path for the poster's centrepiece rather than a side panel.
+%% GIRG joined this axis 2026-08-02 (C3b production run, 500 trials/cell,
+%% calibrated w_min=0.186377): Gary accepted the 9-curve figure as the hero,
+%% resolving the previously-open one-axis-vs-separate question. The two D-038
+%% comparisons stay separable BY READING: CM-vs-ER = heterogeneity,
+%% GIRG-vs-CM = geometry. Record lives in the C3b commit chain.
 %%
-%% ENCODING. Colour carries the family (the poster's headline claim); line style
-%% carries fear. Never the other way round -- the headline is about who you are
-%% connected to, so family must be the more salient channel.
-%%
-%% HEIGHT-CONSTRAINED, not width-constrained: \resizebox{1.0\linewidth}{!} let
-%% the height run free and pushed the x-axis labels off the bottom of the main
-%% column. Fixing the height and letting width follow keeps it inside the panel.
+%% HEIGHT-CONSTRAINED, not width-constrained, same reason as the placeholder it
+%% replaced: letting height run free pushed the x-axis labels off the bottom of
+%% the main column.
+%% ⚠ PNG is matplotlib default DPI — fine on screen, regenerate at dpi >= 300
+%% before print (poster-queue item 5 polish).
 \begin{center}
 \resizebox{!}{0.6\textheight}{%
-\begin{tikzpicture}[font=\sffamily\bfseries, x=1.5cm, y=1.0cm]
-  % Cream panel: the figure reads as a FIGURE sitting on the teal, matching the
-  % side columns and the right-column boxes. The old ink-over-teal wash produced
-  % a muddy grey-green that is not in the palette.
-  \fill[tcCream, rounded corners=12pt] (-2.6,-3.2) rectangle (17.4, 22.4);
-
-  % Background grid
-  \draw[tcRule, thin, dashed, step=2.0] (0,0) grid (16,20);
-
-  % Main axes
-  \draw[tcInk, line width=4pt, ->] (0,0) -- (16.8,0);
-  \draw[tcInk, line width=4pt, ->] (0,0) -- (0,20.8);
-
-  % Axis labels -- y rotated onto its own axis where a reader expects it,
-  % instead of floating detached above the panel.
-  \node[tcInk, font=\fontsize{22}{26}\selectfont] at (8,-2.5) {Seed size ($a$)};
-  \node[tcInk, font=\fontsize{22}{26}\selectfont, rotate=90] at (-2.0,10) {P(systemic)};
-
-  % X ticks
-  \foreach \x/\lab in {4/8, 8/16, 12/24, 16/32} {
-    \draw[tcInk, line width=3pt] (\x,0) -- (\x,-0.3) node[below, tcInk, font=\fontsize{16}{18}\selectfont] {\lab};
-  }
-  % Y ticks
-  \foreach \y/\lab in {5.0/0.25, 10.0/0.50, 15.0/0.75, 20.0/1.00} {
-    \draw[tcInk, line width=3pt] (0,\y) -- (-0.3,\y) node[left, tcInk, font=\fontsize{16}{18}\selectfont] {\lab};
-  }
-
-  % --- Configuration model (heavy tail) : RUST. Ignites from a small seed. ---
-  \draw[tcRust, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
-    (0,0.2) (1.5,1.5) (3.0,10.0) (5.0,17.5) (8.0,19.4) (16,19.9)
-  };
-  \draw[tcRust, line width=8pt] plot[smooth, tension=0.5] coordinates {
-    (0,0.1) (2.5,1.0) (4.5,9.0) (7.0,17.0) (10.0,19.2) (16,19.7)
-  };
-
-  % --- Erdos-Renyi (homogeneous) : TEAL. Needs a much larger seed. ---
-  \draw[tcTeal, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
-    (0,0.1) (6.0,0.6) (8.5,6.0) (11.0,16.0) (13.5,19.0) (16,19.6)
-  };
-  \draw[tcTeal, line width=8pt] plot[smooth, tension=0.5] coordinates {
-    (0,0.05) (7.5,0.4) (10.0,5.0) (12.5,15.0) (15.0,18.8) (16,19.4)
-  };
-
-  % --- Geometric model (GIRG) : INKSOFT. Intermediate ignition. ---
-  \draw[tcPlum, line width=8pt, dashed] plot[smooth, tension=0.5] coordinates {
-    (0,0.1) (3.5,0.8) (6.0,8.0) (8.5,16.5) (11.5,19.2) (16,19.8)
-  };
-  \draw[tcPlum, line width=8pt] plot[smooth, tension=0.5] coordinates {
-    (0,0.05) (4.5,0.6) (7.5,7.0) (10.0,16.0) (13.0,19.0) (16,19.6)
-  };
-
-  % Header label
-  %% Header names what the figure actually shows. It said "DEGREE HETEROGENEITY"
-  %% while plotting GIRG too, i.e. geometry as well -- so it is network structure
-  %% in general, not heterogeneity alone.
-  \node[tcInk, font=\fontsize{24}{28}\selectfont] at (8, 21.5) {[ SIMULATED : EFFECT OF NETWORK STRUCTURE ]};
-
-  
-\end{tikzpicture}%
-}
-
-\vspace{0em}
-
-%% NEW SEPARATED LEGEND
-\resizebox{!}{0.08\textheight}{%
-\begin{tikzpicture}[font=\sffamily\bfseries]
-  \fill[tcCream, rounded corners=12pt] (0, 0) rectangle (32, 4);
-  
-  \draw[tcRust, line width=8pt, dashed] (1, 2.8) -- (2.5, 2.8);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (2.8, 2.8) {Config.\ model, $\bar\mu > 0$};
-  \draw[tcRust, line width=8pt] (1, 1.2) -- (2.5, 1.2);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (2.8, 1.2) {Config.\ model, $\bar\mu = 0$};
-
-  \draw[tcPlum, line width=8pt, dashed] (11.5, 2.8) -- (13.0, 2.8);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (13.3, 2.8) {Geometric (GIRG), $\bar\mu > 0$};
-  \draw[tcPlum, line width=8pt] (11.5, 1.2) -- (13.0, 1.2);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (13.3, 1.2) {Geometric (GIRG), $\bar\mu = 0$};
-
-  \draw[tcTeal, line width=8pt, dashed] (22, 2.8) -- (23.5, 2.8);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (23.8, 2.8) {Erd\H{o}s--R\'enyi, $\bar\mu > 0$};
-  \draw[tcTeal, line width=8pt] (22, 1.2) -- (23.5, 1.2);
-  \node[tcInk, font=\fontsize{18}{22}\selectfont, right] at (23.8, 1.2) {Erd\H{o}s--R\'enyi, $\bar\mu = 0$};
-\end{tikzpicture}%
+\includegraphics{img/poster_comparison}%
 }
 \end{center}
 \vfill
 }{
 %%%% Bottom space of center column left intentionally clean
 
-}% Disclaimer -- was truncated mid-sentence, ending on a bare semicolon.
-Simulated placeholder for layout evaluation only. Matched $n$ and mean degree;
-awaiting poster-queue items 1--3.
+}% Disclaimer under the hero. The engine sentence is the Sec 5.4 disclosure
+% (item 2c): ER ran on the C++ engine, CM and GIRG on the Python reference;
+% the poster must say so because the headline comparison crosses engines.
+Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$,
+500 trials per point. Erd\H{o}s--R\'enyi simulated on the validated C++
+engine; configuration model and GIRG on the Python reference
+implementation (cross-engine agreement verified).
 
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -290,10 +206,8 @@ $1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a constant
   %% the right column at roughly 40% of the left column's ink density.
   \begin{minipage}[t][7in][c]{0.95\linewidth}
     \centering
-    \color{tcInkSoft}\bfseries\Large
-    [ FIGURE 1 : FEAR AS A MULTIPLIER ] \\[0.5em]
-    \normalfont\small Placeholder --- ignition rate vs.\ $n$, one line per $\bar\mu$.\\
-    Source: \texttt{results/figures/q4\_mumap\_ignition.png}
+    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/q4_mumap_ignition}\\[0.4em]
+    {\color{tcInkSoft}\small Ignition rate vs.\ $n$, one panel per $\bar\mu$ (S-058, gated).}
   \end{minipage}%
 }
 \end{center}
@@ -316,10 +230,8 @@ as the network grows --- contracts:
 \fcolorbox{tcRule}{tcCream}{%
   \begin{minipage}[t][7in][c]{0.95\linewidth}
     \centering
-    \color{tcInkSoft}\bfseries\Large
-    [ FIGURE 2 : FINITE-SIZE SHARPENING ] \\[0.5em]
-    \normalfont\small Placeholder --- transition width vs.\ $n$, 7-point fit.\\
-    Source: \texttt{results/figures/finite\_size\_scaling\_r2\_n10000.png}
+    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/finite_size_scaling_r2_n10000}\\[0.4em]
+    {\color{tcInkSoft}\small Transition width vs.\ $n$, 7-point fit (Task W, verified).}
   \end{minipage}%
 }
 \end{center}

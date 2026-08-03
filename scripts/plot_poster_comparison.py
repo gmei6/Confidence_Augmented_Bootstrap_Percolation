@@ -12,8 +12,17 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 COLOR_CM = "#BD5A2E"
 COLOR_ER = "#2E6E76"
+COLOR_GIRG = "#8E4A72"  # okf/poster/poster.tex tcPlum — third family, geometry (GIRG)
 BG_COLOR = "#F6F3EA"
 TEXT_COLOR = "#1E2530"
+
+# One-hue OKLCH ramps per family: light = low mean fear, dark = high mean
+# fear (dark end anchored to the existing brand color). Validated against
+# BG_COLOR with the dataviz skill's ordinal-ramp checks (monotone L, >=0.06
+# adjacent lightness gap, >=2:1 light-end contrast).
+CM_RAMP = {0.0: "#ec8559", 0.4: "#d46f44", 0.7: COLOR_CM}
+ER_RAMP = {0.0: "#72b1b9", 0.4: "#508f97", 0.7: COLOR_ER}
+GIRG_RAMP = {0.0: "#c087a6", 0.4: "#a8688b", 0.7: COLOR_GIRG}
 
 
 def main() -> None:
@@ -57,12 +66,15 @@ def main() -> None:
     ax.set_facecolor(BG_COLOR)
 
     series_config = [
-        {"family": "configuration_model", "mu": 0.0, "color": COLOR_CM, "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.0$"},
-        {"family": "configuration_model", "mu": 0.4, "color": COLOR_CM, "ls": "--", "marker": "s", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.4$"},
-        {"family": "configuration_model", "mu": 0.7, "color": COLOR_CM, "ls": ":", "marker": "D", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.7$"},
-        {"family": "erdos_renyi", "mu": 0.0, "color": COLOR_ER, "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
-        {"family": "erdos_renyi", "mu": 0.4, "color": COLOR_ER, "ls": "--", "marker": "v", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
-        {"family": "erdos_renyi", "mu": 0.7, "color": COLOR_ER, "ls": ":", "marker": "<", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
+        {"family": "configuration_model", "mu": 0.0, "color": CM_RAMP[0.0], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.0$"},
+        {"family": "configuration_model", "mu": 0.4, "color": CM_RAMP[0.4], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.4$"},
+        {"family": "configuration_model", "mu": 0.7, "color": CM_RAMP[0.7], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.7$"},
+        {"family": "erdos_renyi", "mu": 0.0, "color": ER_RAMP[0.0], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
+        {"family": "erdos_renyi", "mu": 0.4, "color": ER_RAMP[0.4], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
+        {"family": "erdos_renyi", "mu": 0.7, "color": ER_RAMP[0.7], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
+        {"family": "girg", "mu": 0.0, "color": GIRG_RAMP[0.0], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
+        {"family": "girg", "mu": 0.4, "color": GIRG_RAMP[0.4], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
+        {"family": "girg", "mu": 0.7, "color": GIRG_RAMP[0.7], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
     ]
 
     for cfg in series_config:
@@ -70,23 +82,18 @@ def main() -> None:
         if key not in grouped:
             continue
         items = grouped[key]
-        x = np.array([it.get("a_over_ac", it["seed_size"] / it["janson_a_c"]) for it in items])
+        x = np.array([it["seed_size"] for it in items])
         y = np.array([it["p_systemic"] for it in items])
-        y_low = np.array([it["wilson_ci_lower"] for it in items])
-        y_high = np.array([it["wilson_ci_upper"] for it in items])
 
-        yerr_lower = np.maximum(0.0, y - y_low)
-        yerr_upper = np.maximum(0.0, y_high - y)
-        yerr = np.vstack([yerr_lower, yerr_upper])
-
-        ax.errorbar(
-            x, y, yerr=yerr,
+        ax.plot(
+            x, y,
             color=cfg["color"], linestyle=cfg["ls"], marker=cfg["marker"],
-            linewidth=2.0, markersize=6, capsize=3, capthick=1.2,
+            linewidth=2.0, markersize=6,
             label=cfg["label"]
         )
 
-    ax.set_xlabel("Seed size relative to Janson prediction (a / a_c)", fontsize=12, fontweight="bold", labelpad=8)
+    ax.set_xscale("log")
+    ax.set_xlabel("Seed size (a)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylabel("P(systemic)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylim(-0.03, 1.03)
     ax.set_title("Degree Heterogeneity Effect on Cascade Ignition ($n=10000$, $\\langle k \\rangle \\approx 4.53$)",

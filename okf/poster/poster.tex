@@ -81,15 +81,17 @@
 %% comparisons stay separable BY READING: CM-vs-ER = heterogeneity,
 %% GIRG-vs-CM = geometry. Record lives in the C3b commit chain.
 %%
-%% HEIGHT-CONSTRAINED, not width-constrained, same reason as the placeholder it
-%% replaced: letting height run free pushed the x-axis labels off the bottom of
-%% the main column.
+%% BOX-CONSTRAINED on both width and height (keepaspectratio): the old
+%% resizebox height-only scaling let the on-page width run free, and at
+%% this figure's aspect ratio that overflowed past the main column into
+%% the right panel. width=0.95\linewidth caps it at the column; height
+%% keeps the original 0.6\textheight ceiling so it still clears the
+%% headline text above it. keepaspectratio picks whichever constraint
+%% binds, so it can no longer overflow either one.
 %% ⚠ PNG is matplotlib default DPI — fine on screen, regenerate at dpi >= 300
 %% before print (poster-queue item 5 polish).
 \begin{center}
-\resizebox{!}{0.6\textheight}{%
-\includegraphics{img/poster_comparison}%
-}
+\includegraphics[width=0.95\linewidth, height=0.6\textheight, keepaspectratio]{img/poster_comparison}%
 \end{center}
 \vfill
 }{
@@ -98,10 +100,20 @@
 }% Disclaimer under the hero. The engine sentence is the Sec 5.4 disclosure
 % (item 2c): ER ran on the C++ engine, CM and GIRG on the Python reference;
 % the poster must say so because the headline comparison crosses engines.
+%% Wrapped in an explicit-width, ragged-right minipage (2026-08-03 caption-wrap
+%% fix): as bare paragraph text this rendered fully justified with no forced
+%% width context, and the mid-sentence LaTeX line breaks plus long unhyphenated
+%% tokens ("Erd\H{o}s--R\'enyi") produced an overfull line that ran past the
+%% column edge and read as cut off. \raggedright removes the justification
+%% that was causing the overfull box; the minipage pins the width so wrapping
+%% is against the column, not whatever ambient width happened to be active.
+\begin{minipage}{\linewidth}
+\raggedright
 Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$,
 500 trials per point. Erd\H{o}s--R\'enyi simulated on the validated C++
 engine; configuration model and GIRG on the Python reference
 implementation (cross-engine agreement verified).
+\end{minipage}
 
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,8 +159,8 @@ A node is activated if either condition is met:
 We hold network size $n$ and average degree constant across all tests to isolate three items:
 \vspace{0.2em}
 \begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
-  \item \textbf{Heterogeneity (ER vs.\ CM):} Homogeneous degree distribution vs.\ heavy-tailed hubs.
-  \item \textbf{Geometry (CM vs.\ GIRG):} Pure random connections vs.\ local spatial clustering.
+  \item \textbf{Heterogeneity (ER vs.\ power-law network (CM)):} Homogeneous degree distribution vs.\ heavy-tailed hubs.
+  \item \textbf{Geometry (power-law network (CM) vs.\ GIRG):} Pure random connections vs.\ local spatial clustering.
   \item \textbf{Fear ($\bar\mu = 0$ vs.\ $\bar\mu > 0$):} Baseline bootstrap percolation vs.\ confidence augmentation.
 \end{itemize}
 
@@ -215,16 +227,24 @@ $1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a constant
 \vspace{-1.5em}
 
 \section{Sharper Transition}
-%% The lead-in was commented out, which left the two nu values printing with no
-%% n-range and no statement of what nu is. A reader got two bare numbers.
-Fear makes the systemic boundary \textbf{sharper}, leaving the system less
-forgiving of small perturbations. Over $n = 10^3$ to $8\!\times\!10^4$ the
-finite-size exponent $\nu$ --- the rate at which the transition window narrows
-as the network grows --- contracts:
+%% Rewritten 2026-08-03 as a RATE claim, not a level claim. The prior version
+%% ("sharper... less forgiving") read as true at every n, but the two fitted
+%% windows actually cross near n ~ 1e4 -- below that, mu=0.3's window is the
+%% WIDER one (see figure). The honest claim is about how fast the window
+%% narrows, not its size at any one n.
+Fear does not shrink the transition window at any fixed size --- it makes the
+window shrink \textbf{faster} as the network grows. Over $n = 10^3$ to
+$8\!\times\!10^4$ (Erd\H{o}s--R\'enyi / $G(n,p)$, C++ engine, verified), the
+finite-size exponent $\nu$ --- the rate at which the transition window
+narrows, $w \sim n^{-1/\nu}$ --- contracts:
 \begin{align*}
   \nu(\mu = 0)   &= 5.61 \pm 0.18 \\
   \nu(\mu = 0.3) &= 4.82 \pm 0.15
 \end{align*}
+The two fitted windows cross near $n \approx 10^4$: below that, fear's window
+is actually \textbf{wider} than the baseline, and only past it does the
+faster contraction pull it narrower. The result lives in the \textbf{trend},
+not the level at any single $n$.
 
 \begin{center}
 \fcolorbox{tcRule}{tcCream}{%

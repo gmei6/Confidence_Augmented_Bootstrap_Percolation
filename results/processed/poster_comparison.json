@@ -1,14 +1,16 @@
 {
   "metadata": {
     "script": "scripts/analyze_poster_comparison.py",
-    "git_commit": "01791103a614befd8e2d0cf38862add5b5e0d6f1",
+    "git_commit": "2024c236c5cd451621155666a85f4d79f27a1773",
     "source_raws": [
       "results/poster_er_mu0_raw.json",
       "results/poster_er_mu10_raw.json",
       "results/poster_er_mu20_raw.json",
       "results/poster_er_mu30_raw.json",
       "results/poster_er_mu40_raw.json",
+      "results/poster_er_mu40_tails_raw.json",
       "results/poster_er_mu70_raw.json",
+      "results/poster_er_mu70_tails_raw.json",
       "results/poster_cm_mu0_raw.json",
       "results/poster_cm_mu10_raw.json",
       "results/poster_cm_mu20_raw.json",
@@ -21,6 +23,7 @@
     ],
     "git_commits_in_raws": [
       "01791103a614befd8e2d0cf38862add5b5e0d6f1",
+      "2024c236c5cd451621155666a85f4d79f27a1773",
       "301d56066800278e14b68ad60baf74c8929a5c26",
       "68adadbc0d89d7f6270e0f0bccae084b27e456b7"
     ],
@@ -131,7 +134,7 @@
       "engine_resolved": "cpp",
       "realized_mu_bar": 0.7,
       "janson_a_c": 243.2672272353176,
-      "interior_point_count": 11,
+      "interior_point_count": 12,
       "reliable": true,
       "a05_point": 30.806451612903224,
       "a05_ci_lower": 30.104987155135156,
@@ -392,7 +395,7 @@
       "predicted_crossing": 28.22142857142858,
       "ratio": 1.0915978804875854,
       "below_floor": false,
-      "interior_count": 11
+      "interior_count": 12
     },
     {
       "family": "configuration_model",
@@ -1280,6 +1283,84 @@
       "wilson_ci_upper": 0.9979574037280398
     },
     {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 58,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.23842093593599997,
+      "n_trials": 500,
+      "n_systemic": 0,
+      "p_systemic": 0.0,
+      "wilson_ci_lower": 4.336808689942018e-19,
+      "wilson_ci_upper": 0.007624340461552241
+    },
+    {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 66,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.27130658227199994,
+      "n_trials": 500,
+      "n_systemic": 0,
+      "p_systemic": 0.0,
+      "wilson_ci_lower": 4.336808689942018e-19,
+      "wilson_ci_upper": 0.007624340461552241
+    },
+    {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 74,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.30419222860799994,
+      "n_trials": 500,
+      "n_systemic": 4,
+      "p_systemic": 0.008,
+      "wilson_ci_lower": 0.00311531518006224,
+      "wilson_ci_upper": 0.020387035834105168
+    },
+    {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 160,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.6577129267199999,
+      "n_trials": 500,
+      "n_systemic": 499,
+      "p_systemic": 0.998,
+      "wilson_ci_lower": 0.9887592932948532,
+      "wilson_ci_upper": 0.9996468636054407
+    },
+    {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 172,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.7070413962239999,
+      "n_trials": 500,
+      "n_systemic": 500,
+      "p_systemic": 1.0,
+      "wilson_ci_lower": 0.9923756595384479,
+      "wilson_ci_upper": 1.0
+    },
+    {
+      "config_key": "poster_er_mu40",
+      "family": "erdos_renyi",
+      "mean_fear": 0.4,
+      "seed_size": 188,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.7728126888959999,
+      "n_trials": 500,
+      "n_systemic": 500,
+      "p_systemic": 1.0,
+      "wilson_ci_lower": 0.9923756595384479,
+      "wilson_ci_upper": 1.0
+    },
+    {
       "config_key": "poster_er_mu70",
       "family": "erdos_renyi",
       "mean_fear": 0.7,
@@ -1421,6 +1502,84 @@
       "p_systemic": 0.872,
       "wilson_ci_lower": 0.8398543146918417,
       "wilson_ci_upper": 0.8984731760047634
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 4,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.016442823167999998,
+      "n_trials": 500,
+      "n_systemic": 0,
+      "p_systemic": 0.0,
+      "wilson_ci_lower": 4.336808689942018e-19,
+      "wilson_ci_upper": 0.007624340461552241
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 8,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.032885646335999996,
+      "n_trials": 500,
+      "n_systemic": 3,
+      "p_systemic": 0.006,
+      "wilson_ci_lower": 0.002042596271960237,
+      "wilson_ci_upper": 0.01749025210405338
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 12,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.049328469503999994,
+      "n_trials": 500,
+      "n_systemic": 16,
+      "p_systemic": 0.032,
+      "wilson_ci_lower": 0.019791513626571118,
+      "wilson_ci_upper": 0.051344869045441784
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 52,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.21375670118399998,
+      "n_trials": 500,
+      "n_systemic": 468,
+      "p_systemic": 0.936,
+      "wilson_ci_lower": 0.911047591162316,
+      "wilson_ci_upper": 0.9543039839552107
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 60,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.24664234751999997,
+      "n_trials": 500,
+      "n_systemic": 499,
+      "p_systemic": 0.998,
+      "wilson_ci_lower": 0.9887592932948532,
+      "wilson_ci_upper": 0.9996468636054407
+    },
+    {
+      "config_key": "poster_er_mu70",
+      "family": "erdos_renyi",
+      "mean_fear": 0.7,
+      "seed_size": 70,
+      "janson_a_c": 243.2672272353176,
+      "a_over_ac": 0.28774940543999994,
+      "n_trials": 500,
+      "n_systemic": 500,
+      "p_systemic": 1.0,
+      "wilson_ci_lower": 0.9923756595384479,
+      "wilson_ci_upper": 1.0
     },
     {
       "config_key": "poster_cm_mu0",

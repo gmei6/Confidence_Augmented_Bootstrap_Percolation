@@ -1,5 +1,10 @@
 """Analyze poster comparison sweep raw results and output Wilson score intervals,
-crossings with propagated Wilson uncertainty, D-012 floor checks, and inflation factors."""
+crossings with propagated Wilson uncertainty, D-012 floor checks, and inflation factors.
+
+A CONFIG_SPECS entry's "raw" field may be a single path or a list of paths; a
+list is merged cell-by-cell into one curve (used for tail-extension sweeps that
+add seed sizes outside an existing grid without re-indexing its RNG streams --
+see the poster_er_mu40/mu70 entries)."""
 
 import json
 import os
@@ -17,8 +22,14 @@ CONFIG_SPECS = [
     {"key": "poster_er_mu10", "family": "erdos_renyi", "mu": 0.1, "raw": "results/poster_er_mu10_raw.json"},
     {"key": "poster_er_mu20", "family": "erdos_renyi", "mu": 0.2, "raw": "results/poster_er_mu20_raw.json"},
     {"key": "poster_er_mu30", "family": "erdos_renyi", "mu": 0.3, "raw": "results/poster_er_mu30_raw.json"},
-    {"key": "poster_er_mu40", "family": "erdos_renyi", "mu": 0.4, "raw": "results/poster_er_mu40_raw.json"},
-    {"key": "poster_er_mu70", "family": "erdos_renyi", "mu": 0.7, "raw": "results/poster_er_mu70_raw.json"},
+    # mu=0.4 and mu=0.7 each merge two raws: the original 11-point grid plus a
+    # separate tail-extension sweep (configs/poster_er_mu{40,70}_tails.json).
+    # The tails are a SEPARATE config/raw rather than a widened original grid
+    # because widening a seed_sizes list in place re-indexes the RNG child-seed
+    # stream for every existing cell (project lesson) -- merging post-hoc here
+    # keeps the original raw's cells reproducible and untouched.
+    {"key": "poster_er_mu40", "family": "erdos_renyi", "mu": 0.4, "raw": ["results/poster_er_mu40_raw.json", "results/poster_er_mu40_tails_raw.json"]},
+    {"key": "poster_er_mu70", "family": "erdos_renyi", "mu": 0.7, "raw": ["results/poster_er_mu70_raw.json", "results/poster_er_mu70_tails_raw.json"]},
     {"key": "poster_cm_mu0", "family": "configuration_model", "mu": 0.0, "raw": "results/poster_cm_mu0_raw.json"},
     {"key": "poster_cm_mu10", "family": "configuration_model", "mu": 0.1, "raw": "results/poster_cm_mu10_raw.json"},
     {"key": "poster_cm_mu20", "family": "configuration_model", "mu": 0.2, "raw": "results/poster_cm_mu20_raw.json"},
@@ -78,29 +89,50 @@ def main() -> None:
     curves_summary = {}
 
     for spec in CONFIG_SPECS:
-        raw_path = os.path.join(base_dir, spec["raw"])
-        if not os.path.exists(raw_path):
-            raise FileNotFoundError(f"Raw file not found at {raw_path}")
-        
-        source_raws.append(spec["raw"])
-        with open(raw_path, "r") as f:
-            raw_data = json.load(f)
-            
-        md = raw_data.get("metadata", {})
-        if "git_commit" in md:
-            commits.add(md["git_commit"])
+        raw_specs = spec["raw"] if isinstance(spec["raw"], list) else [spec["raw"]]
 
-        engine_resolved = md.get("engine_resolved", md.get("engine", "unknown"))
+        n = p = r = engine_resolved = None
+        all_cells = []
+        for raw_rel in raw_specs:
+            raw_path = os.path.join(base_dir, raw_rel)
+            if not os.path.exists(raw_path):
+                raise FileNotFoundError(f"Raw file not found at {raw_path}")
 
-        n = md.get("n", 10000)
-        p = md.get("p", 0.00045336)
-        r = md.get("r", 2)
+            source_raws.append(raw_rel)
+            with open(raw_path, "r") as f:
+                raw_data = json.load(f)
+
+            md = raw_data.get("metadata", {})
+            if "git_commit" in md:
+                commits.add(md["git_commit"])
+
+            this_engine = md.get("engine_resolved", md.get("engine", "unknown"))
+            this_n = md.get("n", 10000)
+            this_p = md.get("p", 0.00045336)
+            this_r = md.get("r", 2)
+
+            if n is None:
+                n, p, r, engine_resolved = this_n, this_p, this_r, this_engine
+            else:
+                # Merging a tail-extension raw into a curve: the pinned params
+                # and engine must match the base raw exactly, or this would be
+                # silently combining two different experiments into one curve.
+                assert (this_n, this_p, this_r) == (n, p, r), (
+                    f"{spec['key']}: pinned-param mismatch merging {raw_rel} "
+                    f"({this_n}, {this_p}, {this_r}) vs base ({n}, {p}, {r})"
+                )
+                assert this_engine == engine_resolved, (
+                    f"{spec['key']}: engine mismatch merging {raw_rel}: "
+                    f"{this_engine} vs {engine_resolved}"
+                )
+            all_cells.extend(raw_data["results"])
+
         ac0 = janson_a_c(n, p, r)
         janson_ac_map[spec["key"]] = ac0
 
         curve_records = []
         realized_mus = []
-        for cell in raw_data["results"]:
+        for cell in all_cells:
             seed_size = cell["seed_size"]
             a_over_ac = float(seed_size / ac0)
             failed_fracs = np.asarray(cell["failed_fractions"])

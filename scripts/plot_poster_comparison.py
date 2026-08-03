@@ -62,19 +62,22 @@ def main() -> None:
         "font.size": 11,
     })
 
-    fig, ax = plt.subplots(figsize=(7.5, 5.2), dpi=300)
+    fig, ax = plt.subplots(figsize=(7.0, 7.5), dpi=300)
     ax.set_facecolor(BG_COLOR)
 
+    # Labels shortened (2026-08-03 clipping fix): <k> moves out of every
+    # individual label into the figure title/subtitle instead, since stating
+    # "all families matched to <k>~4.533" once there says it once, not 9x.
     series_config = [
-        {"family": "configuration_model", "mu": 0.0, "color": CM_RAMP[0.0], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.0$"},
-        {"family": "configuration_model", "mu": 0.4, "color": CM_RAMP[0.4], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.4$"},
-        {"family": "configuration_model", "mu": 0.7, "color": CM_RAMP[0.7], "ls": "-", "marker": "o", "label": r"CM ($\tau=2.5$), $\bar{\mu}=0.7$"},
-        {"family": "erdos_renyi", "mu": 0.0, "color": ER_RAMP[0.0], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
-        {"family": "erdos_renyi", "mu": 0.4, "color": ER_RAMP[0.4], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
-        {"family": "erdos_renyi", "mu": 0.7, "color": ER_RAMP[0.7], "ls": "-", "marker": "^", "label": r"ER ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
-        {"family": "girg", "mu": 0.0, "color": GIRG_RAMP[0.0], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.0$"},
-        {"family": "girg", "mu": 0.4, "color": GIRG_RAMP[0.4], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.4$"},
-        {"family": "girg", "mu": 0.7, "color": GIRG_RAMP[0.7], "ls": "-", "marker": "P", "label": r"GIRG ($\langle k \rangle=4.53$), $\bar{\mu}=0.7$"},
+        {"family": "configuration_model", "mu": 0.0, "color": CM_RAMP[0.0], "ls": "-", "marker": "o", "label": r"Power-law (CM, $\tau=2.5$), $\bar{\mu}=0.0$"},
+        {"family": "configuration_model", "mu": 0.4, "color": CM_RAMP[0.4], "ls": "-", "marker": "o", "label": r"Power-law (CM, $\tau=2.5$), $\bar{\mu}=0.4$"},
+        {"family": "configuration_model", "mu": 0.7, "color": CM_RAMP[0.7], "ls": "-", "marker": "o", "label": r"Power-law (CM, $\tau=2.5$), $\bar{\mu}=0.7$"},
+        {"family": "erdos_renyi", "mu": 0.0, "color": ER_RAMP[0.0], "ls": "-", "marker": "^", "label": r"ER, $\bar{\mu}=0.0$"},
+        {"family": "erdos_renyi", "mu": 0.4, "color": ER_RAMP[0.4], "ls": "-", "marker": "^", "label": r"ER, $\bar{\mu}=0.4$"},
+        {"family": "erdos_renyi", "mu": 0.7, "color": ER_RAMP[0.7], "ls": "-", "marker": "^", "label": r"ER, $\bar{\mu}=0.7$"},
+        {"family": "girg", "mu": 0.0, "color": GIRG_RAMP[0.0], "ls": "-", "marker": "P", "label": r"GIRG, $\bar{\mu}=0.0$"},
+        {"family": "girg", "mu": 0.4, "color": GIRG_RAMP[0.4], "ls": "-", "marker": "P", "label": r"GIRG, $\bar{\mu}=0.4$"},
+        {"family": "girg", "mu": 0.7, "color": GIRG_RAMP[0.7], "ls": "-", "marker": "P", "label": r"GIRG, $\bar{\mu}=0.7$"},
     ]
 
     for cfg in series_config:
@@ -96,15 +99,39 @@ def main() -> None:
     ax.set_xlabel("Seed size (a)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylabel("P(systemic)", fontsize=12, fontweight="bold", labelpad=8)
     ax.set_ylim(-0.03, 1.03)
-    ax.set_title("Degree Heterogeneity Effect on Cascade Ignition ($n=10000$, $\\langle k \\rangle \\approx 4.53$)",
-                 fontsize=12, fontweight="bold", pad=12, color=TEXT_COLOR)
+    # Two-line title, shortened (2026-08-03 clipping fix): the old single-line
+    # title plus <k> ran wider than the 7.0in canvas and savefig clipped it.
+    # <k> now lives once in the subtitle line rather than in every legend
+    # entry.
+    ax.set_title(
+        "Degree Heterogeneity Effect on Cascade Ignition\n"
+        r"$n=10{,}000$, all families matched to $\langle k \rangle \approx 4.533$",
+        fontsize=11, fontweight="bold", pad=12, color=TEXT_COLOR,
+    )
 
     ax.grid(True, linestyle=":", alpha=0.5, color=TEXT_COLOR)
-    ax.legend(frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR, fontsize=10, loc="best")
 
-    plt.tight_layout()
+    # Legend moves out of the axes: matplotlib's default legend fill order
+    # is column-major, so ncol=3 on these 9 handles (series_config is
+    # already ordered CM x3, ER x3, GIRG x3) yields one column per family,
+    # mu_bar increasing down each column -- a 3x3 grid grouped by family.
+    handles, labels = ax.get_legend_handles_labels()
+    plt.tight_layout(rect=[0, 0.065, 1, 1])
+    fig.legend(
+        handles, labels,
+        loc="lower center", bbox_to_anchor=(0.5, 0.0),
+        ncol=3, frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR,
+        fontsize=9,
+    )
+    # bbox_inches="tight" (2026-08-03 clipping fix): the title and the
+    # below-axes legend both extend past the drawn axes box. Without this,
+    # savefig crops to the figure's nominal canvas and silently cuts off
+    # whatever pokes out (this is exactly how the previous render clipped the
+    # title's closing paren and the GIRG legend column). tight instead expands
+    # the saved canvas to fit everything actually drawn.
     fig.savefig(
         out_png, dpi=300, facecolor=BG_COLOR,
+        bbox_inches="tight", pad_inches=0.15,
         metadata={"Creation Time": None, "Software": None},
     )
     plt.close(fig)

@@ -7,6 +7,7 @@ import datetime
 import os
 import subprocess
 import time
+import warnings
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import numpy as np
@@ -56,11 +57,11 @@ def get_git_commit_hash() -> str:
 
 def run_single_cell_cpp(args) -> List[tuple[float, int]]:
     """Worker task to run a single cell's trials using C++ engine."""
-    (n, p, r, mu, kappa, a, trials_per_cell, window_len, weights, cell_seed, cpp_bin_str) = args
-    
+    (n, p, r, mu, kappa, a, trials_per_cell, window_len, weights, graph_cfg, cell_seed, cpp_bin_str) = args
+
     # Generate 64-bit seed from SeedSequence
     seed_val = int(cell_seed.generate_state(1, dtype=np.uint64)[0])
-    
+
     cmd = [
         cpp_bin_str,
         "--n", str(n),
@@ -75,7 +76,21 @@ def run_single_cell_cpp(args) -> List[tuple[float, int]]:
     ]
     if weights is not None and len(weights) > 0:
         cmd.extend(["--weights", ",".join(map(str, weights))])
-        
+
+    # G4: GIRG-shaped cells (gamma=0.0 only; _validate_cpp_engine_support has
+    # already rejected anything else before a cell task is ever built) sample
+    # their own graph internally in C++ via --graph-type girg, mirroring
+    # run_single_trial's Python-side girg branch rather than the default
+    # G(n,p) path -- --p above is simply unused by the C++ binary in this mode.
+    graph_type = (graph_cfg or {}).get("type", "gnp")
+    if graph_type == "girg":
+        cmd.extend([
+            "--graph-type", "girg",
+            "--tau", str(graph_cfg["tau"]),
+            "--w-min", str(graph_cfg.get("w_min", 1.0)),
+            "--alpha-g", str(graph_cfg.get("alpha_g", 1.2)),
+        ])
+
     env = {**os.environ, "OMP_NUM_THREADS": "1"}
     
     try:
@@ -210,6 +225,156 @@ def run_single_trial(args) -> tuple[float, int]:
     
     return res.final_failed_fraction, res.rounds_completed
 
+# The Python GIRG path samples fear with `sample_degree_dependent_fears`, which
+# caps mu_d at 1 - epsilon (epsilon = 1e-3, graphs.py) and then draws
+# Beta(mu_d*kappa, (1-mu_d)*kappa). The C++ GIRG path samples fear with
+# `sample_individual_fears`, which short-circuits mean_fear == 1.0 to a point
+# mass at 1.0. Below the cap those two agree at gamma == 0 (the equivalence the
+# whole cpp GIRG path rests on); above it they are simply different
+# distributions, so the cpp path has to refuse rather than quietly diverge.
+# Named once here so the bound and its justification cannot drift apart.
+_GIRG_FEAR_CAP_EPSILON = 1e-3
+
+# Seed layouts the C++ engine implements. `run_single_cell_cpp` builds no
+# layout flag at all, and the binary always draws its seed set uniformly at
+# random (`choose_random_seed` in main.cpp), so "uniform" is the complete list.
+_CPP_SUPPORTED_SEED_LAYOUTS = ("uniform",)
+
+# n = 65537 is the first size at which the BKL sampler's recursion reaches
+# level 8 (cpp/include/twocascade/girg.hpp's level-count table: L=7 for
+# n<=65536, L=8 for n<=262144). Level 8 has no parity test in either suite --
+# see that file's "WHAT IS ACTUALLY VALIDATED, BY LEVEL" table -- so this is a
+# coverage gap, not a known defect. Round-4 blind review, H1: the honest
+# coverage statement lives only in that C++ header, where a config author
+# would not see it before launching a production run at this size.
+_GIRG_BKL_UNVALIDATED_LEVEL_N = 65536
+
+
+def _warn_if_girg_n_exceeds_validated_bkl_level(graph_cfg: Dict[str, Any], n: int) -> None:
+    """Emit a one-time stderr warning (not an error) when a GIRG C++ run
+    requests n above the largest size any parity test currently exercises.
+
+    Deliberately non-blocking: level 8 is the same code path as level 7, one
+    recursion iteration deeper, so it is expected to work -- it is simply
+    untested (cpp/include/twocascade/girg.hpp, L=8 row). Callers that know
+    what they are doing should not be stopped; they should be told.
+    """
+    if graph_cfg.get("type", "gnp") != "girg":
+        return
+    if n <= _GIRG_BKL_UNVALIDATED_LEVEL_N:
+        return
+    warnings.warn(
+        f"n={n} > {_GIRG_BKL_UNVALIDATED_LEVEL_N} uses BKL level 8, which no "
+        "parity test currently validates -- see the coverage table in "
+        "cpp/include/twocascade/girg.hpp before trusting production results "
+        "at this size.",
+        stacklevel=2,
+    )
+
+
+def _validate_cpp_engine_support(
+    graph_cfg: Dict[str, Any],
+    fear_cfg: Dict[str, Any],
+    seed_layout: str = "uniform",
+    mean_fear_grid: Optional[List[float]] = None,
+) -> None:
+    """Raise if an explicit engine="cpp" request pairs with a graph/fear/seeding/
+    fear-grid combination the C++ binary cannot actually run.
+
+    Before this check existed, `run_sweep`'s explicit-engine path (below) trusted
+    the caller: it dispatched to `run_single_cell_cpp` for ANY graph_cfg, but that
+    worker only ever builds `--n`/`--p` G(n,p) via the C++ binary's `sample_gnp_adjacency`
+    path. A config with graph.type="girg" (or "configuration_model", or fear.type=
+    "local") and an explicit engine="cpp" would silently sample G(n,p) with a
+    Janson-formula p that means nothing for the requested model, and report the
+    result as if it were that model — a silent wrong-model bug, not a crash
+    (cpp-girg-plan implementation_plan.md "Current state"). The auto-detect path
+    (the `else` branch below) already falls back to python for anything other than
+    gnp+global; this closes the same gap for the explicit-request path, which had
+    no such guard.
+
+    `seed_layout` and `mean_fear_grid` are checked here for exactly the same
+    reason, found by G5's blind review: both are read by the Python path and
+    ignored by the C++ one, so both were silent-wrong-model holes of the same
+    shape. seed_layout="disc" picks the `a` nodes nearest a random torus centre
+    (a spatially concentrated shock); the C++ binary has no disc seeding and
+    would have run a uniformly scattered shock instead, reporting it as disc.
+    mean_fear above the GIRG fear cap breaks the gamma == 0 fear equivalence
+    (see _GIRG_FEAR_CAP_EPSILON above).
+    """
+    graph_type = graph_cfg.get("type", "gnp")
+    fear_type = fear_cfg.get("type", "global")
+    gamma = fear_cfg.get("gamma", 0.0)
+
+    if fear_type != "global":
+        raise ValueError(
+            f"C++ engine does not support fear.type={fear_type!r}; only 'global' fear "
+            "has a C++ implementation. Use engine='python' for local fear."
+        )
+    if seed_layout not in _CPP_SUPPORTED_SEED_LAYOUTS:
+        raise ValueError(
+            f"C++ engine does not support seed_layout={seed_layout!r}; it always seeds "
+            f"uniformly at random. Supported: {list(_CPP_SUPPORTED_SEED_LAYOUTS)}. "
+            "Use engine='python' for spatially structured seeding (e.g. 'disc')."
+        )
+    if graph_type == "gnp":
+        return
+    if graph_type == "girg":
+        # Completeness of the girg graph_cfg, checked HERE rather than left to
+        # blow up later. `run_single_cell_cpp` builds "--tau", str(graph_cfg["tau"])
+        # with a hard subscript, so a config that sets graph.type="girg" but omits
+        # `tau` passes this gate, gets dispatched to cpp, and only then raises
+        # KeyError inside a multiprocessing Pool worker -- where the traceback
+        # points at a dict lookup in a child process rather than at the config
+        # file that is actually wrong.
+        #
+        # ONLY `tau` is required, deliberately. `w_min` and `alpha_g` default
+        # SYMMETRICALLY on both engine paths -- run_single_cell_cpp passes
+        # graph_cfg.get("w_min", 1.0) / graph_cfg.get("alpha_g", 1.2), and
+        # run_single_trial's Python girg branch calls sample_powerlaw_weights /
+        # sample_girg_adjacency with those same two defaults -- so a config that
+        # omits them runs the SAME model on either engine. That is not the
+        # failure mode this function exists to catch: its job is to reject
+        # combinations where cpp would silently simulate a DIFFERENT model than
+        # the config describes, and identical defaults on both sides is by
+        # definition not that. Requiring them here would instead make the cpp
+        # path reject configs the python path accepts and runs identically --
+        # a new asymmetry, not a closed hole. If those defaults ever diverge
+        # between the two paths, this is the place to add them.
+        if "tau" not in graph_cfg:
+            raise ValueError(
+                "C++ engine's GIRG path requires graph.tau to be set explicitly; got "
+                f"graph config {graph_cfg!r} with no 'tau' key. (w_min and alpha_g may "
+                "be omitted -- they default identically on the C++ and Python paths, to "
+                "1.0 and 1.2 respectively -- but tau has no default on either path.)"
+            )
+        if gamma != 0.0:
+            raise ValueError(
+                "C++ engine's GIRG path only supports fear.gamma == 0.0 (at gamma=0, "
+                "degree-dependent fear reduces exactly to the existing global-kappa "
+                f"model already ported to C++); got gamma={gamma}. Use engine='python' "
+                "for gamma != 0."
+            )
+        cap = 1.0 - _GIRG_FEAR_CAP_EPSILON
+        over_cap = [mu for mu in (mean_fear_grid or []) if mu > cap]
+        if over_cap:
+            raise ValueError(
+                f"C++ engine's GIRG path requires every sweep.mean_fear_grid entry to be "
+                f"<= 1 - {_GIRG_FEAR_CAP_EPSILON} = {cap}; got {over_cap}. Above that cap "
+                "the Python GIRG path (sample_degree_dependent_fears, which clips mu to the "
+                "cap and still draws Beta) and the C++ path (sample_individual_fears, which "
+                "returns a point mass at 1.0 for mean_fear == 1.0) are different "
+                "distributions, so the gamma == 0 equivalence this path relies on no longer "
+                "holds. Use engine='python' for mean_fear above the cap."
+            )
+        return
+    raise ValueError(
+        f"C++ engine does not support graph.type={graph_type!r}. "
+        "Supported graph types: 'gnp', 'girg' (fear.gamma == 0.0 only). "
+        "Use engine='python' for anything else (e.g. 'configuration_model', 'rgg', 'soft_rgg')."
+    )
+
+
 def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Optional[str] = None) -> None:
     """Run a grid sweep based on a config file and save raw outcomes to JSON."""
     if not os.path.exists(config_path):
@@ -240,16 +405,30 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         if engine_requested == "cpp":
             if not CPP_BIN.exists():
                 raise FileNotFoundError(f"C++ engine binary not found at {CPP_BIN}. Please build the C++ engine first.")
+            _validate_cpp_engine_support(
+                graph_cfg, fear_cfg, seed_layout, sweep["mean_fear_grid"])
             resolved_engine = "cpp"
         elif engine_requested == "python":
             resolved_engine = "python"
         else:
             raise ValueError(f"Unknown engine '{engine_requested}'. Must be 'cpp' or 'python'.")
     else:
-        if graph_cfg.get("type", "gnp") != "gnp" or fear_cfg.get("type", "global") != "global":
+        # seed_layout joins the auto-detect fallback conditions for the same
+        # reason it joins the explicit-path validation above: the C++ binary
+        # always seeds uniformly, so auto-detecting cpp for a non-uniform layout
+        # would silently run the wrong shock geometry. Falling back to python
+        # here is not merely safe, it is what surfaces the real error (the
+        # Python path raises "disc seeding requires a geometric graph" when the
+        # layout and the graph type are inconsistent).
+        if (graph_cfg.get("type", "gnp") != "gnp"
+                or fear_cfg.get("type", "global") != "global"
+                or seed_layout not in _CPP_SUPPORTED_SEED_LAYOUTS):
             resolved_engine = "python"
         else:
             resolved_engine = "cpp" if CPP_BIN.exists() else "python"
+
+    if resolved_engine == "cpp":
+        _warn_if_girg_n_exceeds_validated_bkl_level(graph_cfg, n)
 
     print(f"==================================================")
     print(f"USING SIMULATION ENGINE: {resolved_engine.upper()}")
@@ -329,7 +508,7 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         for idx, (i, j, mu, mult, a) in enumerate(cell_info):
             tasks.append((
                 n, p, r, mu, kappa, a, trials_per_cell,
-                window_len, weights, cell_seeds[idx], str(CPP_BIN)
+                window_len, weights, graph_cfg, cell_seeds[idx], str(CPP_BIN)
             ))
             
         print(f"Starting sweep simulation (C++) with {len(tasks)} cell tasks...")

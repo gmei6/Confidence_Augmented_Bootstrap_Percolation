@@ -1,0 +1,749 @@
+#include "twocascade/girg.hpp"
+#include "twocascade/rng.hpp"
+
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <set>
+#include <cmath>
+#include <limits>
+
+#define TEST_ASSERT(cond) \
+    do { \
+        if (!(cond)) { \
+            std::cerr << "Assertion failed at " << __FILE__ << ":" << __LINE__ << ": " << #cond << std::endl; \
+            std::exit(1); \
+        } \
+    } while (0)
+
+static std::vector<Point2D> make_points(int n, std::mt19937_64& rng) {
+    return sample_torus_points(n, rng);
+}
+
+// Simple-graph + symmetry check.
+//
+// Both samplers sort every adjacency list before returning, so this asserts
+// STRICTLY INCREASING neighbours -- which subsumes "no self-loop" and "no
+// duplicate neighbour" while also pinning the documented sortedness -- and then
+// uses binary search for the reciprocal-edge check. The previous form built a
+// std::set per vertex and LINEARLY scanned adj[j] for every neighbour, i.e.
+// O(n * deg^2); on the near-complete fixtures that is O(n^3), which is ~7e10
+// operations at the n = 4097 case added in G5.3 and would have made that case
+// unrunnable. This form is O(n * deg * log deg) and checks strictly more.
+static void assert_symmetric_simple(const std::vector<std::vector<int>>& adj, const char* label) {
+    int n = static_cast<int>(adj.size());
+    for (int i = 0; i < n; ++i) {
+        const std::vector<int>& nbrs = adj[i];
+        for (size_t k = 0; k < nbrs.size(); ++k) {
+            TEST_ASSERT(nbrs[k] != i); // no self-loop
+            // strictly increasing => sorted AND no duplicate neighbour
+            TEST_ASSERT(k == 0 || nbrs[k - 1] < nbrs[k]);
+            const std::vector<int>& back = adj[nbrs[k]];
+            TEST_ASSERT(std::binary_search(back.begin(), back.end(), i)); // i-j => j-i
+        }
+    }
+    (void)label;
+}
+
+// --- Variant A: direct kernel -----------------------------------------------
+
+void test_direct_degenerate_sizes() {
+    std::cout << "Running test_direct_degenerate_sizes..." << std::endl;
+    for (int n : {0, 1}) {
+        std::mt19937_64 rng = make_seeded_rng(3, 0);
+        std::vector<Point2D> pts = make_points(n, rng);
+        std::vector<double> w(n, 1.0);
+        Mt19937UniformSource src(rng);
+        auto adj = sample_girg_adjacency_direct(pts, w, 1.0, src);
+        TEST_ASSERT(static_cast<int>(adj.size()) == n);
+        for (auto& nbrs : adj) TEST_ASSERT(nbrs.empty());
+    }
+    std::cout << "test_direct_degenerate_sizes passed!" << std::endl;
+}
+
+void test_direct_complete_graph_coverage() {
+    std::cout << "Running test_direct_complete_graph_coverage..." << std::endl;
+    // Weights large enough to saturate p_ij == 1 for every pair at every
+    // distance: the sampled graph must be exactly complete (no gaps, no
+    // duplicate visits -- there is no randomness left to hide either bug).
+    for (int n : {2, 3, 5, 17, 64, 200}) {
+        std::mt19937_64 rng = make_seeded_rng(1, 0);
+        std::vector<Point2D> pts = make_points(n, rng);
+        std::vector<double> w(n, 1e9);
+        Mt19937UniformSource src(rng);
+        auto adj = sample_girg_adjacency_direct(pts, w, 1.0, src);
+        for (int i = 0; i < n; ++i) {
+            TEST_ASSERT(static_cast<int>(adj[i].size()) == n - 1);
+        }
+        assert_symmetric_simple(adj, "direct-complete");
+    }
+    std::cout << "test_direct_complete_graph_coverage passed!" << std::endl;
+}
+
+void test_direct_coincident_points_skipped() {
+    std::cout << "Running test_direct_coincident_points_skipped..." << std::endl;
+    // Three coincident points + one distinct point, weights saturating p=1.
+    // dist_sq == 0 must be a skip, not a probability-1 edge (matches the
+    // Python oracle's `continue`); only vertex 3 (distance > 0) connects.
+    std::vector<Point2D> pts = {{0.25, 0.25}, {0.25, 0.25}, {0.25, 0.25}, {0.75, 0.75}};
+    std::vector<double> w(4, 1e9);
+    ConstantUniformSource src(0.0); // accept every non-skipped pair
+    auto adj = sample_girg_adjacency_direct(pts, w, 1.0, src);
+    TEST_ASSERT(adj[0].size() == 1 && adj[0][0] == 3);
+    TEST_ASSERT(adj[1].size() == 1 && adj[1][0] == 3);
+    TEST_ASSERT(adj[2].size() == 1 && adj[2][0] == 3);
+    std::set<int> nbrs3(adj[3].begin(), adj[3].end());
+    TEST_ASSERT((nbrs3 == std::set<int>{0, 1, 2}));
+    std::cout << "test_direct_coincident_points_skipped passed!" << std::endl;
+}
+
+void test_direct_output_is_symmetric_simple_graph() {
+    std::cout << "Running test_direct_output_is_symmetric_simple_graph..." << std::endl;
+    std::mt19937_64 rng = make_seeded_rng(12, 0);
+    std::vector<Point2D> pts = make_points(400, rng);
+    std::vector<double> w = sample_powerlaw_weights(400, 2.5, 0.245, rng);
+    Mt19937UniformSource src(rng);
+    auto adj = sample_girg_adjacency_direct(pts, w, 1.2, src);
+    TEST_ASSERT(adj.size() == 400);
+    assert_symmetric_simple(adj, "direct-random");
+    std::cout << "test_direct_output_is_symmetric_simple_graph passed!" << std::endl;
+}
+
+// --- Variant B: BKL bucket sampler ------------------------------------------
+
+void test_bkl_degenerate_sizes() {
+    std::cout << "Running test_bkl_degenerate_sizes..." << std::endl;
+    for (int n : {0, 1}) {
+        std::mt19937_64 rng = make_seeded_rng(3, 0);
+        std::vector<Point2D> pts = make_points(n, rng);
+        std::vector<double> w(n, 1.0);
+        Mt19937UniformSource src(rng);
+        auto adj = sample_girg_adjacency_bkl(pts, w, 1.2, src);
+        TEST_ASSERT(static_cast<int>(adj.size()) == n);
+    }
+    std::cout << "test_bkl_degenerate_sizes passed!" << std::endl;
+}
+
+void test_bkl_complete_graph_coverage() {
+    std::cout << "Running test_bkl_complete_graph_coverage..." << std::endl;
+    // THE deterministic partition check: with weights large enough to saturate
+    // p_ij == 1 at every distance, every cell-pair group takes the p_bar >= 1
+    // exact-enumeration branch, so the sampled graph must be EXACTLY complete.
+    // No randomness is left to hide a dropped cell-pair class (a missing edge)
+    // or a doubled one (a duplicate neighbour), which is why the G5.2 mutation
+    // study found this to be the check that catches all three partition
+    // mutations -- including the two the constant-c level-set tests are
+    // structurally blind to.
+    //
+    // COVERAGE, and why the n list has to reach this far (reviewer round 3,
+    // MAJOR-1). The BKL level count is n-dependent, so a size list is really a
+    // LEVEL list, and until G5.3 this check stopped at n = 999, i.e. L <= 4,
+    // while production runs at L = 6-7. n = 2000 (L = 5) and n = 4097 (L = 6,
+    // the first n at which the schedule reaches it) close that to L = 6. The
+    // levels reached are asserted below against girg_bkl_level_count rather
+    // than assumed, so a future change to the schedule that quietly lowered L
+    // at these sizes would fail here instead of silently shrinking coverage.
+    //
+    // n = 4097 is the practical ceiling and the reason is structural, not
+    // impatience: a COMPLETE graph's adjacency lists hold n(n-1) entries by
+    // definition -- ~16.8M ints, ~67 MB, at this n -- so the next level up
+    // (L = 7 needs n > 16384) would cost ~1 GB of adjacency alone. That is not
+    // a dense n x n structure smuggled in (the constitution's §I bar); it is
+    // the output of a saturating fixture, and it is exactly why L >= 7 is
+    // validated statistically, at n = 40000, by
+    // tests/test_cpp_girg_validation.py's exact-moment test instead.
+    int deepest_level = 0;
+    for (int n : {2, 3, 5, 17, 64, 200, 999, 2000, 4097}) {
+        std::mt19937_64 rng = make_seeded_rng(1, 0);
+        std::vector<Point2D> pts = make_points(n, rng);
+        std::vector<double> w(n, 1e9);
+        Mt19937UniformSource src(rng);
+        auto adj = sample_girg_adjacency_bkl(pts, w, 1.2, src);
+        for (int i = 0; i < n; ++i) {
+            TEST_ASSERT(static_cast<int>(adj[i].size()) == n - 1);
+        }
+        assert_symmetric_simple(adj, "bkl-complete");
+        deepest_level = std::max(deepest_level, girg_bkl_level_count(n));
+    }
+    // Pin the levels this fixture list actually exercises, so the coverage
+    // claim in girg.hpp is asserted by the suite and not merely written down.
+    TEST_ASSERT(girg_bkl_level_count(999) == 4);
+    TEST_ASSERT(girg_bkl_level_count(2000) == 5);
+    TEST_ASSERT(girg_bkl_level_count(4097) == 6);
+    TEST_ASSERT(deepest_level == 6);
+    std::cout << "  deterministic partition coverage reaches L=" << deepest_level << std::endl;
+    std::cout << "test_bkl_complete_graph_coverage passed!" << std::endl;
+}
+
+void test_bkl_output_is_symmetric_simple_graph() {
+    std::cout << "Running test_bkl_output_is_symmetric_simple_graph..." << std::endl;
+    std::mt19937_64 rng = make_seeded_rng(12, 0);
+    std::vector<Point2D> pts = make_points(400, rng);
+    std::vector<double> w = sample_powerlaw_weights(400, 2.5, 0.245, rng);
+    Mt19937UniformSource src(rng);
+    auto adj = sample_girg_adjacency_bkl(pts, w, 1.2, src);
+    TEST_ASSERT(adj.size() == 400);
+    assert_symmetric_simple(adj, "bkl-random");
+    std::cout << "test_bkl_output_is_symmetric_simple_graph passed!" << std::endl;
+}
+
+// Independent restatement of the model's pair probability, written straight
+// from the definition p_ij = min(1, (w_i w_j / (n d_ij^2))^alpha) rather than
+// from girg_pair_probability's control flow. Its whole job is to be an ORACLE
+// for the alpha <= 0 branch, where the pre-clamp form min(1, x)^alpha and the
+// correct post-clamp form min(1, x^alpha) genuinely disagree.
+static double oracle_pair_probability(const Point2D& a, const Point2D& b,
+                                       double wa, double wb, int n, double alpha) {
+    double dx = std::fabs(a.x - b.x);
+    dx = std::min(dx, 1.0 - dx);
+    double dy = std::fabs(a.y - b.y);
+    dy = std::min(dy, 1.0 - dy);
+    double d2 = dx * dx + dy * dy;
+    if (d2 == 0.0) return 0.0; // coincident points are skipped, not saturated
+    double ratio = (wa * wb) / (static_cast<double>(n) * d2);
+    double powered = std::pow(ratio, alpha);
+    return powered < 1.0 ? powered : 1.0;
+}
+
+void test_alpha_nonpositive_matches_independent_pair_probabilities() {
+    std::cout << "Running test_alpha_nonpositive_matches_independent_pair_probabilities..." << std::endl;
+    // RISKS.md #3: alpha_g <= 0 breaks the p_bar upper-bound rejection scheme's
+    // monotonicity assumption, so sample_girg_adjacency_bkl falls back to
+    // sample_girg_adjacency_direct there.
+    //
+    // This test USED to assert only `adj_direct == adj_bkl`, which is true BY
+    // CONSTRUCTION (girg.cpp's alpha_g <= 0 branch literally returns
+    // sample_girg_adjacency_direct(...)) and therefore proved nothing about
+    // whether either variant computes the right probabilities. It missed a real
+    // bug: girg_pair_probability clamped BEFORE the power, i.e. computed
+    // min(1,x)^alpha, which for alpha < 0 is neither an upper bound nor the
+    // model. Both variants agreed -- on the same wrong number.
+    //
+    // So the assertion is now against an INDEPENDENT evaluation of the
+    // definition: with a constant-c source, an edge appears iff c < p_ij, so
+    // the sampled edge set must equal the oracle's threshold set exactly. The
+    // fallback identity is still checked, but as a secondary claim.
+    const int n = 150;
+    const double alpha = -1.0;
+    std::mt19937_64 rng = make_seeded_rng(21, 0);
+    std::vector<Point2D> pts = make_points(n, rng);
+    std::vector<double> w = sample_powerlaw_weights(n, 2.5, 0.245, rng);
+
+    for (double c : {1e-6, 0.5}) {
+        std::set<std::pair<int, int>> expected;
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                if (c < oracle_pair_probability(pts[i], pts[j], w[i], w[j], n, alpha)) {
+                    expected.insert({i, j});
+                }
+            }
+        }
+        TEST_ASSERT(!expected.empty()); // a vacuous threshold set would prove nothing
+
+        ConstantUniformSource src_a(c);
+        ConstantUniformSource src_b(c);
+        auto adj_direct = sample_girg_adjacency_direct(pts, w, alpha, src_a);
+        auto adj_bkl = sample_girg_adjacency_bkl(pts, w, alpha, src_b);
+
+        std::set<std::pair<int, int>> got_direct, got_bkl;
+        for (int i = 0; i < n; ++i) {
+            for (int j : adj_direct[i]) if (j > i) got_direct.insert({i, j});
+            for (int j : adj_bkl[i]) if (j > i) got_bkl.insert({i, j});
+        }
+        TEST_ASSERT(got_direct == expected);
+        TEST_ASSERT(got_bkl == expected);
+        TEST_ASSERT(adj_direct == adj_bkl); // the fallback itself, now secondary
+    }
+    std::cout << "test_alpha_nonpositive_matches_independent_pair_probabilities passed!" << std::endl;
+}
+
+void test_bkl_degenerate_weights_match_independent_pair_probabilities() {
+    std::cout << "Running test_bkl_degenerate_weights_match_independent_pair_probabilities..." << std::endl;
+    // RISKS.md #4: w_min <= 0 or a non-finite weight breaks the weight-layer
+    // key floor(log2(w/w_min)), so sample_girg_adjacency_bkl falls back to
+    // sample_girg_adjacency_direct in both cases.
+    //
+    // This test USED to assert only `adj_direct == adj_bkl`, which is true BY
+    // CONSTRUCTION -- girg.cpp's degenerate-weight branch literally returns
+    // sample_girg_adjacency_direct(...) -- and so proved nothing about whether
+    // either variant computes the right probabilities on degenerate weights.
+    // It is the same defect that was fixed in G5.1 for the alpha_g <= 0
+    // fallback (test_alpha_nonpositive_matches_independent_pair_probabilities
+    // above), and it is fixed the same way: assert both variants' edge sets
+    // against an INDEPENDENT evaluation of the model definition under a
+    // constant-c source, where an edge appears iff c < p_ij. The identity
+    // between the two variants is kept, but demoted to a secondary claim.
+    //
+    // The two degenerate inputs exercise both ends of the pair-probability
+    // formula, not just the fallback plumbing:
+    //   w = 0 at one vertex -> base = 0, so 0^alpha = 0: that vertex must end
+    //                          up ISOLATED, not saturated.
+    //   w = inf at one vertex -> base = inf, so inf^alpha = inf, clamped to 1:
+    //                          that vertex must connect to EVERY other vertex
+    //                          (no coincident points in this fixture).
+    // Those are asserted explicitly below, so a fallback that silently dropped
+    // or saturated the degenerate vertex cannot pass.
+    //
+    // THIRD CASE (G5.3, reviewer round 3 MINOR-5): every weight FINITE and
+    // w_min STRICTLY POSITIVE, yet the layer key still blows up, because w_min
+    // is denormal and w_i / w_min overflows to +inf. floor(log2(+inf)) is +inf
+    // and static_cast<int> of it is undefined behaviour -- the two guards above
+    // (all-finite, w_min > 0) both pass, so this input used to reach the bucket
+    // path. The discriminating assertion is adj_bkl == adj_direct under a
+    // constant source: the fallback makes them identical BY CONSTRUCTION, while
+    // the bucket path under a constant source does NOT reproduce the direct
+    // edge set (its ratio branch accepts on u < exact_p/p_bar, weaker than the
+    // direct u < exact_p, and its geometric skip jumps over candidate pairs
+    // that a constant u never brings back). MEASURED on this exact fixture with
+    // the guard removed (scratch build, G5.3): direct 486 edges vs bkl 517,
+    // symmetric difference 145 (88 bkl-only, 57 direct-only), adj_direct ==
+    // adj_bkl false. So the assertions below discriminate rather than passing
+    // vacuously. Note that vertex 3 is isolated either way, so the isolation
+    // assertion alone would NOT have caught it -- the edge-set comparison is
+    // what does.
+    const int n = 80;
+    const double alpha = 1.2;
+    const double c = 0.2;
+    std::mt19937_64 rng = make_seeded_rng(22, 0);
+    std::vector<Point2D> pts = make_points(n, rng);
+    std::vector<double> w_zero(n, 1.0);
+    w_zero[0] = 0.0; // w_min == 0
+    std::vector<double> w_inf(n, 1.0);
+    w_inf[5] = std::numeric_limits<double>::infinity();
+    std::vector<double> w_denormal_min(n, 1.0);
+    // Smallest positive double: finite, > 0, but 1.0 / it == +inf.
+    w_denormal_min[3] = std::numeric_limits<double>::denorm_min();
+    TEST_ASSERT(w_denormal_min[3] > 0.0 && std::isfinite(w_denormal_min[3]));
+    TEST_ASSERT(!std::isfinite(1.0 / w_denormal_min[3])); // the actual hazard
+
+    int case_index = 0;
+    for (const auto& w : {w_zero, w_inf, w_denormal_min}) {
+        std::set<std::pair<int, int>> expected;
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                if (c < oracle_pair_probability(pts[i], pts[j], w[i], w[j], n, alpha)) {
+                    expected.insert({i, j});
+                }
+            }
+        }
+        // Non-vacuity in BOTH directions: a threshold set that was empty (or
+        // the complete graph) would make the comparison below meaningless.
+        TEST_ASSERT(!expected.empty());
+        TEST_ASSERT(static_cast<int>(expected.size()) < n * (n - 1) / 2);
+
+        ConstantUniformSource src_a(c);
+        ConstantUniformSource src_b(c);
+        auto adj_direct = sample_girg_adjacency_direct(pts, w, alpha, src_a);
+        auto adj_bkl = sample_girg_adjacency_bkl(pts, w, alpha, src_b);
+
+        std::set<std::pair<int, int>> got_direct, got_bkl;
+        for (int i = 0; i < n; ++i) {
+            for (int j : adj_direct[i]) if (j > i) got_direct.insert({i, j});
+            for (int j : adj_bkl[i]) if (j > i) got_bkl.insert({i, j});
+        }
+        TEST_ASSERT(got_direct == expected);
+        TEST_ASSERT(got_bkl == expected);
+        TEST_ASSERT(adj_direct == adj_bkl); // the fallback itself, now secondary
+
+        if (case_index == 0) {
+            TEST_ASSERT(adj_direct[0].empty()); // w = 0 -> isolated
+            TEST_ASSERT(adj_bkl[0].empty());
+        } else if (case_index == 1) {
+            TEST_ASSERT(static_cast<int>(adj_direct[5].size()) == n - 1); // w = inf -> saturated
+            TEST_ASSERT(static_cast<int>(adj_bkl[5].size()) == n - 1);
+        } else {
+            // denorm_min weight: base underflows to 0, so p = 0 for every pair
+            // involving it -- isolated, exactly like the w = 0 case, and NOT
+            // saturated by a garbage layer key.
+            TEST_ASSERT(adj_direct[3].empty());
+            TEST_ASSERT(adj_bkl[3].empty());
+        }
+        ++case_index;
+    }
+    std::cout << "test_bkl_degenerate_weights_match_independent_pair_probabilities passed!" << std::endl;
+}
+
+static long symmetric_difference_count(const std::vector<std::vector<int>>& a,
+                                        const std::vector<std::vector<int>>& b) {
+    std::set<std::pair<int, int>> ea, eb;
+    for (size_t i = 0; i < a.size(); ++i) {
+        for (int j : a[i]) {
+            if (j > static_cast<int>(i)) ea.insert({static_cast<int>(i), j});
+        }
+    }
+    for (size_t i = 0; i < b.size(); ++i) {
+        for (int j : b[i]) {
+            if (j > static_cast<int>(i)) eb.insert({static_cast<int>(i), j});
+        }
+    }
+    long diff = 0;
+    for (auto& e : ea) if (!eb.count(e)) ++diff;
+    for (auto& e : eb) if (!ea.count(e)) ++diff;
+    return diff;
+}
+
+void test_bkl_vs_direct_level_set_identity_high_threshold() {
+    std::cout << "Running test_bkl_vs_direct_level_set_identity_high_threshold..." << std::endl;
+    // TWICE-CORRECTED SCOPE -- recorded here because the first correction
+    // (this test originally asserted exact identity at c in {1e-6,0.3,0.9})
+    // was itself only PARTIALLY right, and the record needs to survive past
+    // this session (okf/lessons.md: don't silently narrow, or re-widen, a
+    // documented invariant without saying so).
+    //
+    // First correction (G2): RISKS.md #1 assumed a constant-c stub makes
+    // direct and bkl agree "at literally every threshold c", the way it does
+    // for C1's fast-vs-slow port. That is only true while every visited
+    // cell-pair group has p_bar >= 1 (the exact-enumeration branch, tested
+    // separately and reliably by test_bkl_complete_graph_coverage above).
+    //
+    // Second correction (G5, this fixture): "high c" is not by itself
+    // sufficient either, and the reason is exact, not approximate. Once
+    // p_bar < 1 for a group, bkl's geometric-skip branch accepts a candidate
+    // pair iff u.next() < exact_p(i,j) / p_bar. Since p_bar < 1 by
+    // construction of that branch, exact_p/p_bar > exact_p for any
+    // exact_p > 0 -- so the skip branch's accept condition is PROVABLY WEAKER
+    // than the direct kernel's u.next() < exact_p(i,j) at the SAME constant
+    // u, for any c whatsoever, including c close to 1. A pair with a tiny
+    // absolute exact_p can still cross a high c if its ratio to its own
+    // group's (necessarily larger) upper bound is high enough. This was
+    // missed in G2 because that session's one embedded fixture happened not
+    // to contain such a pair at c in {0.9,0.95,0.99} -- fixture luck, not a
+    // guarantee (confirmed by deriving a concrete counterexample against the
+    // Python oracle during G5: n=200, c=0.9, a pair with exact_p ~ 0.054 and
+    // group p_bar ~ 0.060, giving ratio ~0.90+ and one spurious bkl edge).
+    //
+    // So: exact identity holds ONLY in the p_bar>=1-forced regime (covered
+    // separately, deterministically, by test_bkl_complete_graph_coverage).
+    // Elsewhere, this test checks a BOUNDED small symmetric difference at
+    // high c, not zero. (G5 justified the tight bound by asserting that a
+    // real partition bug "still shows up as a LARGE, systematic difference --
+    // thousands of edges, as seen at c=1e-6 during G2's investigation". That
+    // justification was never measured and is FALSE at these thresholds; it
+    // is corrected by measurement in the third correction below, and the
+    // c=1e-6 figure it cited is baseline ratio-branch divergence, present
+    // without any mutation at all.) The non-saturating regime's overall
+    // correctness is covered by the (separate, required) statistical battery
+    // in tests/test_cpp_girg_validation.py (G5): edge count, degree
+    // histogram, distance-binned edges, all against the Python oracle under
+    // real RNG.
+    //
+    // n=331 deliberately spans multiple non-power-of-two-friendly cell grids
+    // across the level range (L is >=2 for n this size), exercising the
+    // multi-level recursion rather than only the deepest level.
+    std::mt19937_64 rng = make_seeded_rng(2026, 0);
+    std::vector<Point2D> pts = make_points(331, rng);
+    std::vector<double> w = sample_powerlaw_weights(331, 2.5, 0.245, rng);
+
+    // THIRD CORRECTION (G5.2, reviewer round 2 MINOR-8): the bound of 3 was
+    // asserted with no demonstrated discrimination, and the paragraph above
+    // claiming a dropped/doubled cell-pair class "still shows up as a LARGE,
+    // systematic difference (thousands of edges)" was WRONG at these
+    // thresholds. Measured, by mutating sample_girg_adjacency_bkl in an
+    // isolated copy of the tree and re-running this exact fixture
+    // (symmetric difference at c = 0.9 / 0.95 / 0.99):
+    //
+    //   baseline                              0 / 0 / 0
+    //   drop the level-2 non-touching class   0 / 0 / 0   <- INVISIBLE
+    //   drop the level-3 non-touching class  10 /10 /10
+    //   drop the level-4 non-touching class  18 /18 /18
+    //   delete the cell_lex_less guard        0 / 0 / 0   <- INVISIBLE
+    //     (i.e. visit and sample every unordered cell pair TWICE)
+    //
+    // and on the n=200 fixture of the sibling Python test, dropping level 3
+    // (its deepest) gives 4 / 3 / 3 against a bound of 3 -- passing at two of
+    // the three thresholds. So the smallest mutated difference is 0, the ratio
+    // to the bound is 0.00, and this check is NOT what protects against
+    // partition bugs. Both blind spots have structural causes, not fixture
+    // luck:
+    //   - Doubling is IDEMPOTENT at the edge-set level under a constant
+    //     source: the second visit to a cell pair re-runs the same
+    //     accept/reject with the same u and reaches the same verdict. No c
+    //     can fix that; it is inherent to the constant-source stub.
+    //   - The level-2 non-touching class holds only the longest-range pairs,
+    //     whose exact_p is far below any c in {0.9, 0.95, 0.99}, so it
+    //     contributes no edges at these thresholds either way.
+    //
+    // The bound is therefore KEPT (as a cheap regression tripwire on the
+    // ratio-branch boundary effect, which is what it actually measures) but is
+    // no longer claimed to catch partition bugs. What does catch them, checked
+    // by re-running the whole suite under each mutation:
+    //   - test_bkl_complete_graph_coverage above: the p_bar>=1 regime forces
+    //     exact enumeration, so a dropped class shows as a missing edge and a
+    //     doubled class as a duplicate neighbour. It fails on ALL THREE
+    //     mutations, at cpp/tests/test_girg.cpp's adj[i].size() == n-1
+    //     assertion.
+    //   - tests/test_cpp_girg_validation.py's production-n moment test
+    //     (MAJOR-1), which is statistical and does not use a constant source,
+    //     so neither blind spot applies to it. Measured under the same two
+    //     mutations: doubling gives z = +91.1 on the edge count (m = 36539 vs
+    //     E = 25130 +- 125), dropping level 3 gives z = -37.5 in the
+    //     [0.236,0.354) distance bin (238 edges vs E = 1627 +- 37); both
+    //     p = 0 against that test's Bonferroni alpha of 6.7e-5. G5.3 closed
+    //     the remaining hole in that table by measuring the level-2 drop --
+    //     the mutation invisible HERE -- against that same test: worst
+    //     z = -20.89 in the [0.471,0.589) distance bin (79 edges vs
+    //     E = 524.9 +- 21.3), p = 7.1e-97, 19 of 75 z-scores past alpha, with
+    //     the deficit concentrated in the OUTER distance bins exactly as a
+    //     lost longest-range class predicts. So every mutation this test is
+    //     blind to is now demonstrated -- not assumed -- to be caught
+    //     elsewhere.
+    //   - and, added here for the doubling case specifically, the
+    //     simple-graph check below: on this fixture the doubling mutation
+    //     emits 251 pair records for 223 distinct edges at c=0.9 (28 doubled
+    //     pairs, i.e. 56 duplicate adjacency entries; 28 doubled pairs at
+    //     c=0.95 and c=0.99 too) even though the edge SET is unchanged, so
+    //     asserting simplicity turns a previously invisible mutation into a
+    //     hard failure in this very test.
+    // DEFERRED ADVISORY (G5.3, reviewer round 3 MINOR-6). The reviewer's
+    // suggestion is to DERIVE this bound from the fixture instead of pinning
+    // the observed value: count, for each c, the pairs that sit in the
+    // ratio-branch boundary band -- exact_p < c <= exact_p / p_bar -- and
+    // assert the symmetric difference against that count. Not done, and
+    // deliberately so: p_bar is a property of the sampler's own cell x
+    // weight-layer partition, so computing it in the test means re-deriving
+    // the level schedule, the cell assignment, the layer keys and each group's
+    // max weight -- a second implementation of the partition, asserted against
+    // the first. That is both more code than the check is worth and
+    // self-referential in exactly the way that would hide a shared-assumption
+    // bug. The bound stays a pinned observation, and its LIMITS are measured
+    // and stated above rather than assumed, which is what makes leaving it
+    // honest. Revisit only if the sampler ever exposes its group structure for
+    // inspection (it does not today, and should not grow an accessor just for
+    // this).
+    const long kMaxSymmetricDiff = 3; // tripwire on the ratio-branch boundary, see above
+    for (double c : {0.9, 0.95, 0.99}) {
+        ConstantUniformSource src_direct(c);
+        ConstantUniformSource src_bkl(c);
+        auto adj_direct = sample_girg_adjacency_direct(pts, w, 1.2, src_direct);
+        auto adj_bkl = sample_girg_adjacency_bkl(pts, w, 1.2, src_bkl);
+        long diff = symmetric_difference_count(adj_direct, adj_bkl);
+        TEST_ASSERT(diff <= kMaxSymmetricDiff);
+        assert_symmetric_simple(adj_bkl, "bkl-level-set");
+        assert_symmetric_simple(adj_direct, "direct-level-set");
+    }
+    std::cout << "test_bkl_vs_direct_level_set_identity_high_threshold passed!" << std::endl;
+}
+
+// Counts uniform draws while passing a real RNG through. Every unit of pair
+// work in either sampler consumes at least one draw -- the direct kernel draws
+// exactly once per pair, and BKL draws once per geometric skip, once per
+// candidate accepted by the skip, and once per exactly-enumerated pair -- so
+// the draw count IS the visited-pair work, measured exactly and reproducibly
+// rather than inferred from a wall clock.
+class CountingUniformSource : public IUniformSource {
+public:
+    explicit CountingUniformSource(std::mt19937_64& rng) : rng_(rng) {}
+    double next() override { ++count_; return dist_(rng_); }
+    long long count() const { return count_; }
+
+private:
+    std::mt19937_64& rng_;
+    std::uniform_real_distribution<double> dist_{0.0, 1.0};
+    long long count_ = 0;
+};
+
+void test_bkl_pair_work_grows_slower_than_quadratically() {
+    std::cout << "Running test_bkl_pair_work_grows_slower_than_quadratically..." << std::endl;
+    // This test previously measured NOTHING that its name claims: it sampled at
+    // two sizes and asserted only symmetry, with a comment about bounding
+    // wall-clock growth that no code implemented. It now counts pair work
+    // exactly, via the uniform-draw counter above.
+    //
+    // Wall clock is deliberately still not used (flaky on a shared machine);
+    // real timings live in scripts/bench_girg.py's committed table. Draw counts
+    // are deterministic given the seed, so the bounds below are pass/fail
+    // facts about the algorithm, not machine-dependent thresholds.
+    const int n_small = 2000;
+    const int n_large = 8000;
+    long long draws_small = 0, draws_large = 0;
+
+    for (int n : {n_small, n_large}) {
+        std::mt19937_64 rng = make_seeded_rng(77, 0);
+        std::vector<Point2D> pts = make_points(n, rng);
+        std::vector<double> w = sample_powerlaw_weights(n, 2.5, 0.245, rng);
+        CountingUniformSource src(rng);
+        auto adj = sample_girg_adjacency_bkl(pts, w, 1.2, src);
+        TEST_ASSERT(static_cast<int>(adj.size()) == n);
+        assert_symmetric_simple(adj, "bkl-scaling");
+        (n == n_small ? draws_small : draws_large) = src.count();
+    }
+
+    const double pairs_large = 0.5 * static_cast<double>(n_large)
+                             * static_cast<double>(n_large - 1);
+    std::cout << "  bkl draws: n=" << n_small << " -> " << draws_small
+              << ", n=" << n_large << " -> " << draws_large
+              << " (full enumeration at n=" << n_large << " would be "
+              << static_cast<long long>(pairs_large) << ")" << std::endl;
+
+    TEST_ASSERT(draws_small > 0 && draws_large > 0);
+
+    // (1) Absolute: BKL must visit far fewer pairs than full enumeration at the
+    //     larger size. Measured: 527651 draws vs 31996000 pairs, a ratio of
+    //     0.0165 (~1/61); 0.25 is the loose bound around it.
+    TEST_ASSERT(static_cast<double>(draws_large) < 0.25 * pairs_large);
+
+    // (2) Growth: a 4x increase in n costs strictly less than the 16x a
+    //     quadratic algorithm would. Measured: 115509 -> 527651 draws, a growth
+    //     of 4.57x. 10x is loose enough to survive fixture noise, tight enough
+    //     that any regression to per-pair enumeration (which would land at
+    //     exactly 16.0x) fails it.
+    double growth = static_cast<double>(draws_large) / static_cast<double>(draws_small);
+    std::cout << "  growth over 4x n: " << growth << "x (quadratic would be 16x)" << std::endl;
+    TEST_ASSERT(growth < 10.0);
+
+    // (3) Control: the direct kernel draws exactly once per pair, confirming
+    //     the counter measures what the claim needs it to measure.
+    {
+        std::mt19937_64 rng = make_seeded_rng(77, 0);
+        std::vector<Point2D> pts = make_points(n_small, rng);
+        std::vector<double> w = sample_powerlaw_weights(n_small, 2.5, 0.245, rng);
+        CountingUniformSource src(rng);
+        sample_girg_adjacency_direct(pts, w, 1.2, src);
+        TEST_ASSERT(src.count() == static_cast<long long>(n_small) * (n_small - 1) / 2);
+    }
+    std::cout << "test_bkl_pair_work_grows_slower_than_quadratically passed!" << std::endl;
+}
+
+void test_bkl_level_count_schedule_and_cap() {
+    std::cout << "Running test_bkl_level_count_schedule_and_cap..." << std::endl;
+    // The BKL level schedule was an unobservable internal until it was pulled
+    // out into girg_bkl_level_count (reviewer round 2, MINOR-7). Two properties
+    // it asserts are load-bearing OUTSIDE this file:
+    //
+    //  (1) L is n-DEPENDENT, and the production sizes sit at different L than
+    //      the small fixtures every other test uses. That is the whole reason
+    //      tests/test_cpp_girg_validation.py has to carry a parity check at
+    //      n = 10000 (MAJOR-1): a suite that stops at n = 2000 never runs the
+    //      recursion at the depth production runs it at.
+    //  (2) The hard cap of 8 is a real cliff, not decoration: above it the
+    //      deepest cell occupancy grows with n and the sampler drifts back
+    //      toward quadratic. Pinning WHERE it starts to bind means a future
+    //      change to the schedule cannot quietly move that boundary under a
+    //      production size.
+    const int n_small_fixtures = 2000;   // test_bkl_pair_work_..., prong A
+    const int n_production = 10000;      // configs/poster_girg_*.json
+    const int n_largest_run = 40000;     // largest n this project has swept
+    TEST_ASSERT(girg_bkl_level_count(n_small_fixtures) == 5);
+    TEST_ASSERT(girg_bkl_level_count(n_production) == 6);
+    TEST_ASSERT(girg_bkl_level_count(n_largest_run) == 7);
+    // ... and therefore small-n coverage really does miss production depth:
+    TEST_ASSERT(girg_bkl_level_count(n_small_fixtures) < girg_bkl_level_count(n_production));
+
+    // Floor: L >= 2 for every n, including the degenerate sizes, because a
+    // level-1 (2x2) grid has no non-touching cell pairs to recurse on.
+    for (int n : {0, 1, 2, 3, 4, 16, 64, 100}) {
+        TEST_ASSERT(girg_bkl_level_count(n) >= 2);
+    }
+
+    // Monotone non-decreasing in n (a schedule that ever went DOWN with n
+    // would shrink the grid as the point set grew).
+    int prev = girg_bkl_level_count(1);
+    for (int n = 2; n <= 300000; n = (n < 1000 ? n + 1 : n + 997)) {
+        int cur = girg_bkl_level_count(n);
+        TEST_ASSERT(cur >= prev);
+        TEST_ASSERT(cur <= kGirgBklMaxLevel);
+        prev = cur;
+    }
+
+    // The cap binds exactly above n = 262144 = 4 * 2^16: at that n the
+    // unclamped schedule is exactly 8, and one point later it wants 9 and is
+    // refused. Compare against the unclamped formula so this asserts the CAP,
+    // not merely the clamped value.
+    auto uncapped = [](int n) {
+        return static_cast<int>(std::ceil(0.5 * std::log2(std::max(n / 4.0, 4.0))));
+    };
+    TEST_ASSERT(uncapped(262144) == kGirgBklMaxLevel);
+    TEST_ASSERT(girg_bkl_level_count(262144) == kGirgBklMaxLevel);
+    TEST_ASSERT(uncapped(262145) > kGirgBklMaxLevel);            // wants more
+    TEST_ASSERT(girg_bkl_level_count(262145) == kGirgBklMaxLevel); // refused
+    // Production sizes are comfortably below the cliff.
+    TEST_ASSERT(uncapped(n_largest_run) < kGirgBklMaxLevel);
+    std::cout << "  L(2000)=5 L(10000)=6 L(40000)=7, cap " << kGirgBklMaxLevel
+              << " first binds at n=262145" << std::endl;
+    std::cout << "test_bkl_level_count_schedule_and_cap passed!" << std::endl;
+}
+
+void test_all_points_coincident_produces_no_edges() {
+    std::cout << "Running test_all_points_coincident_produces_no_edges..." << std::endl;
+    // Every pairwise distance is exactly 0 (d^2 == 0 is a skip, not a
+    // saturating edge -- RISKS.md #2), so BOTH variants must produce an empty
+    // graph even with weights large enough to saturate p to 1 everywhere a
+    // distance were nonzero. This is the degenerate case where BKL's cell
+    // grid collapses every point into the SAME cell at every level (there is
+    // never a non-touching cell pair to route through the geometric-skip
+    // path), so it also exercises "the deepest-level same-cell loop correctly
+    // finds zero edges" rather than crashing or hanging.
+    int n = 50;
+    std::vector<Point2D> pts(n, Point2D{0.37, 0.61});
+    std::vector<double> w(n, 1e9);
+
+    ConstantUniformSource src_direct(0.0); // accept everything not skipped
+    auto adj_direct = sample_girg_adjacency_direct(pts, w, 1.2, src_direct);
+    for (auto& nbrs : adj_direct) {
+        TEST_ASSERT(nbrs.empty());
+    }
+
+    ConstantUniformSource src_bkl(0.0);
+    auto adj_bkl = sample_girg_adjacency_bkl(pts, w, 1.2, src_bkl);
+    for (auto& nbrs : adj_bkl) {
+        TEST_ASSERT(nbrs.empty());
+    }
+    std::cout << "test_all_points_coincident_produces_no_edges passed!" << std::endl;
+}
+
+void test_girg_pair_probability_bounds() {
+    std::cout << "Running test_girg_pair_probability_bounds..." << std::endl;
+    Point2D a{0.1, 0.1};
+    Point2D b{0.9, 0.9}; // far apart on the torus (wraps to near)
+    double p = girg_pair_probability(a, b, 1.0, 1.0, 1000, 1.2);
+    TEST_ASSERT(p >= 0.0 && p <= 1.0);
+
+    Point2D coincident{0.5, 0.5};
+    double p_coincident = girg_pair_probability(coincident, coincident, 1e9, 1e9, 100, 1.2);
+    TEST_ASSERT(p_coincident == 0.0);
+
+    double p_saturating = girg_pair_probability(a, b, 1e12, 1e12, 10, 1.2);
+    TEST_ASSERT(p_saturating == 1.0);
+
+    // alpha_g <= 0: the clamp must be applied AFTER the power. These two cases
+    // are hand-computable to exact doubles and are precisely the ones the old
+    // clamp-before-power form got wrong, so they are a discriminator, not a
+    // restatement of the implementation.
+    //
+    //   pts (0.1,0.1) and (0.2,0.1): dx = 0.1, dy = 0, d^2 = 0.01.
+    //   n=10,   w=1: base = 1/(10*0.01)   = 10  > 1, base^-1 = 0.1  -> 0.1
+    //                (old form: base >= 1 short-circuited to 1.0)
+    //   n=1000, w=1: base = 1/(1000*0.01) = 0.1 < 1, base^-1 = 10   -> 1.0
+    //                (old form: returned 10.0, not even a probability)
+    Point2D near_a{0.1, 0.1};
+    Point2D near_b{0.2, 0.1};
+    double p_neg_big_base = girg_pair_probability(near_a, near_b, 1.0, 1.0, 10, -1.0);
+    TEST_ASSERT(std::fabs(p_neg_big_base - 0.1) < 1e-12);
+    double p_neg_small_base = girg_pair_probability(near_a, near_b, 1.0, 1.0, 1000, -1.0);
+    TEST_ASSERT(p_neg_small_base == 1.0);
+
+    // alpha_g == 0 is the boundary: every non-coincident pair has p == 1.
+    TEST_ASSERT(girg_pair_probability(near_a, near_b, 1.0, 1.0, 10, 0.0) == 1.0);
+    TEST_ASSERT(girg_pair_probability(near_a, near_b, 1.0, 1.0, 1000, 0.0) == 1.0);
+    std::cout << "test_girg_pair_probability_bounds passed!" << std::endl;
+}
+
+int main() {
+    test_direct_degenerate_sizes();
+    test_direct_complete_graph_coverage();
+    test_direct_coincident_points_skipped();
+    test_direct_output_is_symmetric_simple_graph();
+    test_girg_pair_probability_bounds();
+    test_bkl_degenerate_sizes();
+    test_bkl_complete_graph_coverage();
+    test_bkl_output_is_symmetric_simple_graph();
+    test_alpha_nonpositive_matches_independent_pair_probabilities();
+    test_bkl_degenerate_weights_match_independent_pair_probabilities();
+    test_bkl_vs_direct_level_set_identity_high_threshold();
+    test_bkl_pair_work_grows_slower_than_quadratically();
+    test_bkl_level_count_schedule_and_cap();
+    test_all_points_coincident_produces_no_edges();
+    std::cout << "All GIRG tests passed!" << std::endl;
+    return 0;
+}

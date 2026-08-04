@@ -11,6 +11,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <chrono>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -59,12 +60,15 @@ std::vector<int> choose_random_seed(int n, int seed_size, std::mt19937_64& rng) 
 
 // --- GIRG cross-validation helpers (§5.4-adjacent, cpp-girg-plan G1/G5) -----
 //
-// These support a standalone "--girg-verify" mode used only by validation
-// scripts (scripts/dump_girg_reference.py + tests/test_cpp_girg_validation.py),
-// never by the runner's normal sweep path. They read points/weights dumped by
-// the Python oracle so both languages sample/evaluate on IDENTICAL geometry
-// and weights -- the only way to make the exact-probability check
-// deterministic and the level-set identity check meaningful.
+// These support a standalone "--girg-verify" mode used only by validation and
+// benchmark tooling (scripts/dump_girg_reference.py +
+// tests/test_cpp_girg_validation.py, and scripts/bench_girg.py for the "bench"
+// sub-mode), never by the runner's normal sweep path. The "probabilities" and
+// "sample" sub-modes read points/weights dumped by the Python oracle so both
+// languages sample/evaluate on IDENTICAL geometry and weights -- the only way
+// to make the exact-probability check deterministic and the level-set identity
+// check meaningful. The "bench" sub-mode generates its own, since a timing
+// comparison needs matching PARAMETERS, not matching draws.
 
 std::vector<Point2D> load_points_from_file(const std::string& filepath) {
     std::ifstream infile(filepath);
@@ -122,6 +126,18 @@ void run_girg_sample_mode(const std::vector<Point2D>& points,
                            double constant_c,
                            uint64_t base_seed,
                            std::ostream& out) {
+    // Reject an unknown --rng-source instead of silently falling through to
+    // "real", mirroring the --girg-variant check below. A typo here is the
+    // worst possible silent failure for this mode: `--rng-source constnat`
+    // would run the REAL generator while the caller believed it was running
+    // the constant-c stub, so a level-set identity check would compare two
+    // unrelated random graphs and (usually) fail for a reason that has nothing
+    // to do with the sampler under test.
+    if (rng_source != "real" && rng_source != "constant") {
+        throw std::invalid_argument(
+            "Unknown --rng-source: '" + rng_source + "' (expected 'real' or 'constant').");
+    }
+
     std::mt19937_64 rng = make_seeded_rng(base_seed, 0);
     Mt19937UniformSource real_src(rng);
     ConstantUniformSource const_src(constant_c);
@@ -145,6 +161,41 @@ void run_girg_sample_mode(const std::vector<Point2D>& points,
             }
         }
     }
+}
+
+// Times ONE adjacency sample of the requested variant on internally-generated
+// points/weights, and prints "variant n seconds edges". Deliberately excludes
+// file I/O (the --girg-verify sample path writes an O(m) edge list, which at
+// n=40000 dominates the sampling it is supposed to be measuring) and excludes
+// point/weight generation, so the number is the sampler and nothing else.
+// Consumed by scripts/bench_girg.py, which pairs it with the Python oracle's
+// timing on the same n-grid.
+void run_girg_bench_mode(int n, double tau, double w_min, double alpha_g,
+                          const std::string& variant, uint64_t base_seed,
+                          std::ostream& out) {
+    std::mt19937_64 rng = make_seeded_rng(base_seed, 0);
+    std::vector<Point2D> points = sample_torus_points(n, rng);
+    std::vector<double> weights = sample_powerlaw_weights(n, tau, w_min, rng);
+    Mt19937UniformSource src(rng);
+
+    auto t0 = std::chrono::steady_clock::now();
+    std::vector<std::vector<int>> adj;
+    if (variant == "direct") {
+        adj = sample_girg_adjacency_direct(points, weights, alpha_g, src);
+    } else if (variant == "bkl") {
+        adj = sample_girg_adjacency_bkl(points, weights, alpha_g, src);
+    } else {
+        throw std::invalid_argument("Unknown --girg-variant: " + variant);
+    }
+    auto t1 = std::chrono::steady_clock::now();
+
+    long long degree_sum = 0;
+    for (const auto& nbrs : adj) {
+        degree_sum += static_cast<long long>(nbrs.size());
+    }
+    double seconds = std::chrono::duration<double>(t1 - t0).count();
+    out << variant << " " << n << " " << std::setprecision(6) << std::fixed << seconds
+        << " " << (degree_sum / 2) << "\n";
 }
 
 struct TrialOutcome {
@@ -172,7 +223,7 @@ int main(int argc, char* argv[]) {
     // GIRG cross-validation mode (cpp-girg-plan G1/G5) -- not used by the
     // normal sweep/simulation path, only by scripts/dump_girg_reference.py +
     // tests/test_cpp_girg_validation.py.
-    std::string girg_verify = "";       // "probabilities" | "sample"
+    std::string girg_verify = "";       // "probabilities" | "sample" | "bench"
     std::string points_file = "";
     std::string weights_file = "";
     double alpha_g = 1.2;
@@ -226,6 +277,22 @@ int main(int argc, char* argv[]) {
         // Mode C: GIRG cross-validation verify mode (short-circuits before the
         // n/p/r/mu validation below, which does not apply to this mode).
         if (!girg_verify.empty()) {
+            // "bench" generates its own points/weights (the whole point is to
+            // scale n up past what dumping a shared fixture is convenient for),
+            // so it short-circuits before the points-file/weights-file check.
+            if (girg_verify == "bench") {
+                if (n <= 0) {
+                    std::cerr << "Error: --girg-verify bench requires --n > 0.\n";
+                    return 1;
+                }
+                if (!(tau > 1.0) || !(w_min > 0.0) || !(alpha_g > 0.0)) {
+                    std::cerr << "Error: --girg-verify bench requires --tau > 1, --w-min > 0, "
+                              << "--alpha-g > 0.\n";
+                    return 1;
+                }
+                run_girg_bench_mode(n, tau, w_min, alpha_g, girg_variant, base_seed, std::cout);
+                return 0;
+            }
             if (points_file.empty() || weights_file.empty()) {
                 std::cerr << "Error: --girg-verify requires --points-file and --weights-file.\n";
                 return 1;
@@ -255,7 +322,7 @@ int main(int argc, char* argv[]) {
                                       rng_source, constant_c, base_seed, *out);
             } else {
                 std::cerr << "Error: unknown --girg-verify mode '" << girg_verify
-                          << "' (expected 'probabilities' or 'sample').\n";
+                          << "' (expected 'probabilities', 'sample', or 'bench').\n";
                 return 1;
             }
             return 0;

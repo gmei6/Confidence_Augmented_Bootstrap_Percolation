@@ -10,10 +10,11 @@ completely unchanged: it reads a plain edge list, and a GIRG-shaped edge list
 loads through it exactly like a G(n,p) one (implementation_plan.md's "Current
 state" note on `load_graph_from_file`).
 
-Writes three artifacts:
+Writes four artifacts:
   <out>/graph.txt   : first line "n m", then m lines "u v" (undirected edges, u<v)
   <out>/seed.txt    : one line of space-separated initial failed-node indices
   <out>/failed.txt  : one line of space-separated final failed-node indices (sorted)
+  <out>/meta.txt    : the parameters used + the git commit, for provenance
 
 Usage:
   python scripts/dump_girg_cascade_reference.py --n 2000 --tau 2.5 --w-min 0.245 \
@@ -22,12 +23,26 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import subprocess
 from pathlib import Path
 
 import numpy as np
 
 from twocascade.girg import sample_torus_points, sample_powerlaw_weights, sample_girg_adjacency
 from twocascade.reference import sample_individual_fears, make_nodes, choose_seed, run_cascade
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def git_commit_hash() -> str:
+    """Same helper shape as scripts/calibrate_matched_degree.py and
+    runner.get_git_commit_hash: never raises, degrades to 'unknown'."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+        ).strip()
+    except Exception:
+        return "unknown"
 
 
 def main() -> None:
@@ -76,6 +91,17 @@ def main() -> None:
             fh.write(f"{u} {v}\n")
     (out / "seed.txt").write_text(" ".join(map(str, sorted(seed_indices))) + "\n")
     (out / "failed.txt").write_text(" ".join(map(str, failed)) + "\n")
+
+    # Provenance: this script previously wrote no meta file at all, so a
+    # graph.txt/failed.txt fixture on disk carried no record of the parameters
+    # or the sampler/cascade revision that produced it. `failed.txt` is a
+    # cross-language ORACLE -- an unstamped one is not auditable.
+    (out / "meta.txt").write_text(
+        f"n={args.n} tau={args.tau} w_min={args.w_min} alpha_g={args.alpha_g} "
+        f"r={args.r} seed_size={args.seed_size} base_seed={args.base_seed} "
+        f"mean_fear=0.0 concentration=50.0 edges={len(edges)} final_failed={len(failed)} "
+        f"git_commit={git_commit_hash()}\n"
+    )
 
     print(f"n={args.n} tau={args.tau} w_min={args.w_min} alpha_g={args.alpha_g} r={args.r} "
           f"seed_size={args.seed_size} base_seed={args.base_seed}")

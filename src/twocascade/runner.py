@@ -224,9 +224,30 @@ def run_single_trial(args) -> tuple[float, int]:
     
     return res.final_failed_fraction, res.rounds_completed
 
-def _validate_cpp_engine_support(graph_cfg: Dict[str, Any], fear_cfg: Dict[str, Any]) -> None:
-    """Raise if an explicit engine="cpp" request pairs with a graph/fear combination
-    the C++ binary cannot actually run.
+# The Python GIRG path samples fear with `sample_degree_dependent_fears`, which
+# caps mu_d at 1 - epsilon (epsilon = 1e-3, graphs.py) and then draws
+# Beta(mu_d*kappa, (1-mu_d)*kappa). The C++ GIRG path samples fear with
+# `sample_individual_fears`, which short-circuits mean_fear == 1.0 to a point
+# mass at 1.0. Below the cap those two agree at gamma == 0 (the equivalence the
+# whole cpp GIRG path rests on); above it they are simply different
+# distributions, so the cpp path has to refuse rather than quietly diverge.
+# Named once here so the bound and its justification cannot drift apart.
+_GIRG_FEAR_CAP_EPSILON = 1e-3
+
+# Seed layouts the C++ engine implements. `run_single_cell_cpp` builds no
+# layout flag at all, and the binary always draws its seed set uniformly at
+# random (`choose_random_seed` in main.cpp), so "uniform" is the complete list.
+_CPP_SUPPORTED_SEED_LAYOUTS = ("uniform",)
+
+
+def _validate_cpp_engine_support(
+    graph_cfg: Dict[str, Any],
+    fear_cfg: Dict[str, Any],
+    seed_layout: str = "uniform",
+    mean_fear_grid: Optional[List[float]] = None,
+) -> None:
+    """Raise if an explicit engine="cpp" request pairs with a graph/fear/seeding/
+    fear-grid combination the C++ binary cannot actually run.
 
     Before this check existed, `run_sweep`'s explicit-engine path (below) trusted
     the caller: it dispatched to `run_single_cell_cpp` for ANY graph_cfg, but that
@@ -239,6 +260,15 @@ def _validate_cpp_engine_support(graph_cfg: Dict[str, Any], fear_cfg: Dict[str, 
     (the `else` branch below) already falls back to python for anything other than
     gnp+global; this closes the same gap for the explicit-request path, which had
     no such guard.
+
+    `seed_layout` and `mean_fear_grid` are checked here for exactly the same
+    reason, found by G5's blind review: both are read by the Python path and
+    ignored by the C++ one, so both were silent-wrong-model holes of the same
+    shape. seed_layout="disc" picks the `a` nodes nearest a random torus centre
+    (a spatially concentrated shock); the C++ binary has no disc seeding and
+    would have run a uniformly scattered shock instead, reporting it as disc.
+    mean_fear above the GIRG fear cap breaks the gamma == 0 fear equivalence
+    (see _GIRG_FEAR_CAP_EPSILON above).
     """
     graph_type = graph_cfg.get("type", "gnp")
     fear_type = fear_cfg.get("type", "global")
@@ -249,6 +279,12 @@ def _validate_cpp_engine_support(graph_cfg: Dict[str, Any], fear_cfg: Dict[str, 
             f"C++ engine does not support fear.type={fear_type!r}; only 'global' fear "
             "has a C++ implementation. Use engine='python' for local fear."
         )
+    if seed_layout not in _CPP_SUPPORTED_SEED_LAYOUTS:
+        raise ValueError(
+            f"C++ engine does not support seed_layout={seed_layout!r}; it always seeds "
+            f"uniformly at random. Supported: {list(_CPP_SUPPORTED_SEED_LAYOUTS)}. "
+            "Use engine='python' for spatially structured seeding (e.g. 'disc')."
+        )
     if graph_type == "gnp":
         return
     if graph_type == "girg":
@@ -258,6 +294,18 @@ def _validate_cpp_engine_support(graph_cfg: Dict[str, Any], fear_cfg: Dict[str, 
                 "degree-dependent fear reduces exactly to the existing global-kappa "
                 f"model already ported to C++); got gamma={gamma}. Use engine='python' "
                 "for gamma != 0."
+            )
+        cap = 1.0 - _GIRG_FEAR_CAP_EPSILON
+        over_cap = [mu for mu in (mean_fear_grid or []) if mu > cap]
+        if over_cap:
+            raise ValueError(
+                f"C++ engine's GIRG path requires every sweep.mean_fear_grid entry to be "
+                f"<= 1 - {_GIRG_FEAR_CAP_EPSILON} = {cap}; got {over_cap}. Above that cap "
+                "the Python GIRG path (sample_degree_dependent_fears, which clips mu to the "
+                "cap and still draws Beta) and the C++ path (sample_individual_fears, which "
+                "returns a point mass at 1.0 for mean_fear == 1.0) are different "
+                "distributions, so the gamma == 0 equivalence this path relies on no longer "
+                "holds. Use engine='python' for mean_fear above the cap."
             )
         return
     raise ValueError(
@@ -297,14 +345,24 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
         if engine_requested == "cpp":
             if not CPP_BIN.exists():
                 raise FileNotFoundError(f"C++ engine binary not found at {CPP_BIN}. Please build the C++ engine first.")
-            _validate_cpp_engine_support(graph_cfg, fear_cfg)
+            _validate_cpp_engine_support(
+                graph_cfg, fear_cfg, seed_layout, sweep["mean_fear_grid"])
             resolved_engine = "cpp"
         elif engine_requested == "python":
             resolved_engine = "python"
         else:
             raise ValueError(f"Unknown engine '{engine_requested}'. Must be 'cpp' or 'python'.")
     else:
-        if graph_cfg.get("type", "gnp") != "gnp" or fear_cfg.get("type", "global") != "global":
+        # seed_layout joins the auto-detect fallback conditions for the same
+        # reason it joins the explicit-path validation above: the C++ binary
+        # always seeds uniformly, so auto-detecting cpp for a non-uniform layout
+        # would silently run the wrong shock geometry. Falling back to python
+        # here is not merely safe, it is what surfaces the real error (the
+        # Python path raises "disc seeding requires a geometric graph" when the
+        # layout and the graph type are inconsistent).
+        if (graph_cfg.get("type", "gnp") != "gnp"
+                or fear_cfg.get("type", "global") != "global"
+                or seed_layout not in _CPP_SUPPORTED_SEED_LAYOUTS):
             resolved_engine = "python"
         else:
             resolved_engine = "cpp" if CPP_BIN.exists() else "python"

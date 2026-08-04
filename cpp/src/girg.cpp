@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <set>
 #include <unordered_map>
 #include <utility>
@@ -39,10 +40,20 @@ double girg_pair_probability(const Point2D& a, const Point2D& b, double wa, doub
         return 0.0; // coincident points are skipped, not a saturating edge (matches the Python `continue`).
     }
     double base = (wa * wb) / (static_cast<double>(n) * d2);
-    if (base >= 1.0) {
-        return 1.0;
-    }
-    return std::pow(base, alpha_g);
+    // The model is min(1, base^alpha_g) -- the clamp goes AFTER the power, not
+    // before it. For alpha_g > 0 the two orders coincide (x -> x^alpha_g is
+    // increasing, so it maps [0,1] onto [0,1] and fixes 1), which is why the
+    // earlier `if (base >= 1) return 1; return pow(base, alpha_g);` form passed
+    // every production-regime test. It is WRONG for alpha_g <= 0, where the
+    // power is decreasing: base < 1 then gives base^alpha_g > 1 (must clamp to
+    // 1, the old form returned the un-clamped >1 value) and base > 1 gives
+    // base^alpha_g < 1 (must NOT be forced to 1, the old form returned 1).
+    // Production rejects alpha_g <= 0 at the CLI (main.cpp), but the direct
+    // kernel is documented as the exact enumeration of the definition for ALL
+    // alpha_g, and both fallback paths in sample_girg_adjacency_bkl route
+    // alpha_g <= 0 here -- so the definition has to actually hold. Overflow is
+    // benign: pow -> +inf clamps to 1.0.
+    return std::min(1.0, std::pow(base, alpha_g));
 }
 
 std::vector<std::vector<int>> sample_girg_adjacency_direct(
@@ -184,9 +195,21 @@ std::pair<const int*, const int*> cell_span_by_id(const LevelBuckets& lvl, int c
 // inflate the acceptance bound p_bar for its whole cell (RISKS.md-adjacent:
 // this is what test_degree_distribution_matches_reference in the Python
 // suite exists to catch if dropped).
+//
+// DETERMINISM: the container is std::map, NOT std::unordered_map, and that is
+// load-bearing rather than stylistic. The (ga, gb) loop in the sampler draws
+// from `u` in group order, so group order fixes the RNG consumption order and
+// therefore the sampled graph. unordered_map's iteration order is unspecified
+// and varies with the standard-library implementation (and, in principle, with
+// its hash seed), which would make the same (config, seed) produce a DIFFERENT
+// graph under a different toolchain -- a direct violation of the constitution's
+// "every run is deterministic given (config, seed)". Ordering by the integer
+// layer key makes the traversal implementation-independent. Cells hold ~4
+// points at the deepest level, so the red-black tree costs nothing measurable
+// against the pair work it feeds.
 std::vector<WeightGroup> cell_layer_groups(const int* begin, const int* end,
                                             const std::vector<double>& w, double w_min) {
-    std::unordered_map<int, WeightGroup> groups;
+    std::map<int, WeightGroup> groups;
     for (const int* it = begin; it != end; ++it) {
         int i = *it;
         double wi = w[i];
@@ -197,7 +220,7 @@ std::vector<WeightGroup> cell_layer_groups(const int* begin, const int* end,
     }
     std::vector<WeightGroup> out;
     out.reserve(groups.size());
-    for (auto& kv : groups) {
+    for (auto& kv : groups) { // ascending layer key: deterministic across toolchains
         out.push_back(std::move(kv.second));
     }
     return out;
@@ -269,6 +292,9 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
 
         // Per-level cache of weight-layer groups, keyed by cell id. Reset
         // every level (matches Python's group_cache = {} inside the loop).
+        // unordered_map is safe HERE (unlike inside cell_layer_groups) because
+        // this map is only ever point-queried by cell id -- it is never
+        // iterated, so its unspecified traversal order cannot reach the RNG.
         std::unordered_map<int, std::vector<WeightGroup>> group_cache;
         auto groups_of = [&](int cell_id) -> const std::vector<WeightGroup>& {
             auto it = group_cache.find(cell_id);
@@ -348,7 +374,11 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                     for (const auto& ga : a_groups) {
                         for (const auto& gb : b_groups) {
                             double base = (ga.max_weight * gb.max_weight) / (n_float * d_min_sq);
-                            double p_bar = (base >= 1.0) ? 1.0 : std::pow(base, alpha_g);
+                            // Same min-after-power form as girg_pair_probability
+                            // (identical here, since this branch only runs for
+                            // alpha_g > 0 -- kept in one shape so the two copies
+                            // of the formula cannot drift apart again).
+                            double p_bar = std::min(1.0, std::pow(base, alpha_g));
                             long long na = static_cast<long long>(ga.indices.size());
                             long long nb = static_cast<long long>(gb.indices.size());
 
@@ -367,6 +397,7 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                             }
 
                             long long total = na * nb;
+                            const double total_f = static_cast<double>(total);
                             double log1m = std::log1p(-p_bar);
                             long long pos = -1;
                             while (true) {
@@ -374,7 +405,23 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                                 if (uu <= 0.0) {
                                     break; // domain guard on log(0); vanishingly rare with a real RNG
                                 }
-                                pos += 1 + static_cast<long long>(std::floor(std::log(uu) / log1m));
+                                // The geometric skip is unbounded above: for a
+                                // tiny p_bar, log1m ~ -p_bar, so the quotient can
+                                // exceed the range of long long and the cast
+                                // would be UNDEFINED behaviour (not merely a
+                                // wrong number) -- and NaN, if log1m were ever
+                                // 0, would be UB too. Test the double BEFORE
+                                // narrowing. This is exactly equivalent to the
+                                // unclamped arithmetic: pos >= -1 always, so a
+                                // skip of total or more can only land at or past
+                                // `total`, which is the loop's own stop
+                                // condition. The negated comparison also makes
+                                // a NaN skip fall out through this branch.
+                                double skip = std::floor(std::log(uu) / log1m);
+                                if (!(skip < total_f)) {
+                                    break;
+                                }
+                                pos += 1 + static_cast<long long>(skip);
                                 if (pos >= total) {
                                     break;
                                 }

@@ -91,12 +91,16 @@ std::vector<double> sample_powerlaw_weights(int n, double tau, double w_min, std
  * (d_ij^2 == 0) return 0.0, matching the Python oracle's `continue` rather
  * than treating a collision as a saturating edge.
  *
- * Requires alpha_g > 0: x -> x^alpha_g is only monotone increasing for
- * alpha_g > 0, which is what makes `min(1,x)^a == min(1,x^a)` valid; callers
- * must apply the alpha_g <= 0 fallback (see sample_girg_adjacency_bkl) before
- * calling this for the bucket algorithm's upper-bound rejection scheme, but
- * the direct kernel below is correct for alpha_g <= 0 too since it is a plain
- * enumeration of the definition, not a bound-based rejection scheme.
+ * Valid for ANY alpha_g: the clamp is applied AFTER the power, so this is the
+ * literal definition rather than the (only-for-alpha_g>0 equivalent)
+ * `min(1, base)^alpha_g`. That distinction matters because the two agree only
+ * while x -> x^alpha_g is increasing; for alpha_g <= 0 the pre-clamp form both
+ * over-reports (returns 1 where base > 1 should give base^alpha_g < 1) and
+ * under-clamps (returns base^alpha_g > 1 where base < 1). The bucket
+ * algorithm's upper-bound rejection scheme separately DOES require alpha_g > 0
+ * for monotonicity and falls back to the direct kernel below otherwise (see
+ * sample_girg_adjacency_bkl); the direct kernel itself is a plain enumeration
+ * of the definition and is correct for every alpha_g.
  */
 double girg_pair_probability(const Point2D& a, const Point2D& b, double wa, double wb,
                               int n, double alpha_g);
@@ -135,6 +139,11 @@ std::vector<std::vector<int>> sample_girg_adjacency_direct(
  * rejection scheme requires x -> x^alpha_g monotone increasing) and for
  * degenerate weights (w_min <= 0 or any non-finite weight, where the
  * weight-layer grouping floor(log2(w/w_min)) is undefined or unbounded).
+ *
+ * Deterministic given (points, weights, alpha_g, uniform-source stream) on ANY
+ * conforming toolchain: every container whose traversal order feeds the RNG
+ * (cell-pair candidates, weight-layer groups) is an ORDERED container. See the
+ * determinism note on cell_layer_groups in girg.cpp.
  */
 std::vector<std::vector<int>> sample_girg_adjacency_bkl(
     const std::vector<Point2D>& points,

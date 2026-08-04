@@ -205,14 +205,36 @@ def test_sampled_graph_statistics_match_oracle(variant, tmp_path):
     between the C++ sampler and the Python oracle `sample_girg_adjacency`, on
     the SAME points/weights. The distance-binned check specifically catches a
     truncating spatial index -- an aggregate edge-count match alone cannot
-    (RISKS.md #2 / implementation_plan.md's parity-table footnote)."""
+    (RISKS.md #2 / implementation_plan.md's parity-table footnote). The
+    degree-histogram check catches a bad acceptance bound in the BKL sampler:
+    if a group's p_bar were ever LESS than some member pair's exact p, that
+    pair's edge probability is silently truncated to p_bar, which costs the
+    heaviest vertices their highest-probability edges -- a tail deficit that
+    moves the degree distribution while the total edge count can still land
+    inside its own tolerance.
+
+    All three checks are calibrated per okf/lessons.md: the degree histogram is
+    compared by p-value (per-bin Welch t-test with a Bonferroni correction over
+    bins), never by a fixed distance cutoff. The independent replicate unit is
+    the GRAPH, not the node: with points/weights held fixed across seeds, node
+    degrees within one graph are correlated, so pooling all n*n_seeds degrees
+    into one two-sample test would badly understate the variance and make this
+    flaky. Per-graph bin counts are genuinely independent across seeds."""
     n = 500
-    n_seeds = 8
+    # 40 replicate graphs, not the 8 this test shipped with. Calibrated by
+    # mutation testing during the G5.1 fix round, not guessed: with the BKL
+    # acceptance bound deliberately halved (p_bar *= 0.5 -- an invalid,
+    # too-small bound, which truncates every pair whose exact p exceeds it), 12
+    # replicates left the degree-histogram check silent, while 40 catch it at
+    # p = 6e-5 in the heavy-degree tail bin [10, inf) -- the exact bin and
+    # failure mode this check exists for. Each replicate is one Python graph
+    # plus one cheap C++ subprocess at n=500; 40 of them cost ~2s.
+    n_seeds = 40
     out_dir = _dump_geometry(tmp_path, n, base_seed=300)
     points, weights = _load_points_weights(out_dir)
 
     py_edge_counts, cpp_edge_counts = [], []
-    py_degs, cpp_degs = [], []
+    py_deg_samples, cpp_deg_samples = [], []  # one degree array per graph
     n_bins = 6
     edges_of_bin = np.linspace(0.0, math.sqrt(0.5), n_bins + 1)
     d_all = np.array([
@@ -228,7 +250,7 @@ def test_sampled_graph_statistics_match_oracle(variant, tmp_path):
         adj_py = sample_girg_adjacency(points, weights, ALPHA_G, py_rng)
         edges_py = {(i, j) for i, nbrs in enumerate(adj_py) for j in nbrs if i < j}
         py_edge_counts.append(len(edges_py))
-        py_degs += [len(a) for a in adj_py]
+        py_deg_samples.append(np.array([len(a) for a in adj_py], dtype=int))
         py_dist_hist += np.histogram([d_all[i, j] for (i, j) in edges_py], bins=edges_of_bin)[0]
 
         stdout = _run_cpp([
@@ -246,7 +268,7 @@ def test_sampled_graph_statistics_match_oracle(variant, tmp_path):
         for (i, j) in edges_cpp:
             deg[i] += 1
             deg[j] += 1
-        cpp_degs += list(deg)
+        cpp_deg_samples.append(deg)
         cpp_dist_hist += np.histogram([d_all[i, j] for (i, j) in edges_cpp], bins=edges_of_bin)[0]
 
     py_edge_counts = np.array(py_edge_counts, dtype=float)
@@ -258,6 +280,55 @@ def test_sampled_graph_statistics_match_oracle(variant, tmp_path):
         f"{py_edge_counts.mean():.1f}; diff {diff:.1f} exceeds 4 SE = {4.0*se:.1f}"
     )
 
+    # --- degree histogram -------------------------------------------------- #
+    # Bin edges come from the ORACLE's pooled degrees (quantiles, deduped
+    # because GIRG degrees are small integers with heavy ties at the low end),
+    # so the binning adapts to the fixture instead of hardcoding a distribution
+    # shape. The last bin is open-ended: it is the heavy-degree tail, which is
+    # the bin a broken acceptance bound damages first.
+    py_pooled = np.concatenate(py_deg_samples)
+    deg_edges = np.unique(np.quantile(py_pooled, [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]))
+    deg_edges = np.append(deg_edges, np.inf)
+    assert len(deg_edges) >= 4, (
+        f"degenerate degree binning ({deg_edges}) -- bad fixture, not a sampler failure"
+    )
+    n_deg_bins = len(deg_edges) - 1
+
+    py_deg_hist = np.array([np.histogram(d, bins=deg_edges)[0] for d in py_deg_samples], dtype=float)
+    cpp_deg_hist = np.array([np.histogram(d, bins=deg_edges)[0] for d in cpp_deg_samples], dtype=float)
+
+    # Bonferroni over bins keeps the family-wise false-positive rate at the same
+    # Z_TEST_MIN_PVALUE the rest of the cross-language suite is calibrated to.
+    per_bin_alpha = Z_TEST_MIN_PVALUE / n_deg_bins
+    for b in range(n_deg_bins):
+        py_col, cpp_col = py_deg_hist[:, b], cpp_deg_hist[:, b]
+        if py_col.sum() + cpp_col.sum() < 30:
+            continue  # bin too sparse for a mean comparison to say anything
+        if py_col.var(ddof=1) == 0.0 and cpp_col.var(ddof=1) == 0.0:
+            # Both languages put a deterministic count here; a t-test is
+            # undefined, so compare directly.
+            assert py_col[0] == cpp_col[0], (
+                f"[{variant}] degree bin {b} [{deg_edges[b]:g},{deg_edges[b+1]:g}) is "
+                f"deterministic but differs: C++ {cpp_col[0]:.0f} vs oracle {py_col[0]:.0f}"
+            )
+            continue
+        t_res = stats.ttest_ind(py_col, cpp_col, equal_var=False)
+        assert t_res.pvalue > per_bin_alpha, (
+            f"[{variant}] degree histogram differs beyond Monte Carlo error in bin {b} "
+            f"[{deg_edges[b]:g},{deg_edges[b+1]:g}): per-graph mean count "
+            f"C++ {cpp_col.mean():.1f} vs oracle {py_col.mean():.1f} "
+            f"(t = {t_res.statistic:.3f}, p = {t_res.pvalue:.5f} <= "
+            f"{per_bin_alpha:.5f} = {Z_TEST_MIN_PVALUE}/{n_deg_bins} Bonferroni)"
+        )
+
+    # Total degree mass is a hard identity, not a statistic: every graph's
+    # degrees must sum to 2m for that same graph. A binning that silently
+    # dropped nodes would make the p-value checks above vacuous.
+    for s in range(n_seeds):
+        assert py_deg_samples[s].sum() == 2 * py_edge_counts[s]
+        assert cpp_deg_samples[s].sum() == 2 * cpp_edge_counts[s]
+
+    # --- distance-binned edges --------------------------------------------- #
     far = edges_of_bin[-2]
     assert py_dist_hist[-1] > 0, "oracle produced no far-bin edges -- bad fixture"
     assert cpp_dist_hist[-1] > 0, (

@@ -25,11 +25,25 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import subprocess
 from pathlib import Path
 
 import numpy as np
 
 from twocascade.girg import sample_torus_points, sample_powerlaw_weights
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def git_commit_hash() -> str:
+    """Same helper shape as scripts/calibrate_matched_degree.py and
+    runner.get_git_commit_hash: never raises, degrades to 'unknown'."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+        ).strip()
+    except Exception:
+        return "unknown"
 
 
 def main() -> None:
@@ -53,9 +67,12 @@ def main() -> None:
     np.savetxt(out / "points.txt", points, fmt="%.17g")
     np.savetxt(out / "weights.txt", weights.reshape(-1, 1), fmt="%.17g")
 
+    # git_commit is part of the provenance contract, not decoration: without it
+    # a points.txt/weights.txt pair cannot be tied back to the sampler revision
+    # that produced it, and these fixtures outlive the test run that made them.
     (out / "meta.txt").write_text(
         f"n={args.n} tau={args.tau} w_min={args.w_min} alpha_g={args.alpha_g} "
-        f"base_seed={args.base_seed}\n"
+        f"base_seed={args.base_seed} git_commit={git_commit_hash()}\n"
     )
 
     print(

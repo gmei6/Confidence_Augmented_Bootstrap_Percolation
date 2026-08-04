@@ -7,17 +7,21 @@ mutability: live
 
 # §8 — Current Status 🟢 *(overwrite each session)*
 
-- **⏸️ STOPPING POINT 2026-08-03 ~09:45 (S-063 is the pickup record — read it first).**
-  Poster is COMPLETE except the Fear Amplifies figure: hero + Fear × Structure
-  (percentage-decrease reframe) + Q9 "Where To Intervene" panel (Gary's
-  remote-nucleation wording) all installed; zip 15/15, synced to ~/Downloads 09:38.
-  Advisor meeting 2026-08-03 3:00pm. **Still running unattended:** GIRG n=20000
-  famcompare arm (detached PID 71992, log `/tmp/fear_amplifies_logs/girg_production.log`,
-  ETA ~10:50 — raw lands on disk; verify by mtime). **Awaiting on pickup:** famcompare
-  analysis + 3-family ratio figure + Fear Amplifies prose; C++ GIRG G6 blind gate +
-  merge approval (`girg-cpp-port` worktree, G0–G5 committed); single-node experiment
-  config approval; commit of the uncommitted poster/famcompare work (inventory in S-063);
-  Gary's `separate-legend` branch merge.
+- **⏸️ WRAPPED 2026-08-04 ~14:50 for the rescheduled 3:00pm advisor meeting (S-064
+  is the session record).** Everything S-063 left open is CLOSED: the poster is
+  **content-complete** (Fear Amplifies rebuilt on the matched-ensemble famcompare
+  fear-curves figure, mu-bar 0.5/0.6 arms run, Fear and Structure 7-point +
+  inverted, panels distilled with presenter notes; zip 15/15, ~/Downloads 13:43);
+  the **C++ GIRG port cleared the full blind gate (AUDIT PASS) and is MERGED**
+  (`a2b2596`, D-045); the **single-seed experiment confirms fear bridges the
+  a=r floor** (`1af8cc1`, D-043); the **QR demo is LIVE** (poster-demo on Pages,
+  all assets 200). Decisions d-040..d-045 recorded. **Open on pickup:** push the
+  merge commit (origin is at `8a40677`); finish the main-repo cross-language
+  pytest re-run; GIRG densification arms on the C++ engine (mu-bar
+  0.1/0.2/0.3/0.5/0.6 — now minutes of compute); item 3b pre-print `/verify`
+  (now also covering famcompare + percentage-decrease steps); >=300 DPI figure
+  regen + Overleaf compile before print; N1-N4 hygiene; worktree cleanup
+  (tc-girg-cpp, tc-work, tc-work2); capture meeting notes.
 - **Phase:** **Poster phase (D-038, advisor meeting 2026-07-22) — both core comparisons are now DELIVERED.** Heterogeneity (ER vs configuration model) closed 2026-07-29 (pilot #5, `d9edf19`); geometry (configuration model vs GIRG, matched degree distribution) closed 2026-08-02 (arc C1–C3b, `6c5491a`…`2024c23`) — the "blocked on a GIRG performance port" state in earlier notes is **stale**; the port shipped. Publication route RESOLVED (D-038): frontier push (theoretical or empirical) after ~6 months, advisor will help; empirical leg = SNAP dataset. Remaining poster work: Q9 recommendation-component framing, the poster narrative draft, the SNAP teaser, and the optional RGG dimension sweep (`okf/next-actions.md` items 4–7). Notes: `okf/meeting-notes/2026-07-22-dhara.md`, session S-060.
 - **Comparison 1 — heterogeneity (ER vs CM): DONE, 12-curve trend, poster figure + departure figure both generated.** Matched-degree baseline ⟨k⟩=4.533 (`results/processed/matched_degree_calibration.json`, `scripts/calibrate_matched_degree.py`, `ba2bf6f`). Five poster pilots (2026-07-27–07-29, Antigravity-driven from `.agy/poster-pilot{2..5}.md`; commits `9f3cc17`, `746b588`, `e58d429`, `74c9744`, `68adadb`, `301d560`, `d9edf19`) converged on a 6-$\bar\mu$-point grid per family ($\bar\mu\in\{0,0.1,0.2,0.3,0.4,0.7\}$, 500 trials/cell, all curves ≥4 interior points). **D-012 $a_c(\mu)=a_c(0)(1-\mu)^{r/(r-1)}$ reproduces on ER, flat across the whole range** (measured/predicted ratios 0.987/0.976/0.978/0.983/1.092 at $\bar\mu$=0.1/0.2/0.3/0.4/0.7) — an independent confirmation a decade above the n=1000 validation — **and the configuration model departs from it monotonically** (ratios 1.128/1.248/1.514/1.839 at $\bar\mu$=0.1/0.2/0.3/0.4). What was a single $\bar\mu=0.4$ point as of pilot #4 is now a five-point monotone trend (pilot #5, `d9edf19`, 2026-07-29) — the Task Z "three points cannot tell a curve from a kink" caution (`okf/next-actions.md` C2) is answered for this claim. The $\bar\mu=0.7$ CM ratio (4.636) stays **EXCLUDED**: D-012 predicts 0.92 seeds there, below the $r=2$ structural floor. Finite-size inflation $K(n)=a_c^{\text{emp}}/a_c^{\text{Janson}}$: two points, 1.49 (n=1000) → 1.289 [1.280, 1.298] (n=10000), decreasing toward 1 as D-023 assumes. Figures: `results/figures/poster_comparison.png`, `results/figures/scaling_law_departure.png` (both regenerated `2024c23`, 2026-08-02, alongside the GIRG update below).
 - **⚠️ Pilot #5's HALF-FINISHED state (prior note) is RESOLVED — closed same day it was found broken.** The prior status text described `results/processed/poster_comparison.json` as stamped ahead of its own raws with `scaling_law_departure.png` never generated. Commit `d9edf19` (2026-07-29) commits the six pending raws plus the re-derived 12-curve analysis; `results/figures/scaling_law_departure.png` now exists (mtime 2026-07-29 13:03, matches). Verified independently in this catch-up by inspecting `results/processed/poster_comparison.json`'s `metadata.source_raws`/mtimes against the raw files' mtimes, not by trusting the commit message alone (the S-058 lesson this caveat was named after). ⚠️ **Provenance caveat carried forward, not resolved:** these pilots are Antigravity-driven with self-administered byte-identity checks, not blind reviewer→critic→auditor `/verify` — same evidentiary tier as before, now on more data.

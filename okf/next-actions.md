@@ -7,28 +7,27 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-**⏸️ PICKUP CHECKLIST (2026-08-03 stopping point — full context in `okf/changes/s-063-*.md`):**
+**⏸️ PICKUP CHECKLIST (2026-08-04 wrap, pre-meeting — full context in `okf/changes/s-064-*.md`;
+S-063's P1–P6 are ALL CLOSED):**
 
-P1. **Check the GIRG n=20000 famcompare raw landed** (`results/famcompare_girg_n20000_raw.json`,
-    expected ~10:50 2026-08-03; log `/tmp/fear_amplifies_logs/girg_production.log`). Verify by
-    mtime/content per the S-058 lesson. **The experiment handoff (calibrations, matched-baseline
-    seeds 112/279/560 with ceiling caveat, γ=0 equivalence, pipeline paths, successor steps) is
-    at `.agy/famcompare-STATE.md`** (durable copy; original in /tmp is reboot-volatile).
-    4k/10k GIRG raws already verified (provenance stamps checked, 5/5 μ̄ cells × 500 trials).
-P2. **Famcompare analysis + figure:** 3-family ratio panel (multiplier vs n, shared grid
-    {4k,10k,20k}, parametric-bootstrap CIs named in caption; ER bounded zeros as an annotated
-    immunity strip, ER matched-baseline (~3%) anchor for the real ratio; a05-scaled cells are
-    supplementary only). Then the Fear Amplifies poster prose rewrite + zip rebuild.
-P3. **C++ GIRG port G6:** run the blind reviewer→critic→auditor gate on the `girg-cpp-port`
-    worktree diff (G0–G5 committed, G5's commit body has a BKL level-set claim correction —
-    read it first), then Gary's explicit diff approval, then merge FROM THE MAIN REPO.
-P4. **Commit the uncommitted work** (inventory in S-063; suggested split: poster-content
-    commit + famcompare-experiment commit; `git add -f` for poster_fear_structure.png).
-P5. **Single-node experiment:** approve the 36 configs (scratchpad `single-seed/`) and run
-    (~2 min); no code change needed (`seed_sizes` path, verified).
-P6. **Queued behind the above:** branching-factor ER arm (approved, post-meeting); GIRG
-    densification arms (after the C++ port, Gary's call); item 3b `/verify` on `2024c23`;
-    Gary's `separate-legend` branch merge; `tc-work` + `tc-girg-cpp` worktree cleanup when done.
+P1. **Meeting follow-through:** capture the 3pm advisor meeting's notes/decisions into
+    `okf/meeting-notes/2026-08-04-dhara.md` and fold outcomes into this queue.
+P2. **Push the merge commit.** Origin is at `8a40677`; the local `antigravity` has the
+    girg-cpp-port merge (`a2b2596`) unpushed. Ask Gary, then push.
+P3. **GIRG densification arms on the C++ engine** (μ̄ ∈ {0.1, 0.2, 0.3, 0.5, 0.6} at
+    n=10000, matched w_min): closes the last gaps in BOTH poster figures (Fear and
+    Structure's 2-point GIRG curve; famcompare's 0.4→0.7 bridge). Minutes of compute
+    post-merge (D-045). Watch the n>65536 warning never fires (it shouldn't at 10k).
+P4. **Finish the post-merge smoke:** `pytest tests/test_cpp_girg_validation.py` (+ the
+    other four files) against the fresh main-repo build (ctest already 2/2; the run was
+    interrupted at wrap). Then remove `cpp/build.stale-cache-20260804`.
+P5. **Pre-print integrity + polish:** item 3b blind `/verify` now covering `2024c23`'s
+    analysis AND the famcompare/percentage-decrease steps (all currently self-checked);
+    regenerate poster PNGs at ≥300 DPI; one full Overleaf compile check of the zip.
+P6. **Queued behind:** N1–N4 + deferred-advisory hygiene (task list #10; N1/N2 are
+    pre-existing CLI defects, N3/N4 validator/provenance minors); branching-factor ER arm
+    (approved, still unstarted); worktree cleanup (`tc-girg-cpp`, `tc-work`, `tc-work2`);
+    SNAP teaser (item 6, untouched); optional presenter-sync layer for the QR demo.
 
 **Poster queue (D-038, advisor meeting 2026-07-22 — items 1–7 are the deliverable).**
 Review surface for this queue: `.lavish/poster-remaining-work.html` (2026-07-29, may itself

@@ -199,18 +199,36 @@ We hold network size $n$ and average degree constant across all tests to isolate
 \vspace{-1.5em}
 
 \section{Fear Amplifies}
-%% ⚠ DO NOT DROP THE SECOND SENTENCE. Without it this reads as a flat "always
-%% 3x", which is the exact claim S-058 caught and retracted on the advisor site:
-%% the multiplier is ~3x at moderate mu-bar but only ~1.5x at mu-bar = 0.1. It is
-%% constant IN n at fixed mu-bar -- not constant ACROSS mu-bar. See
-%% okf/next-actions.md, "Multiplier claim qualified".
-Fear multiplies the ignition probability by roughly $3\times$, and that multiplier
-is \textbf{flat in $n$} at fixed $\bar\mu$; fear changes the \emph{level} of
-ignition, not its \textbf{scaling}.
+%% ⚠ DO NOT DROP THE DIAL SENTENCE (final paragraph). Without it this reads as a
+%% flat "always 3x", which is the exact claim S-058 caught and retracted on the
+%% advisor site: the multiplier is ~3x at moderate mu-bar but only ~1.5x at
+%% mu-bar = 0.1. It is constant IN n at fixed mu-bar (gated result, power-law/CM)
+%% -- not constant ACROSS mu-bar. See okf/next-actions.md, "Multiplier claim
+%% qualified".
+%% Famcompare provenance (2026-08-04): numbers from
+%% results/processed/famcompare_analysis.json (scripts/analyze_famcompare.py);
+%% figure scripts/plot_famcompare_ratio.py. Script-level self-checked, NOT
+%% blind-/verify-gated (same evidentiary status as Fear x Structure below).
+%% famcompare_analysis.json · 500 trials/cell · n=10000 · 95% bootstrap CIs in
+%% famcompare_analysis.json · ER's open points are lower bounds
+Fear multiplies the probability of ignition by roughly $3\times$ on the
+heavy-tailed families (power-law and GIRG alike), and on the power-law model
+that multiplier is \textbf{flat in $n$} at fixed $\bar\mu$: fear changes the
+\emph{level} of ignition, not its \textbf{scaling}.
+
+\vspace{0.3em}
+How much fear amplifies is set by the structure it acts on. On ER at a
+like-for-like baseline (seed chosen so zero-fear ignition sits at the same
+few-percent level as the heavy-tailed families'), the same fear multiplies
+ignition \textbf{at least $25$--$40\times$} --- most cells saturate at
+certainty, so these are lower bounds. And with a bounded seed ($a = r = 2$),
+ER \emph{never} ignites at any $\bar\mu$: fear amplifies a cascade the
+structure makes possible; it cannot start one on its own.
 
 \vspace{0.3em}
 The multiplier is \emph{not} constant across $\bar\mu$ --- it falls to about
-$1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a constant.
+$1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a
+constant.
 
 \begin{center}
 \fcolorbox{tcRule}{tcCream}{%
@@ -218,58 +236,62 @@ $1.5\times$ at $\bar\mu = 0.1$. Fear is an amplifier with a dial, not a constant
   %% the right column at roughly 40% of the left column's ink density.
   \begin{minipage}[t][7in][c]{0.95\linewidth}
     \centering
-    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/q4_mumap_ignition}\\[0.4em]
-    {\color{tcInkSoft}\small Ignition rate vs.\ $n$, one panel per $\bar\mu$ (S-058, gated).}
+    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/famcompare_ratio}\\[0.4em]
+    {\color{tcInkSoft}\small Fear multiplier vs.\ $\bar\mu$ at $n=10{,}000$.
+    Open marker + dashed arrow: at least this value --- all 500/500 trials
+    systemic; the true multiplier is higher.}
   \end{minipage}%
 }
 \end{center}
 
 \vspace{-1.5em}
 
-\section{Sharper Transition}
-%% Rewritten 2026-08-03 as a RATE claim, not a level claim. The prior version
-%% ("sharper... less forgiving") read as true at every n, but the two fitted
-%% windows actually cross near n ~ 1e4 -- below that, mu=0.3's window is the
-%% WIDER one (see figure). The honest claim is about how fast the window
-%% narrows, not its size at any one n.
-Fear does not shrink the transition window at any fixed size --- it makes the
-window shrink \textbf{faster} as the network grows. Over $n = 10^3$ to
-$8\!\times\!10^4$ (Erd\H{o}s--R\'enyi / $G(n,p)$, C++ engine, verified), the
-finite-size exponent $\nu$ --- the rate at which the transition window
-narrows, $w \sim n^{-1/\nu}$ --- contracts:
-\begin{align*}
-  \nu(\mu = 0)   &= 5.61 \pm 0.18 \\
-  \nu(\mu = 0.3) &= 4.82 \pm 0.15
-\end{align*}
-The two fitted windows cross near $n \approx 10^4$: below that, fear's window
-is actually \textbf{wider} than the baseline, and only past it does the
-faster contraction pull it narrower. The result lives in the \textbf{trend},
-not the level at any single $n$.
+\section{Fear $\times$ Structure}
+%% 2026-08-03: replaces the D-012 measured/predicted-RATIO framing (see
+%% okf/decisions, D-012 poster evidentiary choices). (1-mu_bar)^2 is derived
+%% for ER only; scoring CM/GIRG's measured crossing against it treated an
+%% ER-only formula as a baseline they were never predicted to meet. This
+%% section instead states each family's own measured percentage decrease
+%% against ITS OWN mu_bar=0 anchor -- self-contained per family, and the
+%% ER-only theory now appears only as a labeled, dashed reference. mu_bar=0.7
+%% re-enters for every family (its old exclusion was an artifact of the
+%% predicted-crossing floor check, not a property of the measurement itself);
+%% the figure instead flags points within 2.2x of the true structural floor
+%% a=r=2, where the floor -- not fear -- may be doing some of the compressing.
+%% Numbers below: verify from results/processed/poster_fear_structure.json,
+%% don't hand-copy. Self-checked (§5.4 gate covers the underlying comparison
+%% sweeps, not this derived percentage-decrease step on its own).
+The same fear that cuts ER's tipping point by 65\% cuts the heavy-tailed
+networks' by only $\sim$35\% at the same $\bar\mu = 0.4$ --- hubs blunt
+fear's effect on the threshold, and geometry doesn't change that (CM and
+GIRG move together, both well short of ER):
 
 \begin{center}
 \fcolorbox{tcRule}{tcCream}{%
   \begin{minipage}[t][7in][c]{0.95\linewidth}
     \centering
-    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/finite_size_scaling_r2_n10000}\\[0.4em]
-    {\color{tcInkSoft}\small Transition width vs.\ $n$, 7-point fit (Task W, verified).}
+    \includegraphics[width=0.95\linewidth, height=6.4in, keepaspectratio]{img/poster_fear_structure}\\[0.4em]
+    {\color{tcInkSoft}\small Percentage decrease in each family's measured $a_c(\bar\mu)$ vs.\ its own $\bar\mu=0$ anchor; dashed line is the ER-only $(1-\bar\mu)^2$ theory (self-checked).}
   \end{minipage}%
 }
 \end{center}
 
+Fear also accelerates how quickly the transition sharpens as the network
+grows: $\nu(\mu = 0) = 5.61 \pm 0.18 \to \nu(\mu = 0.3) = 4.82 \pm 0.15$,
+verified.
+
 \vspace{-1.5em}
 
 \section{Where To Intervene}
-%% ⚠ KEEP THIS LEAD-IN. Without it the section opens on "Calm the hubs" and reads
-%% as a settled recommendation. It is not one -- Q9 is open (okf/open-questions),
-%% and "calm the hubs" is the OBVIOUS lever, not a demonstrated optimal one.
-How to allocate a fixed calming budget optimally is still an \textbf{open
-question} --- it is what this work is now pointed at. The model does expose two
-levers:
-\vspace{0.3em}
-\begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
-  \item \textbf{Calm the hubs:} Tilting fear reduction toward high-degree nodes lowers the critical seed monotonically.
-  \item \textbf{Limit visibility:} When the fear field is \textbf{local} rather than global, cascades behave like the zero-fear baseline. Panic requires a global audience.
-\end{itemize}
+%% Q9 panel — Gary's condensed wording, approved 2026-08-03 (S-063 session).
+%% Mechanism rests on the AUDIT-PASS local-vs-global dichotomy (near-front fear
+%% failures are redundant; remote pairs nucleate new fronts at r=2). The
+%% quantitative nucleation law remains an honest negative (C-Q5(i)) — keep this
+%% panel qualitative.
+In a network, fear near an active failure is harmless, because those nearby
+nodes would likely fail anyway. The real danger is fear reaching distant nodes
+and starting new chain reactions --- so intervention should prioritize regions
+far from the crisis, not just the active crisis zone.
 
 \vspace{-1.5em}
 

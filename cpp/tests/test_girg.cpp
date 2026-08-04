@@ -1,6 +1,7 @@
 #include "twocascade/girg.hpp"
 #include "twocascade/rng.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -20,18 +21,26 @@ static std::vector<Point2D> make_points(int n, std::mt19937_64& rng) {
     return sample_torus_points(n, rng);
 }
 
+// Simple-graph + symmetry check.
+//
+// Both samplers sort every adjacency list before returning, so this asserts
+// STRICTLY INCREASING neighbours -- which subsumes "no self-loop" and "no
+// duplicate neighbour" while also pinning the documented sortedness -- and then
+// uses binary search for the reciprocal-edge check. The previous form built a
+// std::set per vertex and LINEARLY scanned adj[j] for every neighbour, i.e.
+// O(n * deg^2); on the near-complete fixtures that is O(n^3), which is ~7e10
+// operations at the n = 4097 case added in G5.3 and would have made that case
+// unrunnable. This form is O(n * deg * log deg) and checks strictly more.
 static void assert_symmetric_simple(const std::vector<std::vector<int>>& adj, const char* label) {
     int n = static_cast<int>(adj.size());
     for (int i = 0; i < n; ++i) {
-        std::set<int> seen;
-        for (int j : adj[i]) {
-            TEST_ASSERT(j != i); // no self-loop
-            TEST_ASSERT(seen.insert(j).second); // no duplicate neighbor
-            bool found = false;
-            for (int k : adj[j]) {
-                if (k == i) { found = true; break; }
-            }
-            TEST_ASSERT(found); // edge i-j implies edge j-i
+        const std::vector<int>& nbrs = adj[i];
+        for (size_t k = 0; k < nbrs.size(); ++k) {
+            TEST_ASSERT(nbrs[k] != i); // no self-loop
+            // strictly increasing => sorted AND no duplicate neighbour
+            TEST_ASSERT(k == 0 || nbrs[k - 1] < nbrs[k]);
+            const std::vector<int>& back = adj[nbrs[k]];
+            TEST_ASSERT(std::binary_search(back.begin(), back.end(), i)); // i-j => j-i
         }
     }
     (void)label;
@@ -118,7 +127,34 @@ void test_bkl_degenerate_sizes() {
 
 void test_bkl_complete_graph_coverage() {
     std::cout << "Running test_bkl_complete_graph_coverage..." << std::endl;
-    for (int n : {2, 3, 5, 17, 64, 200, 999}) {
+    // THE deterministic partition check: with weights large enough to saturate
+    // p_ij == 1 at every distance, every cell-pair group takes the p_bar >= 1
+    // exact-enumeration branch, so the sampled graph must be EXACTLY complete.
+    // No randomness is left to hide a dropped cell-pair class (a missing edge)
+    // or a doubled one (a duplicate neighbour), which is why the G5.2 mutation
+    // study found this to be the check that catches all three partition
+    // mutations -- including the two the constant-c level-set tests are
+    // structurally blind to.
+    //
+    // COVERAGE, and why the n list has to reach this far (reviewer round 3,
+    // MAJOR-1). The BKL level count is n-dependent, so a size list is really a
+    // LEVEL list, and until G5.3 this check stopped at n = 999, i.e. L <= 4,
+    // while production runs at L = 6-7. n = 2000 (L = 5) and n = 4097 (L = 6,
+    // the first n at which the schedule reaches it) close that to L = 6. The
+    // levels reached are asserted below against girg_bkl_level_count rather
+    // than assumed, so a future change to the schedule that quietly lowered L
+    // at these sizes would fail here instead of silently shrinking coverage.
+    //
+    // n = 4097 is the practical ceiling and the reason is structural, not
+    // impatience: a COMPLETE graph's adjacency lists hold n(n-1) entries by
+    // definition -- ~16.8M ints, ~67 MB, at this n -- so the next level up
+    // (L = 7 needs n > 16384) would cost ~1 GB of adjacency alone. That is not
+    // a dense n x n structure smuggled in (the constitution's §I bar); it is
+    // the output of a saturating fixture, and it is exactly why L >= 7 is
+    // validated statistically, at n = 40000, by
+    // tests/test_cpp_girg_validation.py's exact-moment test instead.
+    int deepest_level = 0;
+    for (int n : {2, 3, 5, 17, 64, 200, 999, 2000, 4097}) {
         std::mt19937_64 rng = make_seeded_rng(1, 0);
         std::vector<Point2D> pts = make_points(n, rng);
         std::vector<double> w(n, 1e9);
@@ -128,7 +164,15 @@ void test_bkl_complete_graph_coverage() {
             TEST_ASSERT(static_cast<int>(adj[i].size()) == n - 1);
         }
         assert_symmetric_simple(adj, "bkl-complete");
+        deepest_level = std::max(deepest_level, girg_bkl_level_count(n));
     }
+    // Pin the levels this fixture list actually exercises, so the coverage
+    // claim in girg.hpp is asserted by the suite and not merely written down.
+    TEST_ASSERT(girg_bkl_level_count(999) == 4);
+    TEST_ASSERT(girg_bkl_level_count(2000) == 5);
+    TEST_ASSERT(girg_bkl_level_count(4097) == 6);
+    TEST_ASSERT(deepest_level == 6);
+    std::cout << "  deterministic partition coverage reaches L=" << deepest_level << std::endl;
     std::cout << "test_bkl_complete_graph_coverage passed!" << std::endl;
 }
 
@@ -240,6 +284,24 @@ void test_bkl_degenerate_weights_match_independent_pair_probabilities() {
     //                          (no coincident points in this fixture).
     // Those are asserted explicitly below, so a fallback that silently dropped
     // or saturated the degenerate vertex cannot pass.
+    //
+    // THIRD CASE (G5.3, reviewer round 3 MINOR-5): every weight FINITE and
+    // w_min STRICTLY POSITIVE, yet the layer key still blows up, because w_min
+    // is denormal and w_i / w_min overflows to +inf. floor(log2(+inf)) is +inf
+    // and static_cast<int> of it is undefined behaviour -- the two guards above
+    // (all-finite, w_min > 0) both pass, so this input used to reach the bucket
+    // path. The discriminating assertion is adj_bkl == adj_direct under a
+    // constant source: the fallback makes them identical BY CONSTRUCTION, while
+    // the bucket path under a constant source does NOT reproduce the direct
+    // edge set (its ratio branch accepts on u < exact_p/p_bar, weaker than the
+    // direct u < exact_p, and its geometric skip jumps over candidate pairs
+    // that a constant u never brings back). MEASURED on this exact fixture with
+    // the guard removed (scratch build, G5.3): direct 486 edges vs bkl 517,
+    // symmetric difference 145 (88 bkl-only, 57 direct-only), adj_direct ==
+    // adj_bkl false. So the assertions below discriminate rather than passing
+    // vacuously. Note that vertex 3 is isolated either way, so the isolation
+    // assertion alone would NOT have caught it -- the edge-set comparison is
+    // what does.
     const int n = 80;
     const double alpha = 1.2;
     const double c = 0.2;
@@ -249,9 +311,14 @@ void test_bkl_degenerate_weights_match_independent_pair_probabilities() {
     w_zero[0] = 0.0; // w_min == 0
     std::vector<double> w_inf(n, 1.0);
     w_inf[5] = std::numeric_limits<double>::infinity();
+    std::vector<double> w_denormal_min(n, 1.0);
+    // Smallest positive double: finite, > 0, but 1.0 / it == +inf.
+    w_denormal_min[3] = std::numeric_limits<double>::denorm_min();
+    TEST_ASSERT(w_denormal_min[3] > 0.0 && std::isfinite(w_denormal_min[3]));
+    TEST_ASSERT(!std::isfinite(1.0 / w_denormal_min[3])); // the actual hazard
 
     int case_index = 0;
-    for (const auto& w : {w_zero, w_inf}) {
+    for (const auto& w : {w_zero, w_inf, w_denormal_min}) {
         std::set<std::pair<int, int>> expected;
         for (int i = 0; i < n; ++i) {
             for (int j = i + 1; j < n; ++j) {
@@ -282,9 +349,15 @@ void test_bkl_degenerate_weights_match_independent_pair_probabilities() {
         if (case_index == 0) {
             TEST_ASSERT(adj_direct[0].empty()); // w = 0 -> isolated
             TEST_ASSERT(adj_bkl[0].empty());
-        } else {
+        } else if (case_index == 1) {
             TEST_ASSERT(static_cast<int>(adj_direct[5].size()) == n - 1); // w = inf -> saturated
             TEST_ASSERT(static_cast<int>(adj_bkl[5].size()) == n - 1);
+        } else {
+            // denorm_min weight: base underflows to 0, so p = 0 for every pair
+            // involving it -- isolated, exactly like the w = 0 case, and NOT
+            // saturated by a garbage layer key.
+            TEST_ASSERT(adj_direct[3].empty());
+            TEST_ASSERT(adj_bkl[3].empty());
         }
         ++case_index;
     }
@@ -406,7 +479,15 @@ void test_bkl_vs_direct_level_set_identity_high_threshold() {
     //     mutations: doubling gives z = +91.1 on the edge count (m = 36539 vs
     //     E = 25130 +- 125), dropping level 3 gives z = -37.5 in the
     //     [0.236,0.354) distance bin (238 edges vs E = 1627 +- 37); both
-    //     p = 0 against that test's Bonferroni alpha of 6.7e-5.
+    //     p = 0 against that test's Bonferroni alpha of 6.7e-5. G5.3 closed
+    //     the remaining hole in that table by measuring the level-2 drop --
+    //     the mutation invisible HERE -- against that same test: worst
+    //     z = -20.89 in the [0.471,0.589) distance bin (79 edges vs
+    //     E = 524.9 +- 21.3), p = 7.1e-97, 19 of 75 z-scores past alpha, with
+    //     the deficit concentrated in the OUTER distance bins exactly as a
+    //     lost longest-range class predicts. So every mutation this test is
+    //     blind to is now demonstrated -- not assumed -- to be caught
+    //     elsewhere.
     //   - and, added here for the doubling case specifically, the
     //     simple-graph check below: on this fixture the doubling mutation
     //     emits 251 pair records for 223 distinct edges at c=0.9 (28 doubled
@@ -414,6 +495,22 @@ void test_bkl_vs_direct_level_set_identity_high_threshold() {
     //     c=0.95 and c=0.99 too) even though the edge SET is unchanged, so
     //     asserting simplicity turns a previously invisible mutation into a
     //     hard failure in this very test.
+    // DEFERRED ADVISORY (G5.3, reviewer round 3 MINOR-6). The reviewer's
+    // suggestion is to DERIVE this bound from the fixture instead of pinning
+    // the observed value: count, for each c, the pairs that sit in the
+    // ratio-branch boundary band -- exact_p < c <= exact_p / p_bar -- and
+    // assert the symmetric difference against that count. Not done, and
+    // deliberately so: p_bar is a property of the sampler's own cell x
+    // weight-layer partition, so computing it in the test means re-deriving
+    // the level schedule, the cell assignment, the layer keys and each group's
+    // max weight -- a second implementation of the partition, asserted against
+    // the first. That is both more code than the check is worth and
+    // self-referential in exactly the way that would hide a shared-assumption
+    // bug. The bound stays a pinned observation, and its LIMITS are measured
+    // and stated above rather than assumed, which is what makes leaving it
+    // honest. Revisit only if the sampler ever exposes its group structure for
+    // inspection (it does not today, and should not grow an accessor just for
+    // this).
     const long kMaxSymmetricDiff = 3; // tripwire on the ratio-branch boundary, see above
     for (double c : {0.9, 0.95, 0.99}) {
         ConstantUniformSource src_direct(c);

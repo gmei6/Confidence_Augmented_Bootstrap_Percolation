@@ -542,21 +542,53 @@ def test_prong_a_girg_failed_sets_identical(n, r, seed_size, base_seed, tmp_path
 # [0.1, 0.3] with kappa=50 -- an interior regime, not a trivial phase.
 PRONG_B_GIRG_PARAMS = dict(n=2000, r=2, mu=0.2, seed_size=3)
 N_TRIALS_GIRG = 300
+
+# DELIBERATELY DIFFERENT VALUES (reviewer round 3, MINOR-8). These two seeds
+# used to both be 24601, which reads as an attempt to line the two languages'
+# RNG streams up -- exactly the thing §5.4 disclaims (numpy's Generator and
+# C++'s mt19937_64 do not produce the same stream from the same integer, and
+# nothing in this file depends on their doing so). Prong B is a two-sample
+# statistical comparison, so the seeds are independent labels for two
+# independent Monte Carlo runs; making them differ removes the false
+# implication and, incidentally, makes the comparison slightly stronger by
+# ruling out any shared-seed coincidence.
 PRONG_B_GIRG_PY_SEED = 24601
-PRONG_B_GIRG_CPP_SEED = 24601
+PRONG_B_GIRG_CPP_SEED = 31337
+
+# Fear-memory window cells (reviewer round 3, MAJOR-2). Prong B ran only at the
+# DEFAULT window (window_len=1, i.e. no memory) while every production GIRG
+# config -- configs/poster_girg_mu0.json / _mu40 / _mu70 -- runs window_len=5
+# with weights [0.2]*5. The windowed path in reference.run_cascade is a
+# different code path on BOTH sides (a deque of per-round failure counts, a
+# weighted sum over the last window_len rounds, and a window_len-round
+# all-quiet stopping rule), so a divergence there would have been invisible to
+# the entire cross-language suite while affecting every poster GIRG number.
+#
+# The (5, [0.2]*5) cell is calibrated the same way the original cell was: an
+# 80-trial Python pilot at pilot seed 314159 (NOT the test's 24601, so the
+# choice is not tuned to the final comparison) gave P(systemic) = 0.325 at
+# kappa=10 and 0.350 at kappa=50 -- both interior, so no other parameter needed
+# to move. kappa=50 is the one carried into the suite because it is also the
+# `concentration` the production configs use.
+WINDOW5_WEIGHTS = (0.2, 0.2, 0.2, 0.2, 0.2)
+PRONG_B_GIRG_CELLS = [
+    pytest.param(10.0, 1, None, id="kappa10-window1"),
+    pytest.param(50.0, 1, None, id="kappa50-window1"),
+    pytest.param(50.0, 5, WINDOW5_WEIGHTS, id="kappa50-window5"),
+]
 
 
-def _python_girg_fractions(kappa: float) -> np.ndarray:
+def _python_girg_fractions(kappa: float, window_len: int, weights) -> np.ndarray:
     P = {**PRONG_B_GIRG_PARAMS, "kappa": kappa}
     rng = np.random.default_rng(PRONG_B_GIRG_PY_SEED)
     fractions = np.empty(N_TRIALS_GIRG)
     for t in range(N_TRIALS_GIRG):
         points = sample_torus_points(P["n"], rng)
-        weights = sample_powerlaw_weights(P["n"], TAU, W_MIN, rng)
-        adjacency = sample_girg_adjacency(points, weights, ALPHA_G, rng)
+        girg_weights = sample_powerlaw_weights(P["n"], TAU, W_MIN, rng)
+        adjacency = sample_girg_adjacency(points, girg_weights, ALPHA_G, rng)
         # gamma=0.0: degree-dependent fear reduces exactly to the global model
         # (this task's scope; see implementation_plan.md).
-        fears, _stats = sample_degree_dependent_fears(weights, P["mu"], 0.0, P["kappa"], rng)
+        fears, _stats = sample_degree_dependent_fears(girg_weights, P["mu"], 0.0, P["kappa"], rng)
         nodes = make_nodes(individual_fears=fears)
         seeds = choose_seed(
             n=P["n"], seed_size=P["seed_size"], adjacency=adjacency, rng=rng,
@@ -565,21 +597,27 @@ def _python_girg_fractions(kappa: float) -> np.ndarray:
         result = run_cascade(
             adjacency=adjacency, nodes=nodes, r=P["r"], seed_indices=seeds,
             rng=rng, record_history=False,
+            window_len=window_len,
+            weights=None if weights is None else list(weights),
         )
         fractions[t] = result.final_failed_fraction
     return fractions
 
 
-def _cpp_girg_fractions(kappa: float) -> np.ndarray:
+def _cpp_girg_fractions(kappa: float, window_len: int, weights) -> np.ndarray:
     P = {**PRONG_B_GIRG_PARAMS, "kappa": kappa}
-    stdout = _run_cpp([
+    args = [
         "--graph-type", "girg", "--tau", str(TAU), "--w-min", str(W_MIN), "--alpha-g", str(ALPHA_G),
         "--n", str(P["n"]), "--r", str(P["r"]),
         "--mu", str(P["mu"]), "--kappa", str(kappa),
         "--seed-size", str(P["seed_size"]),
         "--trials", str(N_TRIALS_GIRG),
         "--base-seed", str(PRONG_B_GIRG_CPP_SEED),
-    ])
+        "--window-len", str(window_len),
+    ]
+    if weights is not None:
+        args += ["--weights", ",".join(repr(float(w)) for w in weights)]
+    stdout = _run_cpp(args)
     lines = [ln for ln in stdout.splitlines() if ln.strip()]
     assert len(lines) == N_TRIALS_GIRG, f"expected {N_TRIALS_GIRG} lines, got {len(lines)}"
     return np.array([float(ln.split()[0]) for ln in lines])
@@ -588,23 +626,38 @@ def _cpp_girg_fractions(kappa: float) -> np.ndarray:
 _girg_fractions_cache = {}
 
 
-def _get_girg_fractions(kappa: float) -> tuple[np.ndarray, np.ndarray]:
-    if kappa not in _girg_fractions_cache:
+def _get_girg_fractions(kappa: float, window_len: int, weights) -> tuple[np.ndarray, np.ndarray]:
+    key = (kappa, window_len, weights)
+    if key not in _girg_fractions_cache:
         if not CPP_BIN.exists():
             pytest.skip(f"C++ engine not built at {CPP_BIN}")
-        _girg_fractions_cache[kappa] = (_python_girg_fractions(kappa), _cpp_girg_fractions(kappa))
-    return _girg_fractions_cache[kappa]
+        _girg_fractions_cache[key] = (
+            _python_girg_fractions(kappa, window_len, weights),
+            _cpp_girg_fractions(kappa, window_len, weights),
+        )
+    return _girg_fractions_cache[key]
 
 
 @requires_cpp_binary
-@pytest.mark.parametrize("kappa", [10.0, 50.0])
-def test_prong_b_girg_systemic_probability_z_test(kappa):
-    py_fracs, cpp_fracs = _get_girg_fractions(kappa)
+@pytest.mark.parametrize("kappa,window_len,weights", PRONG_B_GIRG_CELLS)
+def test_prong_b_girg_systemic_probability_z_test(kappa, window_len, weights):
+    py_fracs, cpp_fracs = _get_girg_fractions(kappa, window_len, weights)
     x1 = int(np.sum(py_fracs >= THETA))
     x2 = int(np.sum(cpp_fracs >= THETA))
     n1 = n2 = N_TRIALS_GIRG
     p1, p2 = x1 / n1, x2 / n2
     pooled = (x1 + x2) / (n1 + n2)
+
+    # Non-vacuity, checked BEFORE the degenerate short-circuit below: a cell
+    # whose P(systemic) sat at 0 or 1 on both sides would pass this test while
+    # comparing nothing at all. The cells are pilot-calibrated to be interior
+    # (see PRONG_B_GIRG_CELLS); this asserts the calibration still holds rather
+    # than trusting the comment that records it.
+    assert 0.02 < p1 < 0.98, (
+        f"degenerate Prong B cell (kappa={kappa}, window_len={window_len}): the "
+        f"Python side's P(systemic) = {p1:.3f} is at the boundary, so this "
+        f"comparison has almost no power -- recalibrate the cell"
+    )
 
     if pooled == 0.0 or pooled == 1.0:
         assert p1 == p2
@@ -614,26 +667,28 @@ def test_prong_b_girg_systemic_probability_z_test(kappa):
     z = (p1 - p2) / se
     p_value = 2.0 * (1.0 - stats.norm.cdf(abs(z)))
     assert p_value > Z_TEST_MIN_PVALUE, (
-        f"P(systemic) differs beyond Monte Carlo error for kappa={kappa}: "
+        f"P(systemic) differs beyond Monte Carlo error for kappa={kappa}, "
+        f"window_len={window_len}, weights={weights}: "
         f"Python {p1:.3f} vs C++ {p2:.3f} (z = {z:.3f}, p = {p_value:.5f})"
     )
 
 
 @requires_cpp_binary
-@pytest.mark.parametrize("kappa", [10.0, 50.0])
-def test_prong_b_girg_failed_fraction_ks_distance(kappa):
-    py_fracs, cpp_fracs = _get_girg_fractions(kappa)
+@pytest.mark.parametrize("kappa,window_len,weights", PRONG_B_GIRG_CELLS)
+def test_prong_b_girg_failed_fraction_ks_distance(kappa, window_len, weights):
+    py_fracs, cpp_fracs = _get_girg_fractions(kappa, window_len, weights)
     ks = stats.ks_2samp(py_fracs, cpp_fracs)
     # p-value form, not a fixed distance cutoff (okf/lessons.md's flag against
     # exactly that miscalibration; matches test_cpp_validation.py's convention).
     assert ks.pvalue > Z_TEST_MIN_PVALUE, (
-        f"KS test rejects equivalence for kappa={kappa}: "
+        f"KS test rejects equivalence for kappa={kappa}, window_len={window_len}, "
+        f"weights={weights}: "
         f"distance = {ks.statistic:.4f}, p-value = {ks.pvalue:.5f} <= {Z_TEST_MIN_PVALUE}"
     )
 
 
 # --------------------------------------------------------------------------- #
-# 6. Production-n cross-language parity (n = 10000)
+# 6. Production-n cross-language parity (n = 10000, and n = 40000)
 # --------------------------------------------------------------------------- #
 
 # WHY THIS EXISTS (reviewer round 2, MAJOR-1). Every check above tops out at
@@ -646,6 +701,14 @@ def test_prong_b_girg_failed_fraction_ks_distance(kappa):
 # invisible to the entire suite. This test closes that gap at the production
 # tuple used by configs/poster_girg_*.json (n = 10000, tau = 2.5,
 # w_min = 0.186377, alpha_g = 1.2).
+#
+# EXTENDED IN G5.3 (reviewer round 3, MAJOR-1): n = 10000 is only L = 6, so the
+# same argument still applied one level up. There are now TWO tests below --
+# three replicates at n = 10000 (L = 6) and one at n = 40000 (L = 7, the largest
+# n this project has swept), sharing one size-generic driver. L = 8 (any
+# n in (65536, 262144], e.g. n = 80000) remains UNVALIDATED; the per-level
+# coverage table lives in cpp/include/twocascade/girg.hpp, next to the schedule
+# it describes.
 #
 # HOW, given that the obvious approaches do not scale. Comparing sampled graphs
 # across languages needs a reference for "how many edges SHOULD there be", and
@@ -684,6 +747,11 @@ def test_prong_b_girg_failed_fraction_ks_distance(kappa):
 PRODUCTION_N = 10000
 PRODUCTION_W_MIN = 0.186377  # configs/poster_girg_*.json, calibrated in C2
 PRODUCTION_BASE_SEEDS = [4100, 4101, 4102]
+# Largest n this project has actually swept, and the only size in either suite
+# that reaches BKL level 7 (reviewer round 3, MAJOR-1). One replicate; see
+# test_largest_swept_n_moment_parity below for the cost accounting.
+LARGEST_SWEPT_N = 40000
+LARGEST_SWEPT_BASE_SEEDS = [4103]
 MOMENT_BLOCK = 256           # 256 x 10000 doubles = 20 MB per temporary
 N_DIST_BINS = 6
 HEAVY_WEIGHT_QUANTILE = 0.95
@@ -756,30 +824,24 @@ def _girg_edge_statistics(edges, points, heavy_mask, dist_edges, n):
     return len(edges), bin_counts, int(deg[heavy_mask].sum())
 
 
-@requires_cpp_binary
-def test_production_n_cross_language_parity_against_exact_moments(tmp_path):
-    """C++ (both variants) and the Python oracle, at the PRODUCTION tuple and
-    production n, each measured against exact model moments on shared geometry.
+def _moment_parity_records(tmp_path, n, base_seeds, subdir_prefix, rep_offset=0):
+    """Run the exact-moment parity comparison at size n and return every z it
+    produces as (label, z, detail) triples.
 
-    The Python oracle is included not as the thing under test but as a CONTROL:
-    it is the sampler every other check in this file trusts, so if its z-scores
-    were also out of range the moment computation would be what is wrong, not
-    the C++ engine. Keeping it in the same Bonferroni family makes that
-    explicit rather than assumed.
-
-    Direct and BKL are additionally compared to each other on the same
-    points/weights (independent RNG streams, so the comparison is statistical):
-    that is the cross-VARIANT half of the parity claim, and it is the check
-    that would catch a defect confined to the deeper level schedule that only
-    n >= 10000 reaches."""
+    Split out of the test body (G5.3) so the SAME machinery covers more than one
+    n without duplicating it -- the check is size-generic, only its cost is not.
+    Seeds follow the original scheme, offset by rep_offset so a second call
+    cannot collide with the first: geometry from base_seeds, C++ from
+    77000 + 10*rep + variant, the Python oracle from 88000 + rep."""
     dist_edges = np.linspace(0.0, math.sqrt(0.5), N_DIST_BINS + 1)
-    records = []  # (label, z, extra) for every z the test produces
+    records = []
 
-    for rep, base_seed in enumerate(PRODUCTION_BASE_SEEDS):
-        out_dir = _dump_geometry(tmp_path, PRODUCTION_N, base_seed=base_seed,
-                                 w_min=PRODUCTION_W_MIN, subdir=f"prod_{rep}")
+    for local_rep, base_seed in enumerate(base_seeds):
+        rep = local_rep + rep_offset
+        out_dir = _dump_geometry(tmp_path, n, base_seed=base_seed,
+                                 w_min=PRODUCTION_W_MIN, subdir=f"{subdir_prefix}{local_rep}")
         points, weights = _load_points_weights(out_dir)
-        assert points.shape == (PRODUCTION_N, 2)
+        assert points.shape == (n, 2)
 
         heavy_mask = weights >= np.quantile(weights, HEAVY_WEIGHT_QUANTILE)
         assert heavy_mask.sum() > 0
@@ -810,7 +872,7 @@ def test_production_n_cross_language_parity_against_exact_moments(tmp_path):
 
         for label, edges in observed.items():
             m, bin_counts, heavy_mass = _girg_edge_statistics(
-                edges, points, heavy_mask, dist_edges, PRODUCTION_N)
+                edges, points, heavy_mask, dist_edges, n)
             records.append((f"rep{rep}/{label}/edge-count", (m - e_total) / math.sqrt(v_total),
                             f"m={m} vs E={e_total:.1f}+-{math.sqrt(v_total):.1f}"))
             records.append((f"rep{rep}/{label}/heavy-degree-mass",
@@ -843,17 +905,111 @@ def test_production_n_cross_language_parity_against_exact_moments(tmp_path):
                         (m_bkl - m_direct) / math.sqrt(2.0 * v_total),
                         f"bkl={m_bkl} direct={m_direct}"))
 
-    # Bonferroni over every z produced, so the family-wise false-positive rate
-    # is the same Z_TEST_MIN_PVALUE the rest of this suite is calibrated to.
+    return records
+
+
+def _assert_moment_records(records, what):
+    """Bonferroni over every z produced, so the family-wise false-positive rate
+    is the same Z_TEST_MIN_PVALUE the rest of this suite is calibrated to."""
+    assert records, f"{what}: no z-scores produced at all"
     n_tests = len(records)
     per_test_alpha = Z_TEST_MIN_PVALUE / n_tests
     worst = max(records, key=lambda rec: abs(rec[1]))
     worst_p = 2.0 * stats.norm.sf(abs(worst[1]))
     assert worst_p > per_test_alpha, (
-        f"production-n parity failed at {worst[0]}: z = {worst[1]:+.3f}, "
+        f"{what} failed at {worst[0]}: z = {worst[1]:+.3f}, "
         f"p = {worst_p:.3e} <= {per_test_alpha:.3e} "
         f"(= {Z_TEST_MIN_PVALUE}/{n_tests} Bonferroni over {n_tests} z-scores); {worst[2]}"
     )
+
+
+@requires_cpp_binary
+def test_production_n_cross_language_parity_against_exact_moments(tmp_path):
+    """C++ (both variants) and the Python oracle, at the PRODUCTION tuple and
+    production n, each measured against exact model moments on shared geometry.
+
+    The Python oracle is included not as the thing under test but as a CONTROL:
+    it is the sampler every other check in this file trusts, so if its z-scores
+    were also out of range the moment computation would be what is wrong, not
+    the C++ engine. Keeping it in the same Bonferroni family makes that
+    explicit rather than assumed.
+
+    Direct and BKL are additionally compared to each other on the same
+    points/weights (independent RNG streams, so the comparison is statistical):
+    that is the cross-VARIANT half of the parity claim, and it is the check
+    that would catch a defect confined to the deeper level schedule that only
+    n >= 10000 reaches.
+
+    DISCRIMINATION (measured, not assumed). Mutating sample_girg_adjacency_bkl
+    in an isolated copy of the tree and re-running THIS test at n = 10000, which
+    produces 75 z-scores and therefore a Bonferroni alpha of 6.667e-5:
+      - baseline, unmutated: worst |z| = 2.03 (p = 0.043), 0 of 75 z-scores
+        past alpha -- i.e. the margin below is real headroom, not a test that
+        barely passes                                                [G5.3]
+      - visit every unordered cell pair twice: z = +91.1 on the edge count
+        (m = 36539 vs E = 25130 +- 125)                              [G5.2]
+      - drop the level-3 non-touching class: z = -37.5 in the [0.236,0.354)
+        distance bin (238 edges vs E = 1627 +- 37)                   [G5.2]
+      - drop the level-2 non-touching class (MUT-A at level 2, the one class
+        G5.2 never measured against this test): CAUGHT decisively. Worst
+        z = -20.89 in the [0.471,0.589) distance bin (79 edges vs
+        E = 524.9 +- 21.3), p = 7.1e-97; 19 of the 75 z-scores exceed alpha,
+        including the plain edge count (z = -9.90, m = 23889 vs
+        E = 25129.6 +- 125.3) and the heavy-degree mass (z = -11.43). Every
+        failing z is a cpp-bkl one: the Python-oracle and cpp-direct records in
+        the same family stay inside +-2, which is what makes the diagnosis
+        "the BKL sampler lost its longest-range class" rather than "the moment
+        computation is wrong"                                        [G5.3]
+    That last case is the one the constant-c level-set tests are structurally
+    blind to (the level-2 class carries only the longest-range pairs, whose
+    exact_p never crosses a high threshold c, so its removal changes no edge at
+    c in {0.9, 0.95, 0.99}). Both this test and, deterministically,
+    cpp/tests/test_girg.cpp's test_bkl_complete_graph_coverage catch it; the
+    signature here is specifically a deficit concentrated in the OUTER distance
+    bins, which is what identifies it as a lost long-range class."""
+    records = _moment_parity_records(
+        tmp_path, PRODUCTION_N, PRODUCTION_BASE_SEEDS, subdir_prefix="prod_")
+    _assert_moment_records(records, f"production-n (n={PRODUCTION_N}) parity")
+
+
+@requires_cpp_binary
+@pytest.mark.slow
+def test_largest_swept_n_moment_parity_reaches_bkl_level_7(tmp_path):
+    """The same exact-moment parity check, one replicate, at n = 40000 -- the
+    largest n this project has swept and the ONLY size in either suite that
+    reaches BKL level 7 (reviewer round 3, MAJOR-1).
+
+    WHY IT IS SEPARATE rather than a fourth entry in PRODUCTION_BASE_SEEDS:
+    cost. Measured on this machine, one n = 40000 replicate is ~83 s wall
+    (geometry dump 0.7 s, exact moments 43 s, C++ bkl 0.24 s, C++ direct 15 s,
+    Python oracle 24 s) against ~17 s for all three n = 10000 replicates
+    together, and its peak RSS is ~2.5 GB (the Python oracle's own blockwise
+    temporaries; the moment pass itself peaks at ~1.6 GB with MOMENT_BLOCK=256,
+    which measurement confirmed is both faster and 3.7x lighter than 1024). A
+    separate test keeps that cost deselectable via `-m "not slow"`, keeps its
+    Bonferroni family separate and honest, and keeps a failure at n = 40000
+    distinguishable from one at n = 10000 in the report.
+
+    ONE replicate, not three: the comparison is against EXACT model moments, so
+    a single replicate already yields ~20 independent z-scores; replicates buy
+    breadth over geometry realizations, not power, and the geometry-to-geometry
+    variation is already sampled three times at n = 10000.
+
+    DISCRIMINATION AT THIS n (measured, G5.3). With the level-2 non-touching
+    class dropped in an isolated mutated build, this test's 25 z-scores give a
+    Bonferroni alpha of 2.0e-4 and it FAILS at worst z = -27.14 in the
+    [0.471,0.589) distance bin (184 edges vs E = 1055.7 +- 32.1), p = 3.1e-162,
+    with 7 of 25 z past alpha -- and every one of them a cpp-bkl record, while
+    cpp-direct and python-oracle stay inside +-1.2 on the same geometry. So the
+    single replicate is not a token: it discriminates on its own.
+
+    STILL NOT COVERED: level 8, i.e. n in (65536, 262144] -- notably the
+    n = 80000 an even larger sweep would use. See the coverage table in
+    cpp/include/twocascade/girg.hpp."""
+    records = _moment_parity_records(
+        tmp_path, LARGEST_SWEPT_N, LARGEST_SWEPT_BASE_SEEDS,
+        subdir_prefix="largest_", rep_offset=len(PRODUCTION_BASE_SEEDS))
+    _assert_moment_records(records, f"largest-swept-n (n={LARGEST_SWEPT_N}) parity")
 
 
 # --------------------------------------------------------------------------- #

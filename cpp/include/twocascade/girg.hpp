@@ -94,14 +94,40 @@ constexpr int kGirgBklMaxLevel = 8;
  * constant. The sampler therefore degrades gracefully rather than breaking, but
  * its sub-quadratic behaviour (and the draw-count growth bound asserted in
  * test_bkl_pair_work_grows_slower_than_quadratically) is only established BELOW
- * n ~ 2.6e5. Production sizes on this project are n <= 4e4, roughly 6.5x below
- * where the cap first binds, so today it never engages. Raise it -- do not
- * silently rely on it -- if this sampler is ever pointed at n > 2.6e5.
+ * n ~ 2.6e5. Raise the cap -- do not silently rely on it -- if this sampler is
+ * ever pointed at n > 2.6e5.
  *
- * Level count is n-dependent, which is exactly why parity has to be checked at
- * production n and not only on small fixtures: L = 5 at n = 2000 but L = 6 at
- * n = 10000 and L = 7 at n = 40000, so a small-n check never exercises the
- * recursion depth production actually runs at.
+ * WHAT IS ACTUALLY VALIDATED, BY LEVEL (G5.3; reviewer round 3, MAJOR-1). Level
+ * count is n-dependent, so a fixture SIZE list is really a LEVEL list, and a
+ * suite that stops at small n never runs the recursion at the depth production
+ * runs it at. The schedule's level bands are L=2 for n<=64, 3 for n<=256, 4 for
+ * n<=1024, 5 for n<=4096, 6 for n<=16384, 7 for n<=65536, 8 for n<=262144.
+ * Coverage today:
+ *
+ *   L = 2..4  deterministic and exact. cpp/tests/test_girg.cpp's
+ *             test_bkl_complete_graph_coverage saturates p_ij to 1 at
+ *             n = 2..999, forcing exact enumeration, so the cell partition is
+ *             checked edge-for-edge; plus the constant-c level-set fixtures at
+ *             n = 200 (Python) and n = 331 (C++).
+ *   L = 5     deterministic (same complete-graph check, n = 2000) and
+ *             statistical (Prong A/B cascade parity at n = 2000).
+ *   L = 6     deterministic (same check, n = 4097) AND statistical at the
+ *             production tuple: tests/test_cpp_girg_validation.py's
+ *             test_production_n_cross_language_parity_against_exact_moments,
+ *             3 replicates at n = 10000 against exact model moments.
+ *   L = 7     statistical only:
+ *             test_production_n_moment_parity_at_largest_swept_n, 1 replicate
+ *             at n = 40000 (the largest n this project has swept). Not covered
+ *             deterministically, because the complete-graph fixture's own
+ *             output is n(n-1) adjacency entries (~1 GB at n > 16384).
+ *   L = 8     *** NOT VALIDATED AT ALL. *** No test in either suite samples at
+ *             an n in (65536, 262144], so nothing here has been checked at
+ *             n = 80000 in particular. Sampling at such an n is not blocked and
+ *             is expected to work -- L = 8 is the same code path as L = 7, one
+ *             iteration deeper -- but that expectation is UNTESTED. Before
+ *             trusting a result at n > 65536, add a replicate at that n to the
+ *             exact-moment test (the machinery is size-generic; the cost is the
+ *             O(n^2) moment computation, ~43 s and ~1.6 GB at n = 40000).
  */
 int girg_bkl_level_count(int n);
 

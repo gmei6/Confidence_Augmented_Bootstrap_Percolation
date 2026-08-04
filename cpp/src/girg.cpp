@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <map>
 #include <set>
@@ -121,9 +123,34 @@ std::vector<std::vector<int>> sample_girg_adjacency_direct(
 
 namespace {
 
+// Loud, immediate failure for a broken sampler INVARIANT (as opposed to a bad
+// user input, which is rejected at the CLI in main.cpp).
+//
+// abort(), not throw, and not assert():
+//  - The production call sites run inside `#pragma omp for` (main.cpp's trial
+//    loop). An exception that escapes an OpenMP structured block is undefined
+//    behaviour in the OpenMP spec, and in practice reaches std::terminate with
+//    the useful context already unwound -- so throwing here would trade one
+//    silent-corruption bug for one confusing crash.
+//  - assert() compiles out under -DNDEBUG, which is exactly what
+//    CMAKE_CXX_FLAGS_RELEASE sets, i.e. it would be absent from every build
+//    that actually produces results. An invariant that is only checked in a
+//    configuration nobody runs is not checked.
+// The message goes to stderr and is flushed before aborting so the reason
+// survives the crash even when stdout (which carries the engine's data) is
+// being piped.
+[[noreturn]] void girg_invariant_failure(const char* what) {
+    std::fprintf(stderr, "FATAL twocascade/girg: broken sampler invariant: %s\n", what);
+    std::fflush(stderr);
+    std::abort();
+}
+
 struct WeightGroup {
     std::vector<int> indices;
     double max_weight = 0.0;
+    // Index of a member attaining max_weight. Only used by the p_bar == 0
+    // spot-check in sample_girg_adjacency_bkl; see the comment there.
+    int max_index = -1;
 };
 
 int cell_coord(double v, int m) {
@@ -234,7 +261,10 @@ std::vector<WeightGroup> cell_layer_groups(const int* begin, const int* end,
         int t = (wi > w_min) ? static_cast<int>(std::floor(std::log2(wi / w_min))) : 0;
         auto& g = groups[t];
         g.indices.push_back(i);
-        if (wi > g.max_weight) g.max_weight = wi;
+        if (wi > g.max_weight || g.max_index < 0) {
+            g.max_weight = wi;
+            g.max_index = i;
+        }
     }
     std::vector<WeightGroup> out;
     out.reserve(groups.size());
@@ -274,10 +304,30 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
         }
         w_min = std::min(w_min, w);
     }
+    // A finite weight divided by a STRICTLY POSITIVE w_min can still overflow
+    // to +inf -- w_min denormal (say 5e-324) and w_i merely ordinary is enough.
+    // The layer key is then static_cast<int>(floor(log2(+inf))), i.e. a cast of
+    // an out-of-range double to int, which is UNDEFINED behaviour rather than
+    // just a wrong bucket: the standard imposes no result, and UBSan flags it.
+    // The Python revision this is ported from fails loudly at exactly this
+    // point (int(math.floor(math.log2(inf))) raises OverflowError), so the port
+    // must not quietly proceed either. It does not need to abort, though --
+    // the exact direct kernel uses no layer key at all and is the same remedy
+    // already applied to the other two degenerate-weight cases, so route there.
+    // (reviewer round 3, MINOR-5.)
+    bool layer_key_representable = true;
+    if (all_finite && w_min > 0.0) {
+        for (double w : weights) {
+            if (!std::isfinite(w / w_min)) {
+                layer_key_representable = false;
+                break;
+            }
+        }
+    }
     // w_min <= 0 or a non-finite weight breaks the weight-layer key
     // floor(log2(w/w_min)) (undefined or unbounded) -- RISKS.md #4. Fall back
     // rather than mishandle the (currently out-of-regime) extreme case.
-    if (!all_finite || !(w_min > 0.0)) {
+    if (!all_finite || !(w_min > 0.0) || !layer_key_representable) {
         return sample_girg_adjacency_direct(points, weights, alpha_g, u);
     }
 
@@ -394,8 +444,24 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                     double gx = torus_cell_gap(ax, bx, m);
                     double gy = torus_cell_gap(ay, by, m);
                     double d_min_sq = gx * gx + gy * gy;
-                    if (d_min_sq <= 0.0) {
-                        continue; // unreachable: cheb>=2 forces a strictly positive gap
+                    // UNREACHABLE, and now it says so instead of quietly
+                    // agreeing (reviewer round 3, MINOR-3). The cheb >= 2 test
+                    // above guarantees at least one axis has wrapped index
+                    // distance d >= 2, so torus_cell_gap returns (d-1)/m >= 1/m
+                    // > 0 on that axis and d_min_sq >= 1/m^2. The old
+                    // `continue` therefore never fired -- but if the guard, the
+                    // gap formula, or the level schedule ever changed so that
+                    // it COULD, `continue` would silently drop an entire
+                    // cell-pair class (every pair in it, at every weight layer)
+                    // and the only symptom would be a missing-edge deficit in
+                    // exactly the long-range tail this sampler exists to get
+                    // right. That is a wrong-science failure, so it must not be
+                    // survivable.
+                    if (!(d_min_sq > 0.0)) {
+                        girg_invariant_failure(
+                            "non-positive minimum cell-pair distance for a pair of "
+                            "cells at Chebyshev distance >= 2 (cell partition or "
+                            "torus_cell_gap is broken)");
                     }
 
                     const auto& a_groups = groups_of(a_cid);
@@ -422,6 +488,53 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                                 continue;
                             }
                             if (p_bar <= 0.0) {
+                                // REACHABLE, unlike the d_min_sq guard above,
+                                // and skipping is CORRECT -- but the reasoning
+                                // is a floating-point argument, so it is
+                                // written down and spot-checked rather than
+                                // left implied (reviewer round 3, MINOR-4,
+                                // which read this as possibly dropping a group
+                                // whose members have positive exact_p).
+                                //
+                                // p_bar can only be 0 by UNDERFLOW: w_min > 0
+                                // and d_min_sq > 0 are both established above,
+                                // so base > 0 in exact arithmetic, and p_bar =
+                                // min(1, base^alpha_g) with alpha_g > 0 is 0
+                                // only when the double computation flushes to
+                                // zero. (It cannot be negative or NaN: pow of a
+                                // non-negative base is non-negative, and NaN
+                                // would come back from std::min as 1.0.)
+                                //
+                                // When it does underflow, EVERY member pair's
+                                // exact_p is 0 too, so nothing is dropped. Each
+                                // member has w_i <= ga.max_weight, w_j <=
+                                // gb.max_weight and d_ij^2 >= d_min_sq, and
+                                // IEEE-754 multiplication, division and pow are
+                                // all monotone in their operands -- so the
+                                // member's base, computed by the same
+                                // expression shape in girg_pair_probability, is
+                                // <= this group's base and underflows with it.
+                                // The bound is an upper bound on exact_p by the
+                                // same argument that licenses the rejection
+                                // scheme in the first place; p_bar == 0 forces
+                                // exact_p == 0.
+                                //
+                                // The check below is that argument made
+                                // falsifiable at O(1) cost: the group's own
+                                // max-weight pair is the member that maximises
+                                // base among the weights (its distance is >=
+                                // d_min by construction), so if the bound is
+                                // ever wrong, it is the likeliest witness.
+                                // Checking all na*nb members would cost exactly
+                                // the pair work being skipped, which would
+                                // defeat the algorithm.
+                                if (!(exact_p(ga.max_index, gb.max_index) == 0.0)) {
+                                    girg_invariant_failure(
+                                        "group upper bound p_bar underflowed to 0 while a "
+                                        "member pair still has strictly positive exact "
+                                        "probability -- the acceptance bound is not an "
+                                        "upper bound");
+                                }
                                 continue;
                             }
 

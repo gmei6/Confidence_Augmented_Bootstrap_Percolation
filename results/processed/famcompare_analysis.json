@@ -1,8 +1,8 @@
 {
   "metadata": {
     "script": "scripts/analyze_famcompare.py",
-    "git_commit": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
-    "timestamp": "2026-08-04T07:35:48.299862",
+    "git_commit": "d7950353f037d1434c133b56d5ae2f9e79492379",
+    "timestamp": "2026-08-04T13:36:21.727382",
     "n_grid_full": [
       4000,
       10000,
@@ -24,24 +24,136 @@
       0.1,
       0.2,
       0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7
+    ],
+    "mu_grid_base": [
+      0.0,
+      0.1,
+      0.2,
+      0.3,
       0.4
     ],
+    "mu_grid_extended": [
+      0.5,
+      0.6,
+      0.7
+    ],
+    "mu_grid_extended_n": 10000,
+    "extension_reports": {
+      "configuration_model": {
+        "merged_mu": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7
+        ],
+        "missing_mu": [],
+        "mismatches": null,
+        "note": "2026-08-04 REBASE: configuration_model's n=10000 famcompare source switched from the q4-sourced results/q4_ignition_tau25_mumap_n10000_raw.json (mean degree 4.0, p=0.0004) to the eight poster comparison arms results/poster_cm_mu{0,10,20,30,40,50,60,70}_raw.json (mean degree 4.5336, p=0.00045336 -- the same matched ensemble as girg/erdos_renyi_matched at n=10000), each arm's seed_size==2 cell. This supersedes CM_EXTENSION_SKIP above. All eight arms verified pinned-param-identical (n, r, concentration, window_len, weights, theta, p, base_seed, trials_per_cell) before the merge was trusted -- see build_cm_matched_n10000(). CM's n=10000 curve now runs the full mu_bar in {0.1,...,0.7} instead of stopping at 0.4. The new baseline (mu_bar=0.0) is a different ensemble from the old q4 baseline, not a re-measurement of it, so every ratio at mu_bar in {0.1,...,0.4} shifts too (see metadata.extension_reports.configuration_model.rebase.old_vs_new for the side-by-side). n=4000 and n=20000 CM remain on the q4/4.0 ensemble -- the figure only draws n=10000.",
+        "rebase": {
+          "status": "REBASED",
+          "note": "2026-08-04 REBASE: configuration_model's n=10000 famcompare source switched from the q4-sourced results/q4_ignition_tau25_mumap_n10000_raw.json (mean degree 4.0, p=0.0004) to the eight poster comparison arms results/poster_cm_mu{0,10,20,30,40,50,60,70}_raw.json (mean degree 4.5336, p=0.00045336 -- the same matched ensemble as girg/erdos_renyi_matched at n=10000), each arm's seed_size==2 cell. This supersedes CM_EXTENSION_SKIP above. All eight arms verified pinned-param-identical (n, r, concentration, window_len, weights, theta, p, base_seed, trials_per_cell) before the merge was trusted -- see build_cm_matched_n10000(). CM's n=10000 curve now runs the full mu_bar in {0.1,...,0.7} instead of stopping at 0.4. The new baseline (mu_bar=0.0) is a different ensemble from the old q4 baseline, not a re-measurement of it, so every ratio at mu_bar in {0.1,...,0.4} shifts too (see metadata.extension_reports.configuration_model.rebase.old_vs_new for the side-by-side). n=4000 and n=20000 CM remain on the q4/4.0 ensemble -- the figure only draws n=10000.",
+          "mu_grid_n10000": [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7
+          ],
+          "sources": {
+            "0.0": "results/poster_cm_mu0_raw.json",
+            "0.1": "results/poster_cm_mu10_raw.json",
+            "0.2": "results/poster_cm_mu20_raw.json",
+            "0.3": "results/poster_cm_mu30_raw.json",
+            "0.4": "results/poster_cm_mu40_raw.json",
+            "0.5": "results/poster_cm_mu50_raw.json",
+            "0.6": "results/poster_cm_mu60_raw.json",
+            "0.7": "results/poster_cm_mu70_raw.json"
+          },
+          "seed_size": 2,
+          "old_vs_new": {
+            "old_baseline_p_q4": 0.024,
+            "new_baseline_p_matched": 0.038,
+            "note": "old_baseline_p_q4 is the previously reported q4-sourced n=10000 mu_bar=0.0 P(systemic) (12/500, mean degree 4.0), retained here for before/after comparison only -- it is no longer used in any ratio computed by this script."
+          }
+        }
+      },
+      "girg": {
+        "family": "girg",
+        "ext_raw": "results/poster_girg_mu70_raw.json",
+        "mismatches": [],
+        "merged_mu": [
+          0.7
+        ],
+        "missing_mu": [],
+        "note": "merged"
+      },
+      "erdos_renyi_matched": {
+        "family": "erdos_renyi_matched",
+        "ext_raw": "results/famcompare_er_matched_n10000_ext_raw.json",
+        "mismatches": [],
+        "merged_mu": [
+          0.5,
+          0.6,
+          0.7
+        ],
+        "missing_mu": [],
+        "note": "merged"
+      },
+      "erdos_renyi_bounded": {
+        "family": "erdos_renyi_bounded",
+        "ext_raw": "results/famcompare_er_bounded_n10000_ext_raw.json",
+        "mismatches": [],
+        "merged_mu": [
+          0.5,
+          0.6,
+          0.7
+        ],
+        "missing_mu": [],
+        "note": "merged"
+      }
+    },
+    "cm_ensemble_by_n": {
+      "4000": "q4-sourced (mean degree 4.0, p=0.0004) -- NOT on the matched ensemble; no matched poster arms exist at this n",
+      "10000": "matched (mean degree 4.5336, p=0.00045336, poster_cm_mu* arms) -- REBASED 2026-08-04, see extension_reports.configuration_model",
+      "20000": "q4-sourced (mean degree 4.0, p=0.0004) -- NOT on the matched ensemble; no matched poster arms exist at this n"
+    },
     "theta": 0.5,
     "ratio_ci_method": "parametric bootstrap, 10000 resamples: k1*~Binomial(n1,p1_hat), k0*~Binomial(n0,p0_hat) drawn independently, ratio=(k1*/n1)/(k0*/n0); resamples with k0*==0 dropped (drop_fraction recorded per cell); 95% CI = empirical 2.5/97.5 percentile of surviving resampled ratios",
     "bootstrap_seed": 20260803,
     "source_commits": {
       "results/q4_ignition_tau25_mumap_n4000_raw.json": "e066fd894c2b68c6b65547cff938f71e73498d9c",
-      "results/q4_ignition_tau25_mumap_n10000_raw.json": "e066fd894c2b68c6b65547cff938f71e73498d9c",
       "results/q4_ignition_tau25_mumap_n20000_raw.json": "e066fd894c2b68c6b65547cff938f71e73498d9c",
+      "results/poster_cm_mu0_raw.json": "301d56066800278e14b68ad60baf74c8929a5c26",
+      "results/poster_cm_mu10_raw.json": "301d56066800278e14b68ad60baf74c8929a5c26",
+      "results/poster_cm_mu20_raw.json": "301d56066800278e14b68ad60baf74c8929a5c26",
+      "results/poster_cm_mu30_raw.json": "301d56066800278e14b68ad60baf74c8929a5c26",
+      "results/poster_cm_mu40_raw.json": "68adadbc0d89d7f6270e0f0bccae084b27e456b7",
+      "results/poster_cm_mu50_raw.json": "d7950353f037d1434c133b56d5ae2f9e79492379",
+      "results/poster_cm_mu60_raw.json": "d7950353f037d1434c133b56d5ae2f9e79492379",
+      "results/poster_cm_mu70_raw.json": "68adadbc0d89d7f6270e0f0bccae084b27e456b7",
       "results/famcompare_girg_n4000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_girg_n10000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_girg_n20000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
+      "results/poster_girg_mu70_raw.json": "01791103a614befd8e2d0cf38862add5b5e0d6f1",
       "results/famcompare_er_matched_n4000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_matched_n10000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_matched_n20000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
+      "results/famcompare_er_matched_n10000_ext_raw.json": "d7950353f037d1434c133b56d5ae2f9e79492379",
       "results/famcompare_er_bounded_n4000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_bounded_n10000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_bounded_n20000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
+      "results/famcompare_er_bounded_n10000_ext_raw.json": "d7950353f037d1434c133b56d5ae2f9e79492379",
       "results/famcompare_er_scaled_n4000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_scaled_n10000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
       "results/famcompare_er_scaled_n20000_raw.json": "20acf682d536a517bea6bb88709c9ffbe64fc65a"
@@ -124,13 +236,13 @@
         }
       },
       "10000": {
-        "baseline_p": 0.024,
+        "baseline_p": 0.038,
         "baseline_seed": 2,
         "by_mu": {
           "0.1": {
-            "ratio": 2.0,
-            "ci_lo": 1.0476190476190474,
-            "ci_hi": 4.5,
+            "ratio": 1.2631578947368423,
+            "ci_lo": 0.6874553571428572,
+            "ci_hi": 2.4004166666666604,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 24,
@@ -138,50 +250,33 @@
               "p": 0.048
             },
             "denominator": {
-              "n_systemic": 12,
+              "n_systemic": 19,
               "n_trials": 500,
-              "p": 0.024
+              "p": 0.038
             },
             "ceiling_censored": false
           },
           "0.2": {
-            "ratio": 2.4166666666666665,
-            "ci_lo": 1.3123798076923079,
-            "ci_hi": 5.333333333333333,
+            "ratio": 1.5789473684210527,
+            "ci_lo": 0.9166666666666666,
+            "ci_hi": 2.9230769230769234,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
-              "n_systemic": 29,
+              "n_systemic": 30,
               "n_trials": 500,
-              "p": 0.058
+              "p": 0.06
             },
             "denominator": {
-              "n_systemic": 12,
+              "n_systemic": 19,
               "n_trials": 500,
-              "p": 0.024
+              "p": 0.038
             },
             "ceiling_censored": false
           },
           "0.3": {
-            "ratio": 3.1666666666666665,
-            "ci_lo": 1.764705882352941,
-            "ci_hi": 6.666666666666667,
-            "bootstrap_drop_fraction": 0.0,
-            "numerator": {
-              "n_systemic": 38,
-              "n_trials": 500,
-              "p": 0.076
-            },
-            "denominator": {
-              "n_systemic": 12,
-              "n_trials": 500,
-              "p": 0.024
-            },
-            "ceiling_censored": false
-          },
-          "0.4": {
-            "ratio": 3.5,
-            "ci_lo": 1.9545454545454546,
-            "ci_hi": 7.5,
+            "ratio": 2.210526315789474,
+            "ci_lo": 1.3333333333333333,
+            "ci_hi": 3.928690476190474,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 42,
@@ -189,9 +284,77 @@
               "p": 0.084
             },
             "denominator": {
-              "n_systemic": 12,
+              "n_systemic": 19,
               "n_trials": 500,
-              "p": 0.024
+              "p": 0.038
+            },
+            "ceiling_censored": false
+          },
+          "0.4": {
+            "ratio": 3.0526315789473686,
+            "ci_lo": 1.9031451612903225,
+            "ci_hi": 5.3999999999999995,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 58,
+              "n_trials": 500,
+              "p": 0.116
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": false
+          },
+          "0.5": {
+            "ratio": 4.2631578947368425,
+            "ci_lo": 2.75,
+            "ci_hi": 7.583333333333333,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 81,
+              "n_trials": 500,
+              "p": 0.162
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": false
+          },
+          "0.6": {
+            "ratio": 5.2631578947368425,
+            "ci_lo": 3.4374320652173913,
+            "ci_hi": 9.083522727272726,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 100,
+              "n_trials": 500,
+              "p": 0.2
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": false
+          },
+          "0.7": {
+            "ratio": 6.631578947368421,
+            "ci_lo": 4.375,
+            "ci_hi": 11.5,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 126,
+              "n_trials": 500,
+              "p": 0.252
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
             },
             "ceiling_censored": false
           }
@@ -203,8 +366,8 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.2142857142857144,
-            "ci_lo": 0.5882352941176471,
-            "ci_hi": 2.571428571428571,
+            "ci_lo": 0.5909090909090909,
+            "ci_hi": 2.625,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 17,
@@ -220,7 +383,7 @@
           },
           "0.2": {
             "ratio": 1.9285714285714286,
-            "ci_lo": 1.05,
+            "ci_lo": 1.0499404761904763,
             "ci_hi": 4.0,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
@@ -237,8 +400,8 @@
           },
           "0.3": {
             "ratio": 2.2857142857142856,
-            "ci_lo": 1.2666666666666666,
-            "ci_hi": 4.750694444444434,
+            "ci_lo": 1.2857142857142856,
+            "ci_hi": 4.571428571428571,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 32,
@@ -254,8 +417,8 @@
           },
           "0.4": {
             "ratio": 2.7857142857142856,
-            "ci_lo": 1.6,
-            "ci_hi": 5.625,
+            "ci_lo": 1.615277777777778,
+            "ci_hi": 5.667857142857126,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 39,
@@ -279,8 +442,8 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.6666666666666667,
-            "ci_lo": 0.8947368421052633,
-            "ci_hi": 3.3333333333333335,
+            "ci_lo": 0.9090909090909092,
+            "ci_hi": 3.3340909090908983,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 25,
@@ -296,8 +459,8 @@
           },
           "0.2": {
             "ratio": 3.466666666666667,
-            "ci_lo": 2.0869565217391304,
-            "ci_hi": 6.857589285714279,
+            "ci_lo": 2.055555555555556,
+            "ci_hi": 6.857142857142857,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 52,
@@ -313,8 +476,8 @@
           },
           "0.3": {
             "ratio": 2.933333333333333,
-            "ci_lo": 1.7141369047619046,
-            "ci_hi": 5.8,
+            "ci_lo": 1.7222222222222223,
+            "ci_hi": 5.777777777777778,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 44,
@@ -330,8 +493,8 @@
           },
           "0.4": {
             "ratio": 4.733333333333333,
-            "ci_lo": 2.947368421052632,
-            "ci_hi": 9.25,
+            "ci_lo": 2.9130434782608696,
+            "ci_hi": 9.125,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 71,
@@ -353,8 +516,8 @@
         "by_mu": {
           "0.1": {
             "ratio": 0.8,
-            "ci_lo": 0.3529411764705882,
-            "ci_hi": 1.777777777777778,
+            "ci_lo": 0.35,
+            "ci_hi": 1.75,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 12,
@@ -371,7 +534,7 @@
           "0.2": {
             "ratio": 1.8,
             "ci_lo": 1.0,
-            "ci_hi": 3.545454545454546,
+            "ci_hi": 3.5999999999999996,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 27,
@@ -387,8 +550,8 @@
           },
           "0.3": {
             "ratio": 1.9333333333333336,
-            "ci_lo": 1.0587418300653593,
-            "ci_hi": 3.875,
+            "ci_lo": 1.0588235294117645,
+            "ci_hi": 3.8888888888888897,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 29,
@@ -404,13 +567,30 @@
           },
           "0.4": {
             "ratio": 3.1333333333333333,
-            "ci_lo": 1.888888888888889,
-            "ci_hi": 6.142857142857142,
+            "ci_lo": 1.857142857142857,
+            "ci_hi": 6.125,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 47,
               "n_trials": 500,
               "p": 0.094
+            },
+            "denominator": {
+              "n_systemic": 15,
+              "n_trials": 500,
+              "p": 0.03
+            },
+            "ceiling_censored": false
+          },
+          "0.7": {
+            "ratio": 8.266666666666667,
+            "ci_lo": 5.238095238095238,
+            "ci_hi": 16.0,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 124,
+              "n_trials": 500,
+              "p": 0.248
             },
             "denominator": {
               "n_systemic": 15,
@@ -427,7 +607,7 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.0,
-            "ci_lo": 0.4,
+            "ci_lo": 0.4117647058823529,
             "ci_hi": 2.5,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
@@ -444,8 +624,8 @@
           },
           "0.2": {
             "ratio": 1.0,
-            "ci_lo": 0.4166666666666667,
-            "ci_hi": 2.5,
+            "ci_lo": 0.4,
+            "ci_hi": 2.4,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 11,
@@ -461,8 +641,8 @@
           },
           "0.3": {
             "ratio": 1.272727272727273,
-            "ci_lo": 0.5625,
-            "ci_hi": 3.0,
+            "ci_lo": 0.5714285714285714,
+            "ci_hi": 3.1666666666666665,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 14,
@@ -478,8 +658,8 @@
           },
           "0.4": {
             "ratio": 1.8181818181818183,
-            "ci_lo": 0.8947368421052633,
-            "ci_hi": 4.2869047619047445,
+            "ci_lo": 0.8823529411764705,
+            "ci_hi": 4.285714285714286,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 20,
@@ -503,7 +683,7 @@
         "by_mu": {
           "0.1": {
             "ratio": 26.583333333333332,
-            "ci_lo": 16.44385964912281,
+            "ci_lo": 16.776754385964914,
             "ci_hi": 54.833333333333336,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
@@ -521,7 +701,7 @@
           "0.2": {
             "ratio": 41.416666666666664,
             "ci_lo": 26.105263157894736,
-            "ci_hi": 83.0,
+            "ci_hi": 83.0041666666666,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 497,
@@ -578,7 +758,7 @@
           "0.1": {
             "ratio": 24.842105263157894,
             "ci_lo": 16.928571428571427,
-            "ci_hi": 43.09090909090909,
+            "ci_hi": 42.545454545454554,
             "bootstrap_drop_fraction": 0.0,
             "numerator": {
               "n_systemic": 472,
@@ -627,6 +807,57 @@
             "ceiling_censored": true
           },
           "0.4": {
+            "ratio": 26.315789473684212,
+            "ci_lo": 17.857142857142858,
+            "ci_hi": 45.45454545454546,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 500,
+              "n_trials": 500,
+              "p": 1.0
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": true
+          },
+          "0.5": {
+            "ratio": 26.315789473684212,
+            "ci_lo": 17.857142857142858,
+            "ci_hi": 45.45454545454546,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 500,
+              "n_trials": 500,
+              "p": 1.0
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": true
+          },
+          "0.6": {
+            "ratio": 26.315789473684212,
+            "ci_lo": 17.857142857142858,
+            "ci_hi": 45.45454545454546,
+            "bootstrap_drop_fraction": 0.0,
+            "numerator": {
+              "n_systemic": 500,
+              "n_trials": 500,
+              "p": 1.0
+            },
+            "denominator": {
+              "n_systemic": 19,
+              "n_trials": 500,
+              "p": 0.038
+            },
+            "ceiling_censored": true
+          },
+          "0.7": {
             "ratio": 26.315789473684212,
             "ci_lo": 17.857142857142858,
             "ci_hi": 45.45454545454546,
@@ -734,7 +965,10 @@
       "0.1": 0.0,
       "0.2": 0.0,
       "0.3": 0.0,
-      "0.4": 0.0
+      "0.4": 0.0,
+      "0.5": 0.0,
+      "0.6": 0.0,
+      "0.7": 0.0
     },
     "20000": {
       "0.0": 0.0,
@@ -745,7 +979,7 @@
     }
   },
   "supplementary_erdos_renyi_a05_anchored": {
-    "note": "ER evaluated at its own a05(mu_bar=0) crossing (baseline ~0.5), NOT the matched-baseline anchor. Ratio is arithmetically ceiling-capped near 2x since baseline p~0.5 and p cannot exceed 1. Not part of the main panel.",
+    "note": "ER evaluated at its own a05(mu_bar=0) crossing (baseline ~0.5), NOT the matched-baseline anchor. Ratio is arithmetically ceiling-capped near 2x since baseline p~0.5 and p cannot exceed 1. Not part of the main panel. Not extended to mu_bar>0.4 (out of scope).",
     "ratios": {
       "4000": {
         "baseline_p": 0.506,
@@ -753,22 +987,22 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.9525691699604744,
-            "ci_lo": 1.793478260869565,
-            "ci_hi": 2.1379310344827585,
+            "ci_lo": 1.7956204379562042,
+            "ci_hi": 2.1422413793103448,
             "bootstrap_drop_fraction": 0.0,
             "ceiling_censored": false
           },
           "0.2": {
             "ratio": 1.976284584980237,
             "ci_lo": 1.8181818181818181,
-            "ci_hi": 2.1645021645021645,
+            "ci_hi": 2.155172413793103,
             "bootstrap_drop_fraction": 0.0,
             "ceiling_censored": true
           },
           "0.3": {
             "ratio": 1.976284584980237,
-            "ci_lo": 1.824817518248175,
-            "ci_hi": 2.1645021645021645,
+            "ci_lo": 1.8181818181818181,
+            "ci_hi": 2.155172413793103,
             "bootstrap_drop_fraction": 0.0,
             "ceiling_censored": true
           },
@@ -787,8 +1021,8 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.9529411764705882,
-            "ci_lo": 1.8007246376811592,
-            "ci_hi": 2.1324786324786325,
+            "ci_lo": 1.7978339350180503,
+            "ci_hi": 2.133047210300429,
             "bootstrap_drop_fraction": 0.0,
             "ceiling_censored": false
           },
@@ -821,7 +1055,7 @@
         "by_mu": {
           "0.1": {
             "ratio": 1.9157088122605364,
-            "ci_lo": 1.76678445229682,
+            "ci_lo": 1.773049645390071,
             "ci_hi": 2.092050209205021,
             "bootstrap_drop_fraction": 0.0,
             "ceiling_censored": true
@@ -885,38 +1119,6 @@
           "p_systemic": 0.13
         }
       },
-      "10000": {
-        "0.0": {
-          "seed_size": 2,
-          "n_trials": 500,
-          "n_systemic": 12,
-          "p_systemic": 0.024
-        },
-        "0.1": {
-          "seed_size": 2,
-          "n_trials": 500,
-          "n_systemic": 24,
-          "p_systemic": 0.048
-        },
-        "0.2": {
-          "seed_size": 2,
-          "n_trials": 500,
-          "n_systemic": 29,
-          "p_systemic": 0.058
-        },
-        "0.3": {
-          "seed_size": 2,
-          "n_trials": 500,
-          "n_systemic": 38,
-          "p_systemic": 0.076
-        },
-        "0.4": {
-          "seed_size": 2,
-          "n_trials": 500,
-          "n_systemic": 42,
-          "p_systemic": 0.084
-        }
-      },
       "20000": {
         "0.0": {
           "seed_size": 2,
@@ -947,6 +1149,56 @@
           "n_trials": 500,
           "n_systemic": 39,
           "p_systemic": 0.078
+        }
+      },
+      "10000": {
+        "0.0": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 19,
+          "p_systemic": 0.038
+        },
+        "0.1": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 24,
+          "p_systemic": 0.048
+        },
+        "0.2": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 30,
+          "p_systemic": 0.06
+        },
+        "0.3": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 42,
+          "p_systemic": 0.084
+        },
+        "0.4": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 58,
+          "p_systemic": 0.116
+        },
+        "0.5": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 81,
+          "p_systemic": 0.162
+        },
+        "0.6": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 100,
+          "p_systemic": 0.2
+        },
+        "0.7": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 126,
+          "p_systemic": 0.252
         }
       }
     },
@@ -1013,6 +1265,12 @@
           "n_trials": 500,
           "n_systemic": 47,
           "p_systemic": 0.094
+        },
+        "0.7": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 124,
+          "p_systemic": 0.248
         }
       },
       "20000": {
@@ -1111,6 +1369,24 @@
           "n_trials": 500,
           "n_systemic": 500,
           "p_systemic": 1.0
+        },
+        "0.5": {
+          "seed_size": 279,
+          "n_trials": 500,
+          "n_systemic": 500,
+          "p_systemic": 1.0
+        },
+        "0.6": {
+          "seed_size": 279,
+          "n_trials": 500,
+          "n_systemic": 500,
+          "p_systemic": 1.0
+        },
+        "0.7": {
+          "seed_size": 279,
+          "n_trials": 500,
+          "n_systemic": 500,
+          "p_systemic": 1.0
         }
       },
       "20000": {
@@ -1205,6 +1481,24 @@
           "p_systemic": 0.0
         },
         "0.4": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 0,
+          "p_systemic": 0.0
+        },
+        "0.5": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 0,
+          "p_systemic": 0.0
+        },
+        "0.6": {
+          "seed_size": 2,
+          "n_trials": 500,
+          "n_systemic": 0,
+          "p_systemic": 0.0
+        },
+        "0.7": {
           "seed_size": 2,
           "n_trials": 500,
           "n_systemic": 0,

@@ -33,6 +33,27 @@ Gary reviewed rendered candidates of four designs and chose the overlaid
   - The ER bounded-seed (a=r=2) immunity arm is OFF this figure (it is a
     P=0 arm with an undefined ratio); it is stated in the poster prose
     instead. It must never be plotted as a ratio.
+
+EXTENSION (2026-08-04): x-axis now runs to mu_bar=0.7, with per-family
+availability read from FAMILY_MU_GRID rather than one shared MU_GRID list,
+because the three families are NOT extended symmetrically (see
+scripts/analyze_famcompare.py's module docstring for why):
+  - erdos_renyi_matched reaches 0.7 (newly run ext arm).
+  - girg reaches 0.7 but has no measured 0.5/0.6 -- its line connects 0.4 to
+    0.7 directly (mirrors how scripts/plot_poster_fear_structure.py already
+    bridges the same GIRG gap).
+  - configuration_model reaches 0.7 too, as of the 2026-08-04 REBASE in
+    analyze_famcompare.py: its n=10000 source switched from the q4-sourced
+    mean-degree-4.0 series to the matched mean-degree-4.5336 poster_cm arms
+    (same ensemble girg/ER-matched already use at n=10000), so all three
+    families now run the full mu_bar in {0.1,...,0.7} with no gaps. CM's
+    ratios shifted from the pre-rebase 2.0/2.4/3.2/3.5 (mu_bar 0.1-0.4,
+    old q4 baseline P=0.024) to 1.26/1.58/2.21/3.05 (new matched baseline
+    P=0.038) -- a different ensemble, not a re-measurement, so the change is
+    expected and not a regression.
+End-of-line declutter labels anchor past each family's own last x; CM's
+connector is now the same length as ER-matched's/girg's since all three
+reach 0.7.
 """
 import json
 import os
@@ -82,7 +103,17 @@ FAMILY_LABEL = {
     "erdos_renyi_matched": "ER (matched baseline)",
 }
 
-MU_GRID = [0.1, 0.2, 0.3, 0.4]
+FULL_MU_GRID = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+# Per-family availability (see analyze_famcompare.py's module docstring):
+# configuration_model now has the full 0.1-0.7 run too (2026-08-04 rebase
+# onto the matched poster_cm arms); girg still has no measured 0.5/0.6 so
+# its line jumps 0.4 -> 0.7 directly; erdos_renyi_matched has the full
+# 0.1-0.7 run.
+FAMILY_MU_GRID = {
+    "configuration_model": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+    "girg": [0.1, 0.2, 0.3, 0.4, 0.7],
+    "erdos_renyi_matched": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+}
 N_REP = 10000
 
 FIGSIZE = (10, 10)
@@ -184,19 +215,23 @@ def main():
     ax.set_facecolor(SURFACE)
 
     families = ["erdos_renyi_matched", "configuration_model", "girg"]
-    xs_full = [0.0] + MU_GRID
 
     end_info = []
     for fam in families:
         color = FAMILY_COLOR[fam]
         marker = FAMILY_MARKER[fam]
         msize = FAMILY_MARKER_SIZE[fam]
+        mu_grid = FAMILY_MU_GRID[fam]
+        xs_full = [0.0] + mu_grid
         ys, cens = [1.0], [False]
-        for mu in MU_GRID:
+        for mu in mu_grid:
             c = cell(panel, fam, N_REP, mu)
             ys.append(c["ratio"])
             cens.append(c["ceiling_censored"])
 
+        # girg's xs_full jumps 0.4 -> 0.7 (no measured 0.5/0.6): plotting
+        # xs_full/ys directly still draws one straight segment across that
+        # gap, same bridging convention as plot_poster_fear_structure.py.
         ax.plot(xs_full, ys, color=color, lw=4.0, zorder=4,
                 solid_capstyle="round")
 
@@ -213,7 +248,7 @@ def main():
                 ax.scatter([x], [y], s=msize, marker=marker, facecolors=color,
                            edgecolors=SURFACE, linewidths=2.2, zorder=5)
 
-        end_info.append([ys[-1], fam, color, marker, cens[-1]])
+        end_info.append([ys[-1], fam, color, marker, cens[-1], xs_full[-1]])
 
     end_info.sort(key=lambda r: r[0])
     fig_h_in = FIGSIZE[1]
@@ -224,25 +259,30 @@ def main():
     min_gap_dec = (min_gap_in / ax_h_in) * decades
     label_ys = declutter_log([r[0] for r in end_info], min_gap_dec)
 
-    for (end_y, fam, color, marker, c_last), label_y in zip(end_info, label_ys):
-        if abs(np.log10(label_y) - np.log10(end_y)) > 1e-6:
-            ax.plot([0.40, 0.428], [end_y, label_y], color=INK_MUTED, lw=1.0,
+    # Label anchor column sits just past the RIGHTMOST family endpoint
+    # (0.7, erdos_renyi_matched/girg), not a fixed 0.40 -- CM's connector
+    # line is correspondingly longer since its own last x is still 0.4.
+    LABEL_ANCHOR_X = max(FULL_MU_GRID) + 0.028
+    LABEL_TEXT_X = max(FULL_MU_GRID) + 0.048
+    for (end_y, fam, color, marker, c_last, end_x), label_y in zip(end_info, label_ys):
+        if abs(np.log10(label_y) - np.log10(end_y)) > 1e-6 or end_x != LABEL_ANCHOR_X:
+            ax.plot([end_x, LABEL_ANCHOR_X], [end_y, label_y], color=INK_MUTED, lw=1.0,
                     zorder=6)
-        ax.scatter([0.428], [label_y], s=170, marker=marker, color=color,
+        ax.scatter([LABEL_ANCHOR_X], [label_y], s=170, marker=marker, color=color,
                    zorder=7, edgecolors=SURFACE, linewidths=2.0)
         label = f"{FAMILY_LABEL[fam]}  {fmt_ratio(end_y, c_last)}"
-        ax.text(0.448, label_y, label, fontsize=ANNOT_FS, color=INK_PRIMARY,
+        ax.text(LABEL_TEXT_X, label_y, label, fontsize=ANNOT_FS, color=INK_PRIMARY,
                 va="center", ha="left", zorder=7, fontweight="bold")
 
     ax.axhline(1.0, color=INK_MUTED, lw=1.6, ls=(0, (5, 3)), zorder=1)
-    ax.text(0.60, 1.0, "no effect", fontsize=ANNOT_FS - 3, color=INK_MUTED,
+    ax.text(0.90, 1.0, "no effect", fontsize=ANNOT_FS - 3, color=INK_MUTED,
             ha="left", va="bottom")
 
     ax.set_yscale("log")
-    ax.set_xlim(-0.03, 0.86)
+    ax.set_xlim(-0.03, 1.16)
     ax.set_ylim(*ylim)
-    ax.set_xticks([0.0, 0.1, 0.2, 0.3, 0.4])
-    ax.set_xticklabels(["0", "0.1", "0.2", "0.3", "0.4"])
+    ax.set_xticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+    ax.set_xticklabels(["0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7"])
     ax.set_yticks([1, 2, 5, 10, 20, 40])
     ax.set_yticklabels(["1×", "2×", "5×", "10×", "20×", "40×"])
     for s in ("top", "right"):

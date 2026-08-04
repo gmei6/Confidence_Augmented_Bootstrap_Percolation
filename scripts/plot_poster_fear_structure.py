@@ -41,7 +41,7 @@ FIG_PATH = os.path.join(base_dir, "results", "figures", "poster_fear_structure.p
 # Same family palette/markers as plot_poster_comparison.py, for visual
 # continuity between the poster's two data figures.
 FAMILY_STYLE = {
-    "configuration_model": {"color": "#BD5A2E", "marker": "o", "label": "Power-law (CM, $\\tau=2.5$)"},
+    "configuration_model": {"color": "#BD5A2E", "marker": "o", "label": "Power-law"},
     "erdos_renyi": {"color": "#2E6E76", "marker": "^", "label": "ER"},
     "girg": {"color": "#8E4A72", "marker": "P", "label": "GIRG"},
 }

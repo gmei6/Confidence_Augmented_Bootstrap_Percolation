@@ -1,9 +1,9 @@
 {
   "metadata": {
     "script": "scripts/analyze_poster_fear_structure.py",
-    "git_commit": "20acf682d536a517bea6bb88709c9ffbe64fc65a",
+    "git_commit": "d7950353f037d1434c133b56d5ae2f9e79492379",
     "source": "results/processed/poster_comparison.json",
-    "source_analysis_commit": "2024c236c5cd451621155666a85f4d79f27a1773",
+    "source_analysis_commit": "d7950353f037d1434c133b56d5ae2f9e79492379",
     "near_floor_ratio_threshold": 2.2,
     "structural_floor_r": 2,
     "note": "Percentage decrease in each family's own measured a_c(mu_bar) relative to its own mu_bar=0 anchor. Self-checked derivation of poster_comparison.json's d012_table; not independently /verify-gated on its own (the underlying comparison sweeps are)."
@@ -40,6 +40,22 @@
         "pct_decrease_ci_low": 64.0194173832049,
         "pct_decrease_ci_high": 65.35369110822249,
         "measured_crossing": 110.94827586206897,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.5,
+        "pct_decrease": 75.05024788958863,
+        "pct_decrease_ci_low": 74.22968966680915,
+        "pct_decrease_ci_high": 75.46331797025472,
+        "measured_crossing": 78.23529411764706,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.6,
+        "pct_decrease": 83.47184038960019,
+        "pct_decrease_ci_low": 82.76749809118247,
+        "pct_decrease_ci_high": 83.9460018094586,
+        "measured_crossing": 51.827586206896555,
         "near_floor": false
       },
       {
@@ -82,6 +98,22 @@
         "pct_decrease_ci_low": 29.671878774608405,
         "pct_decrease_ci_high": 37.94807273363976,
         "measured_crossing": 6.764705882352941,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.5,
+        "pct_decrease": 41.09365679061443,
+        "pct_decrease_ci_low": 37.148968375720884,
+        "pct_decrease_ci_high": 45.669251988157825,
+        "measured_crossing": 6.018691588785047,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.6,
+        "pct_decrease": 50.27027027027027,
+        "pct_decrease_ci_low": 46.48049463820869,
+        "pct_decrease_ci_high": 54.047848042097904,
+        "measured_crossing": 5.081081081081081,
         "near_floor": false
       },
       {

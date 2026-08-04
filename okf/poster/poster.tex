@@ -207,30 +207,31 @@ We hold network size $n$ and average degree constant across all tests to isolate
 %% blind-/verify-gated (same evidentiary status as Fear x Structure below).
 %% famcompare_analysis.json · 500 trials/cell · n=10000 · 95% bootstrap CIs in
 %% famcompare_analysis.json · ER's open points are lower bounds
-%% PRESENTER NOTES (2026-08-04): the panel below carries only the distilled
-%% claims; this is the talking script. Viewer-facing notes live on the
-%% poster-demo page (QR target).
-%%   Fear multiplies ignition by roughly 3x on heavy-tailed families
-%%   (power-law and GIRG). On the power-law model this multiplier is flat in
-%%   n at fixed mu-bar: fear shifts the LEVEL of ignition, not its SCALING.
+%% PRESENTER NOTES (2026-08-04, numbers refreshed after the CM rebase to the
+%% matched 4.5336 ensemble + extension to mu-bar=0.7): the panel below
+%% carries only the distilled claims; this is the talking script.
+%% Viewer-facing notes live on the poster-demo page (QR target).
+%%   Fear's multiplier on the heavy-tailed families climbs with the dial:
+%%   ~1.3x at mu-bar=0.1, ~3x at 0.4, ~6.6x (power-law) / 8.3x (GIRG) at
+%%   0.7 -- none censored. (Flat-in-n at fixed mu-bar is the gated S-058
+%%   result, measured on the earlier 4.0-ensemble CM series.)
 %%   Amplification depends on structure. On a matched ER baseline, fear
-%%   multiplies ignition by at least 25-40x (open points: every trial
-%%   cascaded, so the true multiplier is higher). Yet with a bounded seed
-%%   (a=r=2), ER never ignites: fear amplifies cascades the structure makes
-%%   possible; it cannot start them alone.
-%%   The dial: ~1.5x at mu-bar=0.1, ~3-3.5x at mu-bar=0.4. Not a constant.
-%%   GEOMETRY CAVEAT ("appears to damp it slightly further"): GIRG's
-%%   multiplier sits below the power-law model's at every mu-bar at n=10000
-%%   (0.8/1.8/1.9/3.1x vs 2.0/2.4/3.2/3.5x) BUT the per-cell bootstrap CIs
-%%   overlap everywhere -- not statistically separable at 500 trials/cell.
-%%   "Appears to / slightly" is the ceiling of what the data supports; at the
-%%   THRESHOLD level (Fear x Structure below) CM and GIRG move together.
+%%   multiplies ignition by at least ~25x, saturating at certainty from
+%%   mu-bar=0.2 onward (open points: every trial cascaded, true multiplier
+%%   higher). With a bounded seed (a=r=2), ER never ignites at ANY mu-bar
+%%   through 0.7 (0/500 everywhere): fear amplifies cascades the structure
+%%   makes possible; it cannot start them alone.
+%%   GEOMETRY NOTE (sentence cut 2026-08-04, Gary's Option A): on the
+%%   matched ensemble GIRG and power-law INTERLEAVE (GIRG 8.3x vs power-law
+%%   6.6x at 0.7; tied 0.2-0.5; GIRG below only at 0.1) with overlapping
+%%   CIs throughout. The earlier "geometry appears to damp it" reading came
+%%   from comparing GIRG-4.533 against the old CM-4.0 ensemble -- an
+%%   artifact, now corrected. Consistent with Fear and Structure below:
+%%   geometry doesn't measurably change fear's effect in either direction.
 \textbf{Fear is an amplifier with a dial.}
 \vspace{0.2em}
 
 Without hubs, the effect of fear is drastic. With hubs, it is subdued.
-Geometry appears to damp it slightly further --- but hubs do most of the
-work.
 
 \begin{center}
 \fcolorbox{tcRule}{tcCream}{%

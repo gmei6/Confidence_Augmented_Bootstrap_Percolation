@@ -29,12 +29,16 @@ CONFIG_SPECS = [
     # stream for every existing cell (project lesson) -- merging post-hoc here
     # keeps the original raw's cells reproducible and untouched.
     {"key": "poster_er_mu40", "family": "erdos_renyi", "mu": 0.4, "raw": ["results/poster_er_mu40_raw.json", "results/poster_er_mu40_tails_raw.json"]},
+    {"key": "poster_er_mu50", "family": "erdos_renyi", "mu": 0.5, "raw": "results/poster_er_mu50_raw.json"},
+    {"key": "poster_er_mu60", "family": "erdos_renyi", "mu": 0.6, "raw": "results/poster_er_mu60_raw.json"},
     {"key": "poster_er_mu70", "family": "erdos_renyi", "mu": 0.7, "raw": ["results/poster_er_mu70_raw.json", "results/poster_er_mu70_tails_raw.json"]},
     {"key": "poster_cm_mu0", "family": "configuration_model", "mu": 0.0, "raw": "results/poster_cm_mu0_raw.json"},
     {"key": "poster_cm_mu10", "family": "configuration_model", "mu": 0.1, "raw": "results/poster_cm_mu10_raw.json"},
     {"key": "poster_cm_mu20", "family": "configuration_model", "mu": 0.2, "raw": "results/poster_cm_mu20_raw.json"},
     {"key": "poster_cm_mu30", "family": "configuration_model", "mu": 0.3, "raw": "results/poster_cm_mu30_raw.json"},
     {"key": "poster_cm_mu40", "family": "configuration_model", "mu": 0.4, "raw": "results/poster_cm_mu40_raw.json"},
+    {"key": "poster_cm_mu50", "family": "configuration_model", "mu": 0.5, "raw": "results/poster_cm_mu50_raw.json"},
+    {"key": "poster_cm_mu60", "family": "configuration_model", "mu": 0.6, "raw": "results/poster_cm_mu60_raw.json"},
     {"key": "poster_cm_mu70", "family": "configuration_model", "mu": 0.7, "raw": "results/poster_cm_mu70_raw.json"},
     {"key": "poster_girg_mu0", "family": "girg", "mu": 0.0, "raw": "results/poster_girg_mu0_raw.json"},
     {"key": "poster_girg_mu40", "family": "girg", "mu": 0.4, "raw": "results/poster_girg_mu40_raw.json"},
@@ -204,8 +208,8 @@ def main() -> None:
     d012_table = []
     family_key_prefix = {"erdos_renyi": "er", "configuration_model": "cm", "girg": "girg"}
     family_mus = {
-        "erdos_renyi": [0.0, 0.1, 0.2, 0.3, 0.4, 0.7],
-        "configuration_model": [0.0, 0.1, 0.2, 0.3, 0.4, 0.7],
+        "erdos_renyi": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+        "configuration_model": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
         "girg": [0.0, 0.4, 0.7],
     }
     for fam in ["erdos_renyi", "configuration_model", "girg"]:

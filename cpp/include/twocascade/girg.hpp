@@ -70,6 +70,42 @@ private:
 };
 
 /**
+ * @brief Hard ceiling on sample_girg_adjacency_bkl's grid refinement.
+ *
+ * See girg_bkl_level_count below for what capping here actually costs.
+ */
+constexpr int kGirgBklMaxLevel = 8;
+
+/**
+ * @brief Deepest grid level L used by sample_girg_adjacency_bkl at size n.
+ *
+ * L = clamp(ceil(0.5 * log2(max(n/4, 4))), 2, kGirgBklMaxLevel). The target is
+ * ~4 points per cell at the deepest level, so that level's exact enumeration
+ * of touching cells stays linear in n. L >= 2 because a 2x2 grid (level 1) has
+ * no non-touching cell pairs at all, so the recursion could not even start.
+ *
+ * The upper cap is NOT free, and its cost is what this function exists to make
+ * visible and testable. It binds once ceil(0.5*log2(n/4)) > 8, i.e. n/4 > 2^16,
+ * i.e. n > 262144. Beyond that the deepest grid is frozen at m = 2^8 = 256
+ * cells per side (65536 cells), so mean occupancy of a deepest-level cell is
+ * n/65536 and GROWS with n instead of staying at ~4. The deepest-level touching
+ * pass enumerates every pair inside each cell and its 8 neighbours, so its cost
+ * returns to ~9*n*(n/65536)/2 -- quadratic in n again, just with a ~1/14600
+ * constant. The sampler therefore degrades gracefully rather than breaking, but
+ * its sub-quadratic behaviour (and the draw-count growth bound asserted in
+ * test_bkl_pair_work_grows_slower_than_quadratically) is only established BELOW
+ * n ~ 2.6e5. Production sizes on this project are n <= 4e4, roughly 6.5x below
+ * where the cap first binds, so today it never engages. Raise it -- do not
+ * silently rely on it -- if this sampler is ever pointed at n > 2.6e5.
+ *
+ * Level count is n-dependent, which is exactly why parity has to be checked at
+ * production n and not only on small fixtures: L = 5 at n = 2000 but L = 6 at
+ * n = 10000 and L = 7 at n = 40000, so a small-n check never exercises the
+ * recursion depth production actually runs at.
+ */
+int girg_bkl_level_count(int n);
+
+/**
  * @brief Sample n points uniformly on the unit torus.
  * Draw order (x0, y0, x1, y1, ...) mirrors numpy's row-major fill of
  * rng.uniform(0, 1, (n, 2)); RNG-stream identity across languages is not a

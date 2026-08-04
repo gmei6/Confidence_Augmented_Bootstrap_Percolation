@@ -50,6 +50,7 @@ Tests are skipped (not failed) if the binary is absent.
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import subprocess
@@ -108,12 +109,13 @@ def _run_cpp(args: list[str]) -> str:
     return result.stdout
 
 
-def _dump_geometry(tmp_path: Path, n: int, base_seed: int) -> Path:
-    out_dir = tmp_path / "girg_geometry"
+def _dump_geometry(tmp_path: Path, n: int, base_seed: int,
+                   w_min: float = W_MIN, subdir: str = "girg_geometry") -> Path:
+    out_dir = tmp_path / subdir
     proc = subprocess.run(
         [
             sys.executable, str(DUMP_GEOMETRY_SCRIPT),
-            "--n", str(n), "--tau", str(TAU), "--w-min", str(W_MIN),
+            "--n", str(n), "--tau", str(TAU), "--w-min", str(w_min),
             "--alpha-g", str(ALPHA_G), "--base-seed", str(base_seed),
             "--out", str(out_dir),
         ],
@@ -130,15 +132,31 @@ def _load_points_weights(out_dir: Path) -> tuple[np.ndarray, np.ndarray]:
     return points, weights
 
 
-def _edge_set_from_lines(text: str) -> set[tuple[int, int]]:
-    edges = set()
+def _edge_lines(text: str) -> list[tuple[int, int]]:
+    """Every emitted (i, j) line, WITH duplicates preserved.
+
+    The engine prints one line per adjacency entry with j > i, so a cell-pair
+    class that gets visited (and sampled) twice emits the same pair twice.
+    Collapsing to a set -- which _edge_set_from_lines below does, and which
+    every check in this file used to do unconditionally -- destroys exactly
+    that evidence: under a constant-c source, a doubled visit reaches the same
+    accept/reject verdict as the first, so the edge SET is bit-identical to
+    baseline and the duplicate line is the only surviving trace of the bug.
+    Measured on the n=200 fixture at c=0.9 with the cell_lex_less guard
+    deleted: 141 emitted lines against 136 unique edges (G5.2, MINOR-8).
+    """
+    lines = []
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
         i, j = map(int, line.split())
-        edges.add((i, j))
-    return edges
+        lines.append((i, j))
+    return lines
+
+
+def _edge_set_from_lines(text: str) -> set[tuple[int, int]]:
+    return set(_edge_lines(text))
 
 
 class _ConstantRng:
@@ -392,13 +410,40 @@ def test_bkl_level_set_identity_matches_oracle_at_high_threshold(c, tmp_path):
     close to 1. Concretely, at n=200/c=0.9 (this fixture, base_seed=11) bkl
     produces one spurious edge (132,173) with exact_p ~ 0.054 whose group's
     p_bar ~ 0.060 pushes the ratio just over 0.9 -- confirmed by hand while
-    building this test, not a partition bug. A doubled or dropped cell pair
-    (a REAL partition bug) instead produces a large, systematic difference
-    (thousands of edges at low c, per G2's investigation), so a small bound
-    here still catches that failure mode without asserting a false
-    exact-equality guarantee. The p_bar>=1-forced regime, where equality IS
-    exact and guaranteed, is covered separately and deterministically by
-    cpp/tests/test_girg.cpp's test_bkl_complete_graph_coverage."""
+    building this test, not a partition bug.
+
+    SCOPE CORRECTED BY MEASUREMENT (G5.2, reviewer round 2 MINOR-8). G5 also
+    claimed that a doubled or dropped cell pair "instead produces a large,
+    systematic difference (thousands of edges at low c), so a small bound here
+    still catches that failure mode". That was never measured and is false.
+    Mutating sample_girg_adjacency_bkl in an isolated copy and re-running THIS
+    fixture (symmetric difference at c = 0.9 / 0.95 / 0.99, bound = 3):
+
+        baseline                             1 / 0 / 0
+        drop the level-2 non-touching class  1 / 0 / 0   <- invisible
+        drop the level-3 non-touching class  4 / 3 / 3   <- passes at 2 of 3
+        delete the cell_lex_less guard       1 / 0 / 0   <- invisible
+          (i.e. every unordered cell pair visited and sampled twice)
+
+    n=200 has L=3, so level 3 is its deepest non-touching level. Both blind
+    spots are structural, not fixture luck: doubling is IDEMPOTENT at the edge-
+    set level under a constant source (the second visit re-runs the same
+    accept/reject with the same u), and the level-2 class holds only the
+    longest-range pairs, whose exact_p is far below any c tested here.
+
+    The bound is kept as a cheap tripwire on the ratio-branch boundary effect
+    -- which is what it actually measures -- and is no longer claimed to catch
+    partition bugs. Those are caught by, in order of directness:
+    cpp/tests/test_girg.cpp's test_bkl_complete_graph_coverage (the p_bar>=1
+    regime forces exact enumeration; it fails on all three mutations, at its
+    adj[i].size() == n-1 assertion); the production-n moment test at the bottom
+    of this file (statistical, no constant source, so neither blind spot
+    applies -- measured under these same mutations: doubling gives z = +91.1 on
+    the edge count, dropping level 3 gives z = -37.5 in the [0.236,0.354)
+    distance bin, both p = 0 against its Bonferroni alpha of 6.7e-5); and the
+    duplicate-emission assertion added below, which turns the previously
+    invisible doubling mutation into a hard failure here (141 emitted lines vs
+    136 unique edges at c=0.9 under that mutation)."""
     n = 200
     out_dir = _dump_geometry(tmp_path, n, base_seed=11)
     points, weights = _load_points_weights(out_dir)
@@ -415,9 +460,18 @@ def test_bkl_level_set_identity_matches_oracle_at_high_threshold(c, tmp_path):
         "--rng-source", "constant",
         "--constant-c", str(c),
     ])
-    edges_cpp = _edge_set_from_lines(stdout)
+    emitted = _edge_lines(stdout)
+    edges_cpp = set(emitted)
+    # No pair emitted twice: a doubled cell-pair class is invisible in the
+    # symmetric difference below (idempotent under a constant source) but not
+    # here. This is the discrimination the bound of 3 does not provide.
+    assert len(emitted) == len(edges_cpp), (
+        f"c={c}: the bkl sampler emitted {len(emitted)} adjacency lines for "
+        f"{len(edges_cpp)} distinct edges -- a cell pair is being visited (and "
+        f"sampled) more than once, i.e. a partition bug"
+    )
 
-    max_symmetric_diff = 3  # small and fixed, not tuned per-c to pass
+    max_symmetric_diff = 3  # tripwire on the ratio-branch boundary, see docstring
     symmetric_diff = len(edges_cpp - edges_py) + len(edges_py - edges_cpp)
     assert symmetric_diff <= max_symmetric_diff, (
         f"c={c}: bkl level-set mismatch too large ({symmetric_diff} edges; "
@@ -575,4 +629,436 @@ def test_prong_b_girg_failed_fraction_ks_distance(kappa):
     assert ks.pvalue > Z_TEST_MIN_PVALUE, (
         f"KS test rejects equivalence for kappa={kappa}: "
         f"distance = {ks.statistic:.4f}, p-value = {ks.pvalue:.5f} <= {Z_TEST_MIN_PVALUE}"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# 6. Production-n cross-language parity (n = 10000)
+# --------------------------------------------------------------------------- #
+
+# WHY THIS EXISTS (reviewer round 2, MAJOR-1). Every check above tops out at
+# n = 2000 (and the sampler-level ones at n = 500), but the BKL sampler's level
+# schedule is n-DEPENDENT: girg_bkl_level_count gives L = 5 at n = 2000, L = 6
+# at n = 10000, L = 7 at n = 40000. The validated regime therefore never
+# exercised the recursion depth production actually runs at, and a defect that
+# only appears at a deeper level -- a level-6 cell-pair class double-visited or
+# dropped, a candidate set that degenerates at fine grids -- would have been
+# invisible to the entire suite. This test closes that gap at the production
+# tuple used by configs/poster_girg_*.json (n = 10000, tau = 2.5,
+# w_min = 0.186377, alpha_g = 1.2).
+#
+# HOW, given that the obvious approaches do not scale. Comparing sampled graphs
+# across languages needs a reference for "how many edges SHOULD there be", and
+# at n = 10000 the small-n approach -- materialize the n x n distance matrix,
+# take many replicate graphs, compare sample means -- is doubly wrong: 1e8
+# doubles is 800 MB of dense n x n structure (the constitution's §I rule and
+# reviewer MINOR-9), and heavy-tailed weights (tau = 2.5) make replicate-to-
+# replicate edge-count scatter so large that a handful of replicates has almost
+# no power.
+#
+# So the reference is not another sample, it is the EXACT first two moments of
+# the sampled statistic under the model, conditional on the shared points and
+# weights. Each pair is an independent Bernoulli(p_ij), so for any pair-indexed
+# statistic S = sum_{i<j} c_ij X_ij:
+#     E[S] = sum c_ij p_ij,     Var[S] = sum c_ij^2 p_ij (1 - p_ij),
+# both computable in ONE blockwise O(n^2)-time, O(block*n)-memory pass in numpy
+# (the same block trick twocascade.girg.sample_girg_adjacency itself uses), with
+# the p_ij coming from the PYTHON side of the language boundary. Then z =
+# (S_observed - E[S]) / sqrt(Var[S]) is an absolute, per-replicate, cross-
+# language check with no fitted constant anywhere: 3 replicates suffice because
+# the comparison is against exact moments rather than against another noisy
+# sample. Three statistics are checked, each covering a different failure mode:
+#   - total edge count             (gross over/under-sampling)
+#   - 6 torus-distance bins        (a truncating spatial index: the far bins go
+#                                   to zero while the near bins absorb the mass)
+#   - degree mass on the heaviest  (a too-small BKL acceptance bound p_bar,
+#     5% of vertices                which silently truncates exactly the
+#                                   highest-p pairs, i.e. the heavy tail)
+# Realized statistics are computed per-EDGE (m ~ 2.6e4 at this tuple), never
+# per-pair, so nothing dense at n x n is built on the observed side either.
+#
+# Acceptance is by p-value with a Bonferroni correction over every z the test
+# produces, matching Z_TEST_MIN_PVALUE and okf/lessons.md's standing objection
+# to bare fixed-distance cutoffs.
+
+PRODUCTION_N = 10000
+PRODUCTION_W_MIN = 0.186377  # configs/poster_girg_*.json, calibrated in C2
+PRODUCTION_BASE_SEEDS = [4100, 4101, 4102]
+MOMENT_BLOCK = 256           # 256 x 10000 doubles = 20 MB per temporary
+N_DIST_BINS = 6
+HEAVY_WEIGHT_QUANTILE = 0.95
+MIN_EXPECTED_FOR_NORMAL = 30.0  # skip bins too sparse for a normal approximation
+
+
+def _girg_exact_moments(points, weights, alpha_g, heavy_mask, dist_edges,
+                        block=MOMENT_BLOCK):
+    """Exact E and Var of three pair-indexed statistics under the GIRG model,
+    conditional on (points, weights). Blockwise: peak memory is O(block * n),
+    never O(n^2) -- constitution §I, reviewer MINOR-9.
+
+    The p_ij formula here is written out from the model definition rather than
+    imported, so this is an independent Python-side statement of the law that
+    the C++ sampler is being measured against."""
+    n = len(points)
+    x, y = points[:, 0], points[:, 1]
+    n_bins = len(dist_edges) - 1
+    e_total = v_total = 0.0
+    e_bin = np.zeros(n_bins)
+    v_bin = np.zeros(n_bins)
+    e_heavy = v_heavy = 0.0
+    hw = heavy_mask.astype(float)
+
+    for start in range(0, n, block):
+        end = min(start + block, n)
+        rows = np.arange(start, end)
+        cols = np.arange(start, n)  # only j >= start can satisfy j > i here
+        dx = np.abs(x[rows, None] - x[None, cols]); dx = np.minimum(dx, 1.0 - dx)
+        dy = np.abs(y[rows, None] - y[None, cols]); dy = np.minimum(dy, 1.0 - dy)
+        d2 = dx * dx + dy * dy
+        zero = (d2 == 0.0)
+        d2_safe = np.where(zero, 1.0, d2)
+        p = np.minimum(1.0, (weights[rows, None] * weights[None, cols]
+                             / (n * d2_safe)) ** alpha_g)
+        # Coincident points are skipped (p = 0), matching the oracle's `continue`.
+        p = np.where((cols[None, :] > rows[:, None]) & ~zero, p, 0.0)
+        q = p * (1.0 - p)
+
+        e_total += float(p.sum())
+        v_total += float(q.sum())
+
+        idx = np.clip(np.digitize(np.sqrt(d2), dist_edges) - 1, 0, n_bins - 1).ravel()
+        e_bin += np.bincount(idx, weights=p.ravel(), minlength=n_bins)
+        v_bin += np.bincount(idx, weights=q.ravel(), minlength=n_bins)
+
+        # c_ij = |{i,j} n heavy| in {0,1,2}: sum of heavy vertices' degrees.
+        c = hw[rows, None] + hw[None, cols]
+        e_heavy += float((c * p).sum())
+        v_heavy += float((c * c * q).sum())
+
+    return {
+        "total": (e_total, v_total),
+        "bins": (e_bin, v_bin),
+        "heavy": (e_heavy, v_heavy),
+    }
+
+
+def _girg_edge_statistics(edges, points, heavy_mask, dist_edges, n):
+    """Realized values of the same three statistics, computed per-EDGE (O(m))."""
+    if not edges:
+        return 0, np.zeros(len(dist_edges) - 1), 0
+    ei = np.fromiter((i for i, _ in edges), dtype=int, count=len(edges))
+    ej = np.fromiter((j for _, j in edges), dtype=int, count=len(edges))
+    dx = np.abs(points[ei, 0] - points[ej, 0]); dx = np.minimum(dx, 1.0 - dx)
+    dy = np.abs(points[ei, 1] - points[ej, 1]); dy = np.minimum(dy, 1.0 - dy)
+    d = np.sqrt(dx * dx + dy * dy)
+    bin_counts = np.histogram(d, bins=dist_edges)[0].astype(float)
+    deg = np.bincount(np.concatenate([ei, ej]), minlength=n)
+    return len(edges), bin_counts, int(deg[heavy_mask].sum())
+
+
+@requires_cpp_binary
+def test_production_n_cross_language_parity_against_exact_moments(tmp_path):
+    """C++ (both variants) and the Python oracle, at the PRODUCTION tuple and
+    production n, each measured against exact model moments on shared geometry.
+
+    The Python oracle is included not as the thing under test but as a CONTROL:
+    it is the sampler every other check in this file trusts, so if its z-scores
+    were also out of range the moment computation would be what is wrong, not
+    the C++ engine. Keeping it in the same Bonferroni family makes that
+    explicit rather than assumed.
+
+    Direct and BKL are additionally compared to each other on the same
+    points/weights (independent RNG streams, so the comparison is statistical):
+    that is the cross-VARIANT half of the parity claim, and it is the check
+    that would catch a defect confined to the deeper level schedule that only
+    n >= 10000 reaches."""
+    dist_edges = np.linspace(0.0, math.sqrt(0.5), N_DIST_BINS + 1)
+    records = []  # (label, z, extra) for every z the test produces
+
+    for rep, base_seed in enumerate(PRODUCTION_BASE_SEEDS):
+        out_dir = _dump_geometry(tmp_path, PRODUCTION_N, base_seed=base_seed,
+                                 w_min=PRODUCTION_W_MIN, subdir=f"prod_{rep}")
+        points, weights = _load_points_weights(out_dir)
+        assert points.shape == (PRODUCTION_N, 2)
+
+        heavy_mask = weights >= np.quantile(weights, HEAVY_WEIGHT_QUANTILE)
+        assert heavy_mask.sum() > 0
+        moments = _girg_exact_moments(points, weights, ALPHA_G, heavy_mask, dist_edges)
+
+        e_total, v_total = moments["total"]
+        e_bin, v_bin = moments["bins"]
+        e_heavy, v_heavy = moments["heavy"]
+        assert v_total > 0.0 and e_total > 0.0
+
+        observed = {}
+        for variant in ("direct", "bkl"):
+            stdout = _run_cpp([
+                "--girg-verify", "sample",
+                "--points-file", str(out_dir / "points.txt"),
+                "--weights-file", str(out_dir / "weights.txt"),
+                "--alpha-g", str(ALPHA_G),
+                "--girg-variant", variant,
+                "--rng-source", "real",
+                "--base-seed", str(77000 + 10 * rep + (0 if variant == "direct" else 1)),
+            ])
+            observed[f"cpp-{variant}"] = sorted(_edge_set_from_lines(stdout))
+
+        adj_py = sample_girg_adjacency(points, weights, ALPHA_G,
+                                       np.random.default_rng(88000 + rep))
+        observed["python-oracle"] = sorted(
+            (i, j) for i, nbrs in enumerate(adj_py) for j in nbrs if i < j)
+
+        for label, edges in observed.items():
+            m, bin_counts, heavy_mass = _girg_edge_statistics(
+                edges, points, heavy_mask, dist_edges, PRODUCTION_N)
+            records.append((f"rep{rep}/{label}/edge-count", (m - e_total) / math.sqrt(v_total),
+                            f"m={m} vs E={e_total:.1f}+-{math.sqrt(v_total):.1f}"))
+            records.append((f"rep{rep}/{label}/heavy-degree-mass",
+                            (heavy_mass - e_heavy) / math.sqrt(v_heavy),
+                            f"mass={heavy_mass} vs E={e_heavy:.1f}+-{math.sqrt(v_heavy):.1f}"))
+            for b in range(N_DIST_BINS):
+                if e_bin[b] < MIN_EXPECTED_FOR_NORMAL or v_bin[b] <= 0.0:
+                    continue  # too sparse for a normal approximation to mean anything
+                records.append((
+                    f"rep{rep}/{label}/dist-bin{b}"
+                    f"[{dist_edges[b]:.3f},{dist_edges[b+1]:.3f})",
+                    (bin_counts[b] - e_bin[b]) / math.sqrt(v_bin[b]),
+                    f"count={bin_counts[b]:.0f} vs E={e_bin[b]:.1f}+-{math.sqrt(v_bin[b]):.1f}"))
+
+            # A truncating spatial index is the one failure this suite must never
+            # miss, and at production n the outermost bin can be sparse enough to
+            # be skipped above -- so assert its non-emptiness as a hard fact too.
+            assert bin_counts[-1] > 0, (
+                f"rep{rep}/{label}: no edges at all in the outermost distance bin "
+                f"[{dist_edges[-2]:.3f},{dist_edges[-1]:.3f}) while the model expects "
+                f"{e_bin[-1]:.1f} -- signature of a truncating spatial index"
+            )
+
+        # Cross-variant: direct vs bkl on the SAME points/weights. Independent
+        # RNG streams, so the difference of two Poisson-binomial counts has
+        # variance 2 * v_total under the null that both sample the same measure.
+        m_direct = len(observed["cpp-direct"])
+        m_bkl = len(observed["cpp-bkl"])
+        records.append((f"rep{rep}/direct-vs-bkl/edge-count",
+                        (m_bkl - m_direct) / math.sqrt(2.0 * v_total),
+                        f"bkl={m_bkl} direct={m_direct}"))
+
+    # Bonferroni over every z produced, so the family-wise false-positive rate
+    # is the same Z_TEST_MIN_PVALUE the rest of this suite is calibrated to.
+    n_tests = len(records)
+    per_test_alpha = Z_TEST_MIN_PVALUE / n_tests
+    worst = max(records, key=lambda rec: abs(rec[1]))
+    worst_p = 2.0 * stats.norm.sf(abs(worst[1]))
+    assert worst_p > per_test_alpha, (
+        f"production-n parity failed at {worst[0]}: z = {worst[1]:+.3f}, "
+        f"p = {worst_p:.3e} <= {per_test_alpha:.3e} "
+        f"(= {Z_TEST_MIN_PVALUE}/{n_tests} Bonferroni over {n_tests} z-scores); {worst[2]}"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# 7. C++'s OWN point/weight generators vs Python's sampling law
+# --------------------------------------------------------------------------- #
+
+# WHY THIS EXISTS (reviewer round 2, MAJOR-2). Sections 1-6 all feed the C++
+# engine points and weights DUMPED BY PYTHON (that is what makes them
+# deterministic), so not one of them says anything about C++'s own
+# sample_torus_points / sample_powerlaw_weights (cpp/src/girg.cpp:11-30). Those
+# are not test scaffolding: the graph_type=="girg" branch of main.cpp's trial
+# loop calls them for EVERY production trial. A transposed exponent
+# (u**(tau-1) rather than u**(-1/(tau-1))), a w_min added rather than
+# multiplied, or points drawn on the wrong support would leave every check
+# above green while every production GIRG run sampled the wrong model.
+#
+# The C++ draws are exported by the `--girg-verify draws` mode added for this
+# purpose, which reproduces the production trial loop's rng construction
+# exactly (make_seeded_rng(base_seed, 0) -> points -> weights, one generator,
+# that order). Three independent claims are asserted:
+#   (a) weights follow the SAME LAW as Python's sample_powerlaw_weights --
+#       both against the analytic CDF the law implies and, two-sample, against
+#       Python's actual draws (that second one is the literal cross-language
+#       comparison the reviewer asked for; it needs no analytic derivation to
+#       be trusted, and it would catch a discrepancy in a law we had
+#       mis-derived identically in both places... which the first check, being
+#       derivation-based, would not);
+#   (b) points are uniform on [0,1)^2 -- per-axis and, via a grid chi-square,
+#       jointly (a sampler that drew y = x would pass both per-axis KS tests);
+#   (c) end-to-end, the geometry these two functions produce feeds the BKL
+#       sampler to the CALIBRATED mean degree, i.e. the C++ engine reproduces
+#       the number the poster's matched-degree arm is built on.
+#
+# Acceptance is by p-value with a Bonferroni correction over each test's own
+# family (never a bare fixed distance -- okf/lessons.md), and each test also
+# carries a DISCRIMINATION check showing the same statistic at the same
+# threshold rejects a deliberately wrong law. Without that, "KS did not
+# reject" is unfalsifiable: a KS test on a statistic that cannot move is
+# always green.
+
+GEOM_LAW_N = 100_000          # draws per generator check
+GEOM_LAW_CPP_SEED = 909
+GEOM_LAW_PY_SEED = 20260804
+GRID_SIDE = 32                # 32x32 cells -> ~98 expected points per cell
+WRONG_TAU = 2.55              # 2% exponent error, for the discrimination checks
+MEAN_DEGREE_REPLICATES = 20   # matches the calibration run's replicate count
+MEAN_DEGREE_DIRECT_REPLICATES = 5
+CALIBRATION_JSON = REPO_ROOT / "results" / "processed" / "girg_degree_calibration.json"
+
+
+def _cpp_draws(n: int, tau: float, w_min: float, base_seed: int):
+    """Points and weights as generated BY C++ (production rng construction)."""
+    stdout = _run_cpp([
+        "--girg-verify", "draws",
+        "--n", str(n), "--tau", str(tau), "--w-min", str(w_min),
+        "--base-seed", str(base_seed),
+    ])
+    rows = np.fromstring(stdout, sep=" ").reshape(-1, 3)
+    assert rows.shape[0] == n, f"expected {n} draw rows, got {rows.shape[0]}"
+    return rows[:, :2], rows[:, 2]
+
+
+@requires_cpp_binary
+def test_cpp_weight_generator_matches_pythons_powerlaw_law():
+    """C++ sample_powerlaw_weights vs (i) the analytic law and (ii) Python's draws.
+
+    The law: w = w_min * u**(-1/(tau-1)) with u ~ U(0,1) gives
+    P(W > w) = P(u < (w/w_min)**-(tau-1)) = (w_min/w)**(tau-1), i.e. a Pareto
+    with shape tau-1 and scale w_min. scipy's pareto(b, loc=0, scale) has
+    exactly that survival function, so the one-sample KS below is against the
+    law itself, with no fitted parameter anywhere.
+    """
+    _, w_cpp = _cpp_draws(GEOM_LAW_N, TAU, W_MIN, GEOM_LAW_CPP_SEED)
+    w_py = sample_powerlaw_weights(GEOM_LAW_N, TAU, W_MIN,
+                                   np.random.default_rng(GEOM_LAW_PY_SEED))
+
+    # Support: the law's minimum is exactly w_min (u=1 -> w=w_min). A draw
+    # below it means the exponent's SIGN is wrong, which a KS test on the bulk
+    # can be surprisingly slow to notice.
+    assert w_cpp.min() >= W_MIN, f"C++ weight below w_min: {w_cpp.min()!r} < {W_MIN}"
+
+    ks_law = stats.kstest(w_cpp, "pareto", args=(TAU - 1.0, 0.0, W_MIN))
+    ks_cross = stats.ks_2samp(w_cpp, w_py)
+    alpha = Z_TEST_MIN_PVALUE / 2  # Bonferroni over the two claims
+    assert ks_law.pvalue > alpha, (
+        f"C++ weights reject the analytic Pareto(shape={TAU - 1}, scale={W_MIN}) law: "
+        f"D = {ks_law.statistic:.5f}, p = {ks_law.pvalue:.3e} <= {alpha:.3e}"
+    )
+    assert ks_cross.pvalue > alpha, (
+        f"C++ and Python weight draws reject a common law: "
+        f"D = {ks_cross.statistic:.5f}, p = {ks_cross.pvalue:.3e} <= {alpha:.3e}"
+    )
+
+    # DISCRIMINATION: the same test, same threshold, same sample size, against
+    # draws from a law only 2% off in the exponent -- must reject, both ways.
+    w_wrong = sample_powerlaw_weights(GEOM_LAW_N, WRONG_TAU, W_MIN,
+                                      np.random.default_rng(GEOM_LAW_PY_SEED + 1))
+    ks_wrong_law = stats.kstest(w_wrong, "pareto", args=(TAU - 1.0, 0.0, W_MIN))
+    ks_wrong_cross = stats.ks_2samp(w_wrong, w_cpp)
+    assert ks_wrong_law.pvalue < alpha and ks_wrong_cross.pvalue < alpha, (
+        f"discrimination failed: tau={WRONG_TAU} draws were NOT rejected as "
+        f"tau={TAU} (law p = {ks_wrong_law.pvalue:.3e}, cross p = "
+        f"{ks_wrong_cross.pvalue:.3e}), so these KS checks prove nothing"
+    )
+
+
+@requires_cpp_binary
+def test_cpp_point_generator_is_uniform_on_the_torus():
+    """C++ sample_torus_points vs U([0,1))^2: support, per-axis, and joint."""
+    points, _ = _cpp_draws(GEOM_LAW_N, TAU, W_MIN, GEOM_LAW_CPP_SEED + 1)
+    x, y = points[:, 0], points[:, 1]
+
+    # Half-open support, as the torus wrap-around assumes.
+    assert x.min() >= 0.0 and x.max() < 1.0, f"x outside [0,1): [{x.min()}, {x.max()}]"
+    assert y.min() >= 0.0 and y.max() < 1.0, f"y outside [0,1): [{y.min()}, {y.max()}]"
+
+    ks_x = stats.kstest(x, "uniform")
+    ks_y = stats.kstest(y, "uniform")
+    # Joint uniformity: per-axis KS is blind to dependence (y = x passes both),
+    # and the whole point of the geometry is the JOINT position, so bin the
+    # unit square and chi-square the cell counts.
+    counts, _, _ = np.histogram2d(x, y, bins=[np.linspace(0, 1, GRID_SIDE + 1),
+                                              np.linspace(0, 1, GRID_SIDE + 1)])
+    chi2 = stats.chisquare(counts.ravel())
+
+    alpha = Z_TEST_MIN_PVALUE / 3  # Bonferroni over the three claims
+    assert ks_x.pvalue > alpha and ks_y.pvalue > alpha, (
+        f"C++ torus points reject per-axis uniformity: "
+        f"x p = {ks_x.pvalue:.3e}, y p = {ks_y.pvalue:.3e} (alpha = {alpha:.3e})"
+    )
+    assert chi2.pvalue > alpha, (
+        f"C++ torus points reject joint uniformity on a {GRID_SIDE}x{GRID_SIDE} grid: "
+        f"chi2 = {chi2.statistic:.1f}, p = {chi2.pvalue:.3e} <= {alpha:.3e}"
+    )
+
+    # DISCRIMINATION: the grid chi-square must reject a sampler that is
+    # per-axis uniform but jointly degenerate (y = x), which is exactly the
+    # failure the two KS tests above cannot see.
+    diag_counts, _, _ = np.histogram2d(x, x, bins=[np.linspace(0, 1, GRID_SIDE + 1),
+                                                   np.linspace(0, 1, GRID_SIDE + 1)])
+    assert stats.chisquare(diag_counts.ravel()).pvalue < alpha, (
+        "discrimination failed: the grid chi-square did not reject y = x, so it "
+        "is not testing joint uniformity at all"
+    )
+
+
+@requires_cpp_binary
+def test_cpp_generated_geometry_reproduces_calibrated_mean_degree():
+    """End-to-end: C++-generated points+weights, sampled by the C++ engine, hit
+    the mean degree Python's calibration achieved at the SAME tuple.
+
+    Provenance: results/processed/girg_degree_calibration.json (C2,
+    scripts/calibrate_girg_degree.py, base_seed 20260802, 20 replicates) is
+    where w_min = 0.186377 comes from in the first place, and it records the
+    achieved <k> and its standard ERROR over those 20 replicates. The
+    per-replicate SD is se * sqrt(20) -- that is the tolerance scale used here,
+    read from the artifact rather than typed in, so this test tracks the
+    calibration instead of drifting from it.
+
+    This is the only check in the file that exercises the production path
+    end to end: generators + sampler, no Python-supplied geometry anywhere.
+    """
+    calib = json.loads(CALIBRATION_JSON.read_text())["girg"]
+    n = calib["n"]
+    tau, alpha_g, w_min = calib["tau"], calib["alpha_g"], calib["w_min"]
+    target = calib["achieved_mean_degree"]
+    per_replicate_sd = calib["achieved_se"] * math.sqrt(20)  # 20 replicates, per the metadata
+    assert (n, tau, alpha_g) == (PRODUCTION_N, TAU, ALPHA_G)
+    assert abs(w_min - PRODUCTION_W_MIN) < 1e-6
+
+    def cpp_mean_degrees(variant: str, replicates: int, seed0: int) -> np.ndarray:
+        out = []
+        for rep in range(replicates):
+            line = _run_cpp([
+                "--girg-verify", "bench",
+                "--n", str(n), "--tau", str(tau), "--w-min", repr(w_min),
+                "--alpha-g", str(alpha_g), "--girg-variant", variant,
+                "--base-seed", str(seed0 + rep),
+            ]).split()
+            assert line[0] == variant and int(line[1]) == n
+            out.append(2.0 * int(line[3]) / n)
+        return np.array(out)
+
+    arms = {
+        "bkl": cpp_mean_degrees("bkl", MEAN_DEGREE_REPLICATES, 7001),
+        "direct": cpp_mean_degrees("direct", MEAN_DEGREE_DIRECT_REPLICATES, 7501),
+    }
+    alpha = Z_TEST_MIN_PVALUE / len(arms)
+    for variant, degrees in arms.items():
+        z = (degrees.mean() - target) / (per_replicate_sd / math.sqrt(len(degrees)))
+        p = 2.0 * stats.norm.sf(abs(z))
+        assert p > alpha, (
+            f"C++ {variant} mean degree {degrees.mean():.4f} (over {len(degrees)} "
+            f"replicates) is inconsistent with the calibrated <k> = {target:.5f} "
+            f"+- {per_replicate_sd:.4f} per replicate: z = {z:+.3f}, p = {p:.3e} "
+            f"<= {alpha:.3e}. Either the C++ weight/point generators or the "
+            f"sampler no longer match what results/processed/"
+            f"girg_degree_calibration.json was produced with."
+        )
+
+    # DISCRIMINATION: the same z-test would reject a 10% error in <k> (which is
+    # far SMALLER than what a broken weight law produces -- w_min alone moves
+    # <k> from 1.38 at 0.100 to 645 at 3.0, per the calibration's own bracket).
+    z_off = (1.10 * target - target) / (per_replicate_sd / math.sqrt(MEAN_DEGREE_REPLICATES))
+    assert 2.0 * stats.norm.sf(abs(z_off)) < alpha, (
+        "discrimination failed: this z-test cannot even detect a 10% shift in "
+        "mean degree, so passing it means nothing"
     )

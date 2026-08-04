@@ -8,6 +8,16 @@
 #include <unordered_map>
 #include <utility>
 
+// Deepest grid level used by sample_girg_adjacency_bkl. Split out of the
+// sampler (rather than inlined where it is used) so the level schedule --
+// including the hard cap and the n at which it starts to bind -- is directly
+// assertable from a test instead of being an unobservable internal. See the
+// header for the full rationale.
+int girg_bkl_level_count(int n) {
+    return std::max(2, std::min(kGirgBklMaxLevel, static_cast<int>(std::ceil(
+        0.5 * std::log2(std::max(n / 4.0, 4.0))))));
+}
+
 std::vector<Point2D> sample_torus_points(int n, std::mt19937_64& rng) {
     std::vector<Point2D> points(static_cast<size_t>(std::max(n, 0)));
     std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -140,11 +150,19 @@ int torus_cheb(int a, int b, int m) {
     return std::min(d, m - d);
 }
 
-// True iff (bx,by) < (ax,ay) in lexicographic (tuple) order -- matches
-// Python's direct tuple comparison used to visit each unordered cell pair
-// exactly once.
-bool cell_lex_less(int bx, int by, int ax, int ay) {
-    return bx < ax || (bx == ax && by < ay);
+// True iff (lhs_x,lhs_y) < (rhs_x,rhs_y) in lexicographic (tuple) order --
+// matches Python's direct tuple comparison used to visit each unordered cell
+// pair exactly once.
+//
+// The parameters are named for their POSITION in the comparison, not for the
+// cells the call sites happen to pass. An earlier naming (bx,by,ax,ay) read as
+// "b compared against a" while the non-touching loop calls it as
+// cell_lex_less(ax, ay, bx, by) -- the caller's `a` bound to the parameter
+// called `bx`. Both call sites were correct, but the invariant "this pair is
+// visited exactly once" could not be checked by eye without re-deriving the
+// argument order each time.
+bool cell_lex_less(int lhs_x, int lhs_y, int rhs_x, int rhs_y) {
+    return lhs_x < rhs_x || (lhs_x == rhs_x && lhs_y < rhs_y);
 }
 
 // CSR-style bucket layout for one level's m x m grid: point_ids sorted by
@@ -263,11 +281,7 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
         return sample_girg_adjacency_direct(points, weights, alpha_g, u);
     }
 
-    // Aim for ~4 points per cell at the deepest level so direct enumeration
-    // there stays linear in n. L >= 2: a 2x2 grid (level 1) has no
-    // non-touching cells at all, so the recursion could not even start.
-    int L = std::max(2, std::min(8, static_cast<int>(std::ceil(
-        0.5 * std::log2(std::max(n / 4.0, 4.0))))));
+    const int L = girg_bkl_level_count(n);
 
     const double n_float = static_cast<double>(n);
     auto exact_p = [&](int i, int j) {
@@ -295,6 +309,21 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
         // unordered_map is safe HERE (unlike inside cell_layer_groups) because
         // this map is only ever point-queried by cell id -- it is never
         // iterated, so its unspecified traversal order cannot reach the RNG.
+        //
+        // Iteration order is only HALF of why this container was chosen; the
+        // other half is REFERENCE STABILITY, and a future refactor that
+        // satisfies only the first requirement would introduce a dangling
+        // reference. `groups_of` returns a reference into the container, and
+        // the pair loop below holds `a_groups` live across the SECOND call
+        // (`groups_of(b_cid)`), which may insert and therefore rehash.
+        // std::unordered_map guarantees that rehashing invalidates iterators
+        // but NOT references or pointers to elements, so `a_groups` stays
+        // valid. A std::vector<std::vector<WeightGroup>> grown by push_back
+        // would NOT: reallocation invalidates every outstanding reference, and
+        // the bug would be silent use-after-free that happens to work until
+        // the cache crosses a capacity boundary. Any replacement must provide
+        // both properties (a vector pre-sized to m*m and never resized after,
+        // for instance, would be fine on both counts).
         std::unordered_map<int, std::vector<WeightGroup>> group_cache;
         auto groups_of = [&](int cell_id) -> const std::vector<WeightGroup>& {
             auto it = group_cache.find(cell_id);

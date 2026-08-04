@@ -288,6 +288,34 @@ def _validate_cpp_engine_support(
     if graph_type == "gnp":
         return
     if graph_type == "girg":
+        # Completeness of the girg graph_cfg, checked HERE rather than left to
+        # blow up later. `run_single_cell_cpp` builds "--tau", str(graph_cfg["tau"])
+        # with a hard subscript, so a config that sets graph.type="girg" but omits
+        # `tau` passes this gate, gets dispatched to cpp, and only then raises
+        # KeyError inside a multiprocessing Pool worker -- where the traceback
+        # points at a dict lookup in a child process rather than at the config
+        # file that is actually wrong.
+        #
+        # ONLY `tau` is required, deliberately. `w_min` and `alpha_g` default
+        # SYMMETRICALLY on both engine paths -- run_single_cell_cpp passes
+        # graph_cfg.get("w_min", 1.0) / graph_cfg.get("alpha_g", 1.2), and
+        # run_single_trial's Python girg branch calls sample_powerlaw_weights /
+        # sample_girg_adjacency with those same two defaults -- so a config that
+        # omits them runs the SAME model on either engine. That is not the
+        # failure mode this function exists to catch: its job is to reject
+        # combinations where cpp would silently simulate a DIFFERENT model than
+        # the config describes, and identical defaults on both sides is by
+        # definition not that. Requiring them here would instead make the cpp
+        # path reject configs the python path accepts and runs identically --
+        # a new asymmetry, not a closed hole. If those defaults ever diverge
+        # between the two paths, this is the place to add them.
+        if "tau" not in graph_cfg:
+            raise ValueError(
+                "C++ engine's GIRG path requires graph.tau to be set explicitly; got "
+                f"graph config {graph_cfg!r} with no 'tau' key. (w_min and alpha_g may "
+                "be omitted -- they default identically on the C++ and Python paths, to "
+                "1.0 and 1.2 respectively -- but tau has no default on either path.)"
+            )
         if gamma != 0.0:
             raise ValueError(
                 "C++ engine's GIRG path only supports fear.gamma == 0.0 (at gamma=0, "

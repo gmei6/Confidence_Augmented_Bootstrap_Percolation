@@ -235,6 +235,50 @@ def test_cpp_validation_accepts_supported_girg_config():
     )
 
 
+def test_cpp_validation_rejects_girg_config_missing_tau():
+    """graph.type='girg' without graph.tau used to pass this gate and then
+    KeyError inside a multiprocessing Pool worker, because run_single_cell_cpp
+    subscripts graph_cfg["tau"] directly while building the command line.
+
+    The second half of this test is the deliberate NON-check: w_min and alpha_g
+    are omitted and the config must still be ACCEPTED, because both engine
+    paths default them to the same values (1.0 / 1.2). This gate exists to
+    reject configs where cpp would silently simulate a different model than the
+    config describes; identical defaults on both sides are not that, and
+    requiring the keys here would reject configs the python path runs happily.
+    """
+    with pytest.raises(ValueError, match="tau"):
+        _validate_cpp_engine_support(
+            {"type": "girg", "w_min": 0.245, "alpha_g": 1.2},
+            {"type": "global", "gamma": 0.0},
+            "uniform",
+            [0.0, 0.2],
+        )
+    _validate_cpp_engine_support(
+        {"type": "girg", "tau": 2.5},
+        {"type": "global", "gamma": 0.0},
+        "uniform",
+        [0.0, 0.2],
+    )
+
+
+def test_run_single_cell_cpp_really_keyerrors_without_tau():
+    """The failure the gate above prevents is real, not hypothetical: without
+    a 'tau' key the worker raises KeyError while assembling argv, before the
+    binary is ever launched (so this needs no built C++ engine, and the guard
+    is what turns that opaque child-process KeyError into a config error).
+    """
+    cell_seed = np.random.SeedSequence(0)
+    args = (
+        50, 0.05, 2, 0.1, 50.0, 3, 1, 1, None,
+        {"type": "girg", "w_min": 0.245, "alpha_g": 1.2},
+        cell_seed,
+        "/nonexistent/twocascade_run",
+    )
+    with pytest.raises(KeyError, match="tau"):
+        run_single_cell_cpp(args)
+
+
 @pytest.mark.skipif(not has_cpp_bin, reason="C++ engine binary not built")
 def test_run_sweep_rejects_unsupported_cpp_config_end_to_end(tmp_path):
     """The validator is wired into run_sweep's explicit-engine path, not merely

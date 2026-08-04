@@ -7,6 +7,7 @@ import datetime
 import os
 import subprocess
 import time
+import warnings
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import numpy as np
@@ -239,6 +240,37 @@ _GIRG_FEAR_CAP_EPSILON = 1e-3
 # random (`choose_random_seed` in main.cpp), so "uniform" is the complete list.
 _CPP_SUPPORTED_SEED_LAYOUTS = ("uniform",)
 
+# n = 65537 is the first size at which the BKL sampler's recursion reaches
+# level 8 (cpp/include/twocascade/girg.hpp's level-count table: L=7 for
+# n<=65536, L=8 for n<=262144). Level 8 has no parity test in either suite --
+# see that file's "WHAT IS ACTUALLY VALIDATED, BY LEVEL" table -- so this is a
+# coverage gap, not a known defect. Round-4 blind review, H1: the honest
+# coverage statement lives only in that C++ header, where a config author
+# would not see it before launching a production run at this size.
+_GIRG_BKL_UNVALIDATED_LEVEL_N = 65536
+
+
+def _warn_if_girg_n_exceeds_validated_bkl_level(graph_cfg: Dict[str, Any], n: int) -> None:
+    """Emit a one-time stderr warning (not an error) when a GIRG C++ run
+    requests n above the largest size any parity test currently exercises.
+
+    Deliberately non-blocking: level 8 is the same code path as level 7, one
+    recursion iteration deeper, so it is expected to work -- it is simply
+    untested (cpp/include/twocascade/girg.hpp, L=8 row). Callers that know
+    what they are doing should not be stopped; they should be told.
+    """
+    if graph_cfg.get("type", "gnp") != "girg":
+        return
+    if n <= _GIRG_BKL_UNVALIDATED_LEVEL_N:
+        return
+    warnings.warn(
+        f"n={n} > {_GIRG_BKL_UNVALIDATED_LEVEL_N} uses BKL level 8, which no "
+        "parity test currently validates -- see the coverage table in "
+        "cpp/include/twocascade/girg.hpp before trusting production results "
+        "at this size.",
+        stacklevel=2,
+    )
+
 
 def _validate_cpp_engine_support(
     graph_cfg: Dict[str, Any],
@@ -394,6 +426,9 @@ def run_sweep(config_path: str, num_processes: Optional[int] = None, engine: Opt
             resolved_engine = "python"
         else:
             resolved_engine = "cpp" if CPP_BIN.exists() else "python"
+
+    if resolved_engine == "cpp":
+        _warn_if_girg_n_exceeds_validated_bkl_level(graph_cfg, n)
 
     print(f"==================================================")
     print(f"USING SIMULATION ENGINE: {resolved_engine.upper()}")

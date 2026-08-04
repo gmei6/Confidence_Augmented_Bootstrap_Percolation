@@ -749,10 +749,12 @@ PRODUCTION_W_MIN = 0.186377  # configs/poster_girg_*.json, calibrated in C2
 PRODUCTION_BASE_SEEDS = [4100, 4101, 4102]
 # Largest n this project has actually swept, and the only size in either suite
 # that reaches BKL level 7 (reviewer round 3, MAJOR-1). One replicate; see
-# test_largest_swept_n_moment_parity below for the cost accounting.
+# test_largest_swept_n_moment_parity_reaches_bkl_level_7 below for the cost
+# accounting.
 LARGEST_SWEPT_N = 40000
 LARGEST_SWEPT_BASE_SEEDS = [4103]
-MOMENT_BLOCK = 256           # 256 x 10000 doubles = 20 MB per temporary
+MOMENT_BLOCK = 256           # 256 x n doubles per temporary: ~20 MB at
+                              # PRODUCTION_N=10000, ~82 MB at LARGEST_SWEPT_N=40000
 N_DIST_BINS = 6
 HEAVY_WEIGHT_QUANTILE = 0.95
 MIN_EXPECTED_FOR_NORMAL = 30.0  # skip bins too sparse for a normal approximation
@@ -1165,18 +1167,21 @@ def test_cpp_generated_geometry_reproduces_calibrated_mean_degree():
     scripts/calibrate_girg_degree.py, base_seed 20260802, 20 replicates) is
     where w_min = 0.186377 comes from in the first place, and it records the
     achieved <k> and its standard ERROR over those 20 replicates. The
-    per-replicate SD is se * sqrt(20) -- that is the tolerance scale used here,
-    read from the artifact rather than typed in, so this test tracks the
+    per-replicate SD is se * sqrt(replicates) -- that is the tolerance scale
+    used here, with replicates itself read from the artifact's
+    metadata.replicates rather than typed in, so this test tracks the
     calibration instead of drifting from it.
 
     This is the only check in the file that exercises the production path
     end to end: generators + sampler, no Python-supplied geometry anywhere.
     """
-    calib = json.loads(CALIBRATION_JSON.read_text())["girg"]
+    calib_full = json.loads(CALIBRATION_JSON.read_text())
+    calib = calib_full["girg"]
     n = calib["n"]
     tau, alpha_g, w_min = calib["tau"], calib["alpha_g"], calib["w_min"]
     target = calib["achieved_mean_degree"]
-    per_replicate_sd = calib["achieved_se"] * math.sqrt(20)  # 20 replicates, per the metadata
+    n_replicates = calib_full["metadata"]["replicates"]
+    per_replicate_sd = calib["achieved_se"] * math.sqrt(n_replicates)
     assert (n, tau, alpha_g) == (PRODUCTION_N, TAU, ALPHA_G)
     assert abs(w_min - PRODUCTION_W_MIN) < 1e-6
 

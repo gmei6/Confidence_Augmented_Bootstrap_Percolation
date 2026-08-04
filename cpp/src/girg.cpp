@@ -510,14 +510,23 @@ std::vector<std::vector<int>> sample_girg_adjacency_bkl(
                                 // member has w_i <= ga.max_weight, w_j <=
                                 // gb.max_weight and d_ij^2 >= d_min_sq, and
                                 // IEEE-754 multiplication, division and pow are
-                                // all monotone in their operands -- so the
-                                // member's base, computed by the same
-                                // expression shape in girg_pair_probability, is
-                                // <= this group's base and underflows with it.
-                                // The bound is an upper bound on exact_p by the
-                                // same argument that licenses the rejection
-                                // scheme in the first place; p_bar == 0 forces
-                                // exact_p == 0.
+                                // monotone in their operands -- so the member's
+                                // base, computed by the same expression shape
+                                // in girg_pair_probability, is <= this group's
+                                // base and underflows with it. That inequality
+                                // is exact in real arithmetic, but holds only
+                                // up to floating-point rounding (~1 ulp for
+                                // cell-boundary points) in practice, because
+                                // d_ij^2 and d_min_sq are different
+                                // floating-point expressions even when they are
+                                // equal in exact arithmetic. The bound is an
+                                // upper bound on exact_p by the same argument
+                                // that licenses the rejection scheme in the
+                                // first place, with the same ~1 ulp slack; the
+                                // consequence of that slack is at most a ~1-ulp
+                                // bias in the acceptance probability, not a
+                                // correctness issue. p_bar == 0 forces
+                                // exact_p == 0 up to that bias.
                                 //
                                 // The check below is that argument made
                                 // falsifiable at O(1) cost: the group's own

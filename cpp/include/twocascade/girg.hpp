@@ -116,7 +116,7 @@ constexpr int kGirgBklMaxLevel = 8;
  *             test_production_n_cross_language_parity_against_exact_moments,
  *             3 replicates at n = 10000 against exact model moments.
  *   L = 7     statistical only:
- *             test_production_n_moment_parity_at_largest_swept_n, 1 replicate
+ *             test_largest_swept_n_moment_parity_reaches_bkl_level_7, 1 replicate
  *             at n = 40000 (the largest n this project has swept). Not covered
  *             deterministically, because the complete-graph fixture's own
  *             output is n(n-1) adjacency entries (~1 GB at n > 16384).

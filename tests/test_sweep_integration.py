@@ -371,3 +371,30 @@ def test_fear_only_channel_terminates():
     # For N=200, 5 seeds, it should terminate in a few rounds and fail only a handful of nodes.
     assert result.final_failed_fraction < 0.20, f"Failed too many nodes in fear-only sweep: {result.final_failed_fraction}"
     assert len(result.history) < 10, f"Branching process ran too long: {result.history}"
+
+
+def test_girg_fear_cap_epsilon_matches_graphs_module_behaviorally():
+    """A5 (round-4 blind review): runner._GIRG_FEAR_CAP_EPSILON is a second,
+    independent hard-coded copy of graphs.sample_degree_dependent_fears'
+    internal epsilon=1e-3 cap. Checked BEHAVIORALLY, without importing or
+    parsing graphs.py's source: at gamma=0.0 every node's raw mu(d) equals
+    mu_bar, so where clipping starts is a direct readout of where graphs.py's
+    real cap sits, and it must match runner's cap exactly."""
+    from twocascade.graphs import sample_degree_dependent_fears
+
+    degrees = list(range(1, 201))
+    cap = 1.0 - _GIRG_FEAR_CAP_EPSILON
+
+    _, at_cap = sample_degree_dependent_fears(
+        degrees, mu_bar=cap, gamma=0.0, kappa=50.0, rng=np.random.default_rng(1))
+    assert at_cap["cap_hits"] == 0 and not at_cap["infeasible"], (
+        f"graphs.py already clips at mu_bar == runner's cap ({cap}) -- the two "
+        "epsilons have drifted apart"
+    )
+
+    _, above_cap = sample_degree_dependent_fears(
+        degrees, mu_bar=cap + 1e-4, gamma=0.0, kappa=50.0, rng=np.random.default_rng(1))
+    assert above_cap["cap_hits"] > 0 and above_cap["infeasible"], (
+        f"graphs.py does not clip just above runner's cap ({cap}) -- the two "
+        "epsilons have drifted apart"
+    )

@@ -13,6 +13,18 @@ family_curves dict -- no hardcoded family list or mu_bar grid, so a future
 densification arm (e.g. GIRG at mu_bar in {0.1, 0.2, 0.3}) appears
 automatically the next time analyze_poster_fear_structure.py is re-run and
 this script is re-run after it.
+
+Typography restyle (owner call, 2026-08-04): title/subtitle hierarchy, ink
+colors, DejaVu Sans font family, and spine/grid treatment now match
+scripts/plot_famcompare_ratio.py so the poster's two data figures read as
+one typographic system -- large bold title in primary ink, small
+regular-weight subtitle in faded secondary ink, regular-weight (non-bold)
+axis labels in primary ink, tick labels in secondary ink. Title/subtitle/
+label/tick sizes are famcompare's constants scaled down by this figure's
+canvas width vs. famcompare's 10in canvas, so the visual weight matches
+despite the smaller figure. Content is unchanged: three plain lines,
+inverted y-axis, legend at lower-left, family colors/markers, cream
+background.
 """
 
 import json
@@ -36,6 +48,32 @@ FAMILY_STYLE = {
 BG_COLOR = "#F6F3EA"
 TEXT_COLOR = "#1E2530"
 
+# Ink hierarchy + font/spine treatment, matched to plot_famcompare_ratio.py's
+# INK_PRIMARY / INK_SECONDARY / AXIS_LINE / GRID constants (same underlying
+# RGB as TEXT_COLOR, same alpha values) so the two poster figures share one
+# typographic system.
+INK_PRIMARY = TEXT_COLOR
+INK_SECONDARY = (0.118, 0.145, 0.188, 0.72)
+AXIS_LINE = (0.118, 0.145, 0.188, 0.35)
+GRID_COLOR = (0.118, 0.145, 0.188, 0.12)
+
+FIGSIZE = (7.0, 6.0)
+DPI = 300
+
+# famcompare's TITLE_FS/SUBTITLE_FS/AXIS_LABEL_FS/TICK_FS constants, scaled
+# by this figure's canvas width vs. famcompare's 10in-wide canvas
+# (scripts/plot_famcompare_ratio.py FIGSIZE=(10, 10)), so title/label/tick
+# text reads at matching visual weight despite the smaller figure. Note
+# famcompare's *applied* axis-label size is AXIS_LABEL_FS - 4 = 16, and its
+# subtitle/applied-axis-label/tick sizes are all 16 -- only the title (26)
+# is set apart as the dominant element; that hierarchy carries through here.
+_FAMCOMPARE_CANVAS_W_IN = 10.0
+_SCALE = FIGSIZE[0] / _FAMCOMPARE_CANVAS_W_IN
+TITLE_FS = round(26 * _SCALE, 1)
+SUBTITLE_FS = round(16 * _SCALE, 1)
+AXIS_LABEL_FS = round(16 * _SCALE, 1)
+TICK_FS = round(16 * _SCALE, 1)
+
 
 def main() -> None:
     with open(INPUT_PATH) as f:
@@ -51,16 +89,16 @@ def main() -> None:
     plt.rcParams.update({
         "figure.facecolor": BG_COLOR,
         "axes.facecolor": BG_COLOR,
-        "axes.edgecolor": TEXT_COLOR,
-        "axes.labelcolor": TEXT_COLOR,
-        "xtick.color": TEXT_COLOR,
-        "ytick.color": TEXT_COLOR,
-        "text.color": TEXT_COLOR,
-        "font.family": "sans-serif",
-        "font.size": 11,
+        "axes.edgecolor": AXIS_LINE,
+        "axes.labelcolor": INK_PRIMARY,
+        "xtick.color": INK_SECONDARY,
+        "ytick.color": INK_SECONDARY,
+        "text.color": INK_PRIMARY,
+        "font.family": "DejaVu Sans",
+        "font.size": TICK_FS,
     })
 
-    fig, ax = plt.subplots(figsize=(7.0, 6.0), dpi=300)
+    fig, ax = plt.subplots(figsize=FIGSIZE, dpi=DPI)
     ax.set_facecolor(BG_COLOR)
 
     for fam, rows in family_curves.items():
@@ -91,12 +129,16 @@ def main() -> None:
         # Flagging points as "near the floor" therefore overstated a
         # boundary that doesn't actually bind here.
 
-    ax.set_xlabel(r"Mean fear $\bar\mu$", fontsize=12, fontweight="bold", labelpad=8)
+    # Axis labels: regular weight (not bold), primary ink -- matches
+    # famcompare's axes.labelcolor=INK_PRIMARY with no fontweight override.
+    ax.set_xlabel(r"Mean fear $\bar\mu$", fontsize=AXIS_LABEL_FS,
+                  fontweight="normal", color=INK_PRIMARY, labelpad=8)
     # Plain "vs." (no LaTeX "\ " idiom): that only expands under real LaTeX,
     # and matplotlib's default text renderer prints the backslash literally
     # outside of $...$ math mode -- same class of bug as the nu-figure title.
     ax.set_ylabel(r"Decrease in $a_c(\bar\mu)$ vs. own $\bar\mu=0$ anchor (%)",
-                  fontsize=12, fontweight="bold", labelpad=8)
+                  fontsize=AXIS_LABEL_FS, fontweight="normal",
+                  color=INK_PRIMARY, labelpad=8)
     ax.set_xlim(-0.02, 0.75)
     # Inverted: 0% (the mu_bar=0 anchor) at the top, -100% at the bottom, so
     # a bigger decrease reads as further down the page. Small headroom above
@@ -104,12 +146,31 @@ def main() -> None:
     ax.set_ylim(-100, 3)
     ax.set_yticks([0, -25, -50, -75, -100])
     ax.set_yticklabels(["0%", "-25%", "-50%", "-75%", "-100%"])
+    ax.tick_params(axis="both", labelsize=TICK_FS, colors=INK_SECONDARY)
+
+    # Title/subtitle split (owner call, 2026-08-04): large bold title in
+    # primary ink via fig.suptitle, small regular-weight subtitle in faded
+    # secondary ink via ax.set_title -- same hierarchy as famcompare's
+    # place_title_block, without needing its custom wrap/layout machinery
+    # since this figure's single-axes layout + bbox_inches="tight" already
+    # auto-sizes around whatever title/subtitle height is needed.
+    fig.suptitle("Hubs Blunt Fear's Effect", fontsize=TITLE_FS,
+                 fontweight="bold", color=INK_PRIMARY, y=0.985)
     ax.set_title(
-        "Hubs Blunt Fear's Effect\n"
-        r"$n=10{,}000$, each family normalized to its own $\bar\mu=0$ crossing",
-        fontsize=11.5, fontweight="bold", pad=12, color=TEXT_COLOR,
+        "n = 10,000, each family normalized to its own μ̄ = 0 crossing",
+        fontsize=SUBTITLE_FS, fontweight="normal", color=INK_SECONDARY,
+        pad=14,
     )
-    ax.grid(True, linestyle=":", alpha=0.5, color=TEXT_COLOR)
+    # No separate `alpha=` kwarg: GRID_COLOR is already an RGBA tuple with
+    # its own alpha (0.12, matching famcompare's GRID constant) -- passing
+    # `alpha=` here would override that component instead of compounding it.
+    ax.grid(True, linestyle=":", linewidth=1.0, color=GRID_COLOR)
+    ax.set_axisbelow(True)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    for s in ("left", "bottom"):
+        ax.spines[s].set_color(AXIS_LINE)
+        ax.spines[s].set_linewidth(1.2)
     # Curves now start near 0% (top-left, low mu_bar) and descend toward
     # -100% (bottom-right, high mu_bar) -- the mirror image of the old
     # ascending layout. "upper left" would now sit right on top of the
@@ -118,7 +179,7 @@ def main() -> None:
     # placed it at "upper left" before: away from where the lines are).
     # Still the empty corner now that the errorbars/near-floor rings are
     # gone -- rechecked, nothing else moved into it.
-    ax.legend(loc="lower left", fontsize=9.5, frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR)
+    ax.legend(loc="lower left", fontsize=9.5, frameon=True, facecolor=BG_COLOR, edgecolor=AXIS_LINE)
 
     # Footnote/provenance text block removed (owner call, 2026-08-04):
     # provenance stays recorded in the JSON metadata (results/processed/
@@ -127,7 +188,7 @@ def main() -> None:
     # there's no longer a caption to leave room for, so the figure doesn't
     # carry a dead band at the bottom.
     fig.savefig(
-        FIG_PATH, dpi=300, facecolor=BG_COLOR,
+        FIG_PATH, dpi=DPI, facecolor=BG_COLOR,
         bbox_inches="tight", pad_inches=0.08,
         metadata={"Creation Time": None, "Software": None},
     )

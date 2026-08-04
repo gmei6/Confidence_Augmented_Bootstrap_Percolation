@@ -1,0 +1,25 @@
+{
+  "pinned_params": {
+    "n": 20000,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [0.2, 0.2, 0.2, 0.2, 0.2],
+    "target_high_degree": false
+  },
+  "scaling": {
+    "target_mean_degree": 4.58408420421021,
+    "n_ref": 20000,
+    "alpha": 0.6
+  },
+  "sweep": {
+    "mean_fear_grid": [0.0],
+    "seed_sizes": [552, 558, 564, 570, 576, 582],
+    "trials_per_cell": 300,
+    "base_seed": 44
+  },
+  "output": {
+    "raw_filepath": "results/famcompare_er_baseline_pilot_n20000_raw.json"
+  }
+}

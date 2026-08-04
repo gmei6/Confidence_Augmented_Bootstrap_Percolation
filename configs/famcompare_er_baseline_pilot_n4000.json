@@ -1,0 +1,25 @@
+{
+  "pinned_params": {
+    "n": 4000,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [0.2, 0.2, 0.2, 0.2, 0.2],
+    "target_high_degree": false
+  },
+  "scaling": {
+    "target_mean_degree": 4.449237309327331,
+    "n_ref": 4000,
+    "alpha": 0.6
+  },
+  "sweep": {
+    "mean_fear_grid": [0.0],
+    "seed_sizes": [102, 105, 108, 111, 114, 117],
+    "trials_per_cell": 300,
+    "base_seed": 44
+  },
+  "output": {
+    "raw_filepath": "results/famcompare_er_baseline_pilot_n4000_raw.json"
+  }
+}

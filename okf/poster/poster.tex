@@ -62,12 +62,11 @@
 %%
 %% Baselineskip was 0, which is why the two rendered lines had that large uneven
 %% gap -- TeX falls back to \lineskip when \baselineskip cannot be honoured.
-{\fontsize{80}{88}\selectfont
+{\fontsize{80}{80}\selectfont
 \textbf{Who} you are connected to decides
 \textbf{how easily} a panic ignites.
-\textbf{Fear} decides \textbf{how far} it gets.
-}% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
-\vspace{3cm}
+\textbf{Fear} decides \textbf{how far} it gets.\par}% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
+\vspace{50pt}
 
 %% [REAL FIGURE — Comparison 1, heterogeneity (ER vs CM), n=10000, 500 trials/pt]
 %%
@@ -81,42 +80,34 @@
 %% comparisons stay separable BY READING: CM-vs-ER = heterogeneity,
 %% GIRG-vs-CM = geometry. Record lives in the C3b commit chain.
 %%
-%% BOX-CONSTRAINED on both width and height (keepaspectratio): the old
-%% resizebox height-only scaling let the on-page width run free, and at
-%% this figure's aspect ratio that overflowed past the main column into
-%% the right panel. width=0.95\linewidth caps it at the column; height
-%% keeps the original 0.6\textheight ceiling so it still clears the
-%% headline text above it. keepaspectratio picks whichever constraint
-%% binds, so it can no longer overflow either one.
+%% Full-bleed hero (Gary, 2026-08-04): width=1\linewidth with a 1\textheight
+%% ceiling, keepaspectratio -- the width constraint binds; the legend +
+%% Sec 5.4 engine-disclosure row below is pulled up into the freed
+%% whitespace with the negative vspace.
 %% ⚠ PNG is matplotlib default DPI — fine on screen, regenerate at dpi >= 300
 %% before print (poster-queue item 5 polish).
-\begin{center}
-\includegraphics[width=0.95\linewidth, height=0.52\textheight, keepaspectratio]{img/poster_comparison}\\
-\vspace{1em}
-\includegraphics[width=0.95\linewidth, height=0.08\textheight, keepaspectratio]{img/poster_comparison_legend}%
-\end{center}
-\vfill
+\includegraphics[width=1\linewidth, height=1\textheight, keepaspectratio]{img/poster_comparison}\\
+
+%% Legend and disclosure side by side (Gary, 2026-08-04). The disclosure
+%% sentence must stay (item 2c): the headline comparison crosses engines.
+\vspace{-250pt}
+\begin{minipage}[c]{0.55\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth, height=0.08\textheight, keepaspectratio]{img/poster_comparison_legend}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.42\linewidth}
+    \raggedright
+    \fontsize{35}{30}\selectfont % <-- MANUAL SIZE DIAL
+    Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$,
+    500 trials per point. Erd\H{o}s--R\'enyi simulated on the validated C++
+    engine; configuration model and GIRG on the Python reference
+    implementation (cross-engine agreement verified).
+\end{minipage}
+
 }{
 %%%% Bottom space of center column left intentionally clean
 
-}% Disclaimer under the hero. The engine sentence is the Sec 5.4 disclosure
-% (item 2c): ER ran on the C++ engine, CM and GIRG on the Python reference;
-% the poster must say so because the headline comparison crosses engines.
-%% Wrapped in an explicit-width, ragged-right minipage (2026-08-03 caption-wrap
-%% fix): as bare paragraph text this rendered fully justified with no forced
-%% width context, and the mid-sentence LaTeX line breaks plus long unhyphenated
-%% tokens ("Erd\H{o}s--R\'enyi") produced an overfull line that ran past the
-%% column edge and read as cut off. \raggedright removes the justification
-%% that was causing the overfull box; the minipage pins the width so wrapping
-%% is against the column, not whatever ambient width happened to be active.
-\begin{minipage}{\linewidth}
-\raggedright
-Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$,
-500 trials per point. Erd\H{o}s--R\'enyi simulated on the validated C++
-engine; configuration model and GIRG on the Python reference
-implementation (cross-engine agreement verified).
-\end{minipage}
-
+}
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% LEFT COLUMN — the argument, in reading order
@@ -161,9 +152,12 @@ A node is activated if either condition is met:
 We hold network size $n$ and average degree constant across all tests to isolate three items:
 \vspace{0.2em}
 \begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
-  \item \textbf{Heterogeneity (ER vs.\ power-law network (CM)):} Homogeneous degree distribution vs.\ heavy-tailed hubs.
-  \item \textbf{Geometry (power-law network (CM) vs.\ GIRG):} Pure random connections vs.\ local spatial clustering.
-  \item \textbf{Fear ($\bar\mu = 0$ vs.\ $\bar\mu > 0$):} Baseline bootstrap percolation vs.\ confidence augmentation.
+  \item \textbf{Heterogeneity:} \\
+  Homogeneous degree distribution vs.\ heavy-tailed hubs.
+  \item \textbf{Geometry:} \\
+  Pure random connections vs.\ local spatial clustering.
+  \item \textbf{Fear:} \\
+  Baseline bootstrap percolation vs.\ confidence augmentation.
 \end{itemize}
 
 \vfill

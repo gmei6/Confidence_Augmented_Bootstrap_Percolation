@@ -14,10 +14,13 @@
             color: #c9d1d9;
             font-family: 'Inter', sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 14vh 1.5rem 4rem;
+            box-sizing: border-box;
         }
         /* Dynamic ambient background */
         .background {
@@ -83,6 +86,34 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .notes {
+            max-width: 720px;
+            margin-top: 3rem;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 1;
+            text-align: left;
+        }
+        .notes h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #c9d1d9;
+            margin: 0 0 1rem;
+        }
+        .notes h2 span {
+            background: -webkit-linear-gradient(45deg, #8E4A72, #BD5A2E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .notes p {
+            font-size: 1.05rem;
+            line-height: 1.65;
+            animation: none;
+            margin-bottom: 1rem;
+        }
+        .notes strong { color: #c9d1d9; }
     </style>
 </head>
 <body>
@@ -92,5 +123,27 @@
         <p>Interactive graph visualizations coming soon.</p>
         <div class="loader"></div>
     </div>
+    <section class="notes">
+        <h2>Poster notes — <span>Fear Amplifies</span></h2>
+        <p>The y-axis of the figure is the <strong>fear multiplier</strong>: how many
+        times more likely a system-wide cascade becomes when banks carry fear level
+        &mu;&#772; compared with the same network at zero fear (n = 10,000, 500
+        trials per point).</p>
+        <p>On the <strong>heavy-tailed families</strong> (power-law and GIRG), fear
+        multiplies ignition by roughly 3&times;, and that multiplier stays flat as the
+        network grows — fear raises the <strong>level</strong> of risk, not its
+        <strong>scaling</strong>.</p>
+        <p>On an <strong>Erd&#337;s&ndash;R&eacute;nyi network at a matched starting
+        risk</strong> (a seed chosen so its zero-fear ignition rate matches the
+        heavy-tailed families&rsquo; few percent), the same fear multiplies ignition
+        at least <strong>25&ndash;40&times;</strong>. The open points on the figure
+        mean every one of 500 trials cascaded — the measurement hit its ceiling, so
+        the true multiplier is higher still.</p>
+        <p>But with a small <strong>bounded seed</strong> (a = r = 2), ER never
+        ignites at any fear level: fear amplifies cascades the structure makes
+        possible; it cannot start them alone. And the multiplier has a
+        <strong>dial</strong> — at low fear (&mu;&#772; = 0.1) it is only about
+        1.5&times;.</p>
+    </section>
 </body>
 </html>

@@ -62,3 +62,4 @@ mutability: append-only
 - [S-060 — Advisor meeting 2026-07-22: poster directive, two-comparison framework, publication route resolved](s-060-advisor-meeting-2026-07-22.md)
 - [S-061 — Comparison 1 (heterogeneity: ER vs configuration model) delivered — five poster pilots, D-012 departure now a five-point trend](s-061-poster-comparison-1-heterogeneity-delivered.md)
 - [S-062 — Comparison 2 (geometry: configuration model vs GIRG) delivered — GIRG ported, calibrated, swept; Q6 answered empirically, ungated at the final step](s-062-poster-comparison-2-girg-geometry-delivered.md)
+- [S-063 — Poster complete to one figure; Q9 closed; famcompare launched; C++ GIRG G0–G5; deliberate stopping point](s-063-poster-final-sprint-and-stopping-point.md)

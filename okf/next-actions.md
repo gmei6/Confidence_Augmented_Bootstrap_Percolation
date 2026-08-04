@@ -7,6 +7,29 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
+**⏸️ PICKUP CHECKLIST (2026-08-03 stopping point — full context in `okf/changes/s-063-*.md`):**
+
+P1. **Check the GIRG n=20000 famcompare raw landed** (`results/famcompare_girg_n20000_raw.json`,
+    expected ~10:50 2026-08-03; log `/tmp/fear_amplifies_logs/girg_production.log`). Verify by
+    mtime/content per the S-058 lesson. **The experiment handoff (calibrations, matched-baseline
+    seeds 112/279/560 with ceiling caveat, γ=0 equivalence, pipeline paths, successor steps) is
+    at `.agy/famcompare-STATE.md`** (durable copy; original in /tmp is reboot-volatile).
+    4k/10k GIRG raws already verified (provenance stamps checked, 5/5 μ̄ cells × 500 trials).
+P2. **Famcompare analysis + figure:** 3-family ratio panel (multiplier vs n, shared grid
+    {4k,10k,20k}, parametric-bootstrap CIs named in caption; ER bounded zeros as an annotated
+    immunity strip, ER matched-baseline (~3%) anchor for the real ratio; a05-scaled cells are
+    supplementary only). Then the Fear Amplifies poster prose rewrite + zip rebuild.
+P3. **C++ GIRG port G6:** run the blind reviewer→critic→auditor gate on the `girg-cpp-port`
+    worktree diff (G0–G5 committed, G5's commit body has a BKL level-set claim correction —
+    read it first), then Gary's explicit diff approval, then merge FROM THE MAIN REPO.
+P4. **Commit the uncommitted work** (inventory in S-063; suggested split: poster-content
+    commit + famcompare-experiment commit; `git add -f` for poster_fear_structure.png).
+P5. **Single-node experiment:** approve the 36 configs (scratchpad `single-seed/`) and run
+    (~2 min); no code change needed (`seed_sizes` path, verified).
+P6. **Queued behind the above:** branching-factor ER arm (approved, post-meeting); GIRG
+    densification arms (after the C++ port, Gary's call); item 3b `/verify` on `2024c23`;
+    Gary's `separate-legend` branch merge; `tc-work` + `tc-girg-cpp` worktree cleanup when done.
+
 **Poster queue (D-038, advisor meeting 2026-07-22 — items 1–7 are the deliverable).**
 Review surface for this queue: `.lavish/poster-remaining-work.html` (2026-07-29, may itself
 now be stale — items 1–3 below closed after that surface was last written).

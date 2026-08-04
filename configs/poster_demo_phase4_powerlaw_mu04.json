@@ -1,0 +1,49 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.5,
+      "d_min": 2
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "degree_match": {
+    "realised_mean_degree_n300": 4.0285,
+    "note": "Same graph as phases 3 and 5 - identical graph_seed and trial_seed, only mean_fear differs."
+  },
+  "demo": {
+    "phase": 4,
+    "trace_id": "phase4_powerlaw_mu04",
+    "group": "pl_triple",
+    "mean_fear": 0.4,
+    "seed_size": 2,
+    "graph_seed": 20261116,
+    "trial_seed": 20261116,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "Same network, fear at 0.4",
+    "caption": "Identical graph, identical starting pair - only fear changed. 28 banks fail by panic rather than by their neighbours, half the network is gone by round 8 instead of round 11, and 85% falls in the end."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase4_powerlaw_mu04.json"
+  }
+}

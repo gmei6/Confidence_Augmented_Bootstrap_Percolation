@@ -1,0 +1,52 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.5,
+      "d_min": 2
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "degree_match": {
+    "realised_mean_degree_n300": 4.0285,
+    "realised_se": 0.0502,
+    "replicates": 40,
+    "base_seed": 20260804,
+    "note": "Mean degree on the configuration-model path is an emergent consequence of (tau, d_min) plus erasure - it is NOT a knob and NOT the ER scaling.target_mean_degree. This measured value is what the phase-1/2 ER arm and the phase-6 GIRG arm were matched to. Reproduce with: arch -arm64 python3 scripts/dump_poster_demo_traces.py --calibrate"
+  },
+  "demo": {
+    "phase": 3,
+    "trace_id": "phase3_powerlaw_mu0",
+    "group": "pl_triple",
+    "mean_fear": 0.0,
+    "seed_size": 2,
+    "graph_seed": 20261116,
+    "trial_seed": 20261116,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "Heavy-tailed network, no fear",
+    "caption": "Same 300 banks and the same average number of links - but now a few hubs hold most of them. The same two-bank shock, fear still off, grinds outward through the hubs for 18 rounds and takes 69% of the system. Structure, not fear, is doing this."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase3_powerlaw_mu0.json"
+  }
+}

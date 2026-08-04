@@ -2,128 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="TwoCascade Interactive Graph Visualization Demo">
-    <title>TwoCascade Interactive Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="TwoCascade — an interactive walk through confidence-augmented bootstrap percolation: how fear amplifies financial cascades.">
+    <meta name="color-scheme" content="dark">
+    <title>TwoCascade — interactive demo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding: 14vh 1.5rem 4rem;
-            box-sizing: border-box;
-        }
-        /* Dynamic ambient background */
-        .background {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at center, rgba(142, 74, 114, 0.15) 0%, rgba(13, 17, 23, 1) 50%);
-            animation: pulse 15s ease-in-out infinite alternate;
-            z-index: 0;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.1); opacity: 1; }
-        }
-        .container {
-            text-align: center;
-            padding: 4rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            z-index: 1;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(142, 74, 114, 0.2);
-        }
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            background: -webkit-linear-gradient(45deg, #8E4A72, #BD5A2E);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-        }
-        p {
-            font-size: 1.25rem;
-            color: #8b949e;
-            font-weight: 400;
-            margin-top: 0;
-            animation: fadeIn 2s ease-in;
-        }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .loader {
-            margin-top: 2rem;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            border-top-color: #2E6E76;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .notes {
-            max-width: 720px;
-            margin-top: 3rem;
-            padding: 2.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            z-index: 1;
-            text-align: left;
-        }
-        .notes h2 {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: #c9d1d9;
-            margin: 0 0 1rem;
-        }
-        .notes h2 span {
-            background: -webkit-linear-gradient(45deg, #8E4A72, #BD5A2E);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .notes p {
-            font-size: 1.05rem;
-            line-height: 1.65;
-            animation: none;
-            margin-bottom: 1rem;
-        }
-        .notes strong { color: #c9d1d9; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="background"></div>
-    <div class="container">
-        <h1>TwoCascade</h1>
-        <p>Interactive graph visualizations coming soon.</p>
-        <div class="loader"></div>
+<div class="bg"></div>
+
+<header class="topbar">
+    <div class="dots" id="dots" aria-label="Progress"></div>
+    <div class="tools">
+        <button id="cbToggle" class="tool" aria-pressed="false"
+                title="Redundant shapes for colour-vision differences">shapes</button>
+        <button id="notesBtn" class="tool">notes</button>
     </div>
-    <section class="notes">
+</header>
+
+<main>
+    <!-- ------------------------------------------------------------ phase 0 -->
+    <section class="screen active" id="screen-landing">
+        <h1>TwoCascade</h1>
+        <p class="tagline">Banks fail when their neighbours fail — and when they are
+            simply afraid. Watch what each of those does on its own.</p>
+        <button class="begin" id="beginBtn">Tap to begin</button>
+        <div class="legend-key">
+            <span><i class="swatch healthy"></i> still standing</span>
+            <span><i class="swatch structural"></i> failed — neighbours</span>
+            <span><i class="swatch fear"></i> failed — fear</span>
+        </div>
+        <p class="sub">Seven screens, about two minutes. Every cascade you are about
+            to see was computed ahead of time by the project's Python reference
+            engine — nothing here is a cartoon, and nothing is re-rolled in your
+            browser.</p>
+    </section>
+
+    <!-- ---------------------------------------------------- phases 1-6 stage -->
+    <section class="screen" id="screen-demo">
+        <div class="badge" id="badge"></div>
+        <h2 class="headline" id="headline"></h2>
+        <div class="progress" id="progress" role="progressbar" aria-valuemin="0"
+             aria-valuemax="100" aria-valuenow="0" aria-label="Cascade progress">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="canvasWrap"></div>
+        <div class="readout" id="readout"></div>
+        <details class="explainer" id="explainer">
+            <summary>what am I looking at?</summary>
+            <p id="caption"></p>
+            <p class="measured" id="measured" hidden></p>
+        </details>
+        <div class="row">
+            <button class="ghost" id="replayBtn">↻ Replay</button>
+            <button class="ghost" id="backToTrials" hidden>← Pick another run</button>
+        </div>
+    </section>
+
+    <!-- ------------------------------------------------------ phase 7 chooser -->
+    <section class="screen" id="screen-chooser">
+        <div class="badge">Power-law · one failed bank · fear 0.4</div>
+        <h2 class="headline">One bank fails. Watch.</h2>
+        <p class="chooser-intro">Same network as the last four screens. One bank goes
+            down — too few to ever hand anyone the two failed neighbours the
+            structural rule needs, so anything that spreads from here was started by
+            fear. Three real runs, drawn from the same 400 that were scanned. Pick one.</p>
+        <div class="trial-cards" id="trialCards"></div>
+    </section>
+</main>
+
+<footer class="navbar">
+    <div class="inner">
+        <button class="nav-btn" id="backBtn">← Back</button>
+        <button class="nav-btn primary" id="nextBtn">Next →</button>
+    </div>
+</footer>
+
+<!-- ------------------------------------------------------------- notes sheet -->
+<div class="overlay" id="notesOverlay">
+    <div class="notes-card">
+        <button class="ghost close-notes" id="closeNotes">← Back to the demo</button>
         <h2>Poster notes — <span>Fear Amplifies</span></h2>
         <p>The y-axis of the figure is the <strong>fear multiplier</strong>: how many
         times more likely a system-wide cascade becomes when banks carry fear level
@@ -144,6 +103,34 @@
         possible; it cannot start them alone. And the multiplier has a
         <strong>dial</strong> — at low fear (&mu;&#772; = 0.1) it is only about
         1.5&times;.</p>
-    </section>
+
+        <h3>About the animations</h3>
+        <p>Every screen plays a <strong>precomputed trace</strong>. Each cascade was
+        run once through <code>src/twocascade/reference.py</code> — the project's
+        source-of-truth engine — at n = 300 with a logged seed, and dumped to JSON by
+        <code>scripts/dump_poster_demo_traces.py</code>. The page only plays those
+        files back; it never simulates anything, so what you see is deterministic and
+        reproducible from a committed config and seed, exactly like the figures on the
+        poster.</p>
+        <p>Each failure is labelled <strong>structural</strong> or <strong>fear</strong>
+        after the fact, from the graph alone: a bank that already had r = 2 failed
+        neighbours when it fell is structural, otherwise it panicked. At zero fear
+        every single failure classifies structural — that is the check that keeps the
+        labelling honest.</p>
+        <p>The three network families are drawn at a <strong>matched average degree</strong>
+        (about 4.0 links per bank at n = 300), so the differences you see come from
+        the shape of the network, not from one of them simply having more links.</p>
+
+        <h3>Demo scale is not poster scale</h3>
+        <p>These animations run at n = 300 so they fit on a phone; the poster's
+        results are at n = 10,000 and above. Small networks flatter the underdog: a
+        two-bank shock sits about 4.6&times; below the critical seed size at n = 300
+        but about 122&times; below it at n = 10,000, so rare things that never happen
+        on the poster can happen here. Where that matters, the screen says so rather
+        than generalising the small picture.</p>
+    </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>

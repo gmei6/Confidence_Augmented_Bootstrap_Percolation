@@ -1,0 +1,49 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "gnp"
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "scaling": {
+    "target_mean_degree": 4.041973244147156,
+    "n_ref": 300,
+    "alpha": 0.6,
+    "note": "n_ref = n = 300 so p lands the target exactly at demo scale: p = 0.013473244147157185, (n-1)p = 4.0285, matched to the n=300 configuration model's realised mean degree (see scripts/dump_poster_demo_traces.py --calibrate)."
+  },
+  "demo": {
+    "phase": 1,
+    "trace_id": "phase1_er_mu0",
+    "group": "er_pair",
+    "mean_fear": 0.0,
+    "seed_size": 2,
+    "graph_seed": 20260813,
+    "trial_seed": 20260813,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "Bounded shock, no fear",
+    "caption": "An Erdos-Renyi network: 300 banks, about 4 links each, links thrown down at random. Two banks fail (a = r = 2). With fear switched off a bank fails only once 2 of its own neighbours have failed - one more bank goes, and the chain runs out."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase1_er_mu0.json"
+  }
+}

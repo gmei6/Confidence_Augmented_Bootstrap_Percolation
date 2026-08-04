@@ -1,0 +1,79 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.5,
+      "d_min": 2
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "degree_match": {
+    "realised_mean_degree_n300": 4.0285,
+    "note": "Same graph_seed as phases 3-5, so the finale plays on the network the participant has already watched. Only the trial_seed (which bank fails first, every bank's individual fear, and every panic coin-flip) changes between the three trials."
+  },
+  "demo": {
+    "phase": 7,
+    "trace_id": "phase7_powerlaw_a1",
+    "group": "finale",
+    "mean_fear": 0.4,
+    "seed_size": 1,
+    "graph_seed": 20261116,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "One bank fails. Watch.",
+    "caption": "One failure can never hand anybody the 2 failed neighbours the structural rule demands - so anything that spreads from here was started by fear. Same network as before, three different runs. Of 400 runs on this network, 266 never got past the first bank and 42 took most of the system. At zero fear it would be none of them.",
+    "trials": [
+      {
+        "trace_id": "phase7_trial1",
+        "trial_seed": 20260900,
+        "label": "Trial A",
+        "blurb": "Scan order k = 0 - the first candidate that sputtered and died."
+      },
+      {
+        "trace_id": "phase7_trial2",
+        "trial_seed": 20260902,
+        "label": "Trial B",
+        "blurb": "Scan order k = 2 - the first candidate that was dead on arrival."
+      },
+      {
+        "trace_id": "phase7_trial3",
+        "trial_seed": 20260924,
+        "label": "Trial C",
+        "blurb": "Scan order k = 24 - the first systemic candidate short enough to watch."
+      }
+    ],
+    "scan": {
+      "candidate_trial_seeds": "20260900 + k for k in 0..399",
+      "graph_fixed_at": 20261116,
+      "outcome_counts": {
+        "systemic": 42,
+        "dead_on_arrival": 266,
+        "sputter_then_die": 85,
+        "other": 7
+      },
+      "note": "Reproduce with: arch -arm64 python3 scripts/dump_poster_demo_traces.py --scan phase7"
+    }
+  },
+  "output": {
+    "trace_dir": "poster-demo/traces"
+  }
+}

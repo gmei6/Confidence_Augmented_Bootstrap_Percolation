@@ -1,0 +1,55 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "girg",
+      "tau": 2.5,
+      "w_min": 0.20556640625,
+      "alpha_g": 1.2
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "degree_match": {
+    "target_realised_mean_degree_n300": 4.0285,
+    "achieved_mean_degree": 4.0647,
+    "achieved_se": 0.14,
+    "replicates": 40,
+    "base_seed": 20260804,
+    "tolerance": 0.05,
+    "note": "GIRG has no mean-degree knob; w_min was bisected at n=300 (tau=2.5, alpha_g=1.2) until the realised mean degree landed within 0.05 of the configuration model's realised 4.0285 - inside the 0.14 replicate standard error, i.e. an approximate match adequate for a demo, not a production-grade calibration. Reproduce with: arch -arm64 python3 scripts/dump_poster_demo_traces.py --calibrate"
+  },
+  "demo": {
+    "phase": 6,
+    "trace_id": "phase6_girg_mu04",
+    "group": "geometry",
+    "mean_fear": 0.4,
+    "seed_size": 2,
+    "graph_seed": 20260839,
+    "trial_seed": 20260839,
+    "layout": {
+      "kind": "girg_positions"
+    },
+    "paired_with": "phase4_powerlaw_mu04",
+    "headline": "Does geometry change the story?",
+    "caption": "Bottom: the same heavy-tailed hubs, but every bank now sits somewhere on a map and links prefer near neighbours. Same fear (0.4), same average number of links (4.2 vs 4.1 here), same two-bank shock. Geometry changes what the burn looks like, not whether it burns - 85% of the network without geometry, 82% with."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase6_girg_mu04.json"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "configuration_model",
+      "tau": 2.5,
+      "d_min": 2
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "degree_match": {
+    "realised_mean_degree_n300": 4.0285,
+    "note": "Same graph as phases 3 and 4 - identical graph_seed and trial_seed, only mean_fear differs."
+  },
+  "demo": {
+    "phase": 5,
+    "trace_id": "phase5_powerlaw_mu07",
+    "group": "pl_triple",
+    "mean_fear": 0.7,
+    "seed_size": 2,
+    "graph_seed": 20261116,
+    "trial_seed": 20261116,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "Same network, fear at 0.7",
+    "caption": "Still the same graph and the same starting pair. At fear 0.7 the panic channel does far more of the work (53 banks) and 96% of the network falls. Nothing structural changed across these three screens - only fear."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase5_powerlaw_mu07.json"
+  }
+}

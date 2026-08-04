@@ -1,0 +1,49 @@
+{
+  "engine": "python",
+  "pinned_params": {
+    "n": 300,
+    "r": 2,
+    "concentration": 50,
+    "theta": 0.5,
+    "window_len": 5,
+    "weights": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "target_high_degree": false,
+    "graph": {
+      "type": "gnp"
+    },
+    "fear": {
+      "type": "global",
+      "gamma": 0.0
+    }
+  },
+  "scaling": {
+    "target_mean_degree": 4.041973244147156,
+    "n_ref": 300,
+    "alpha": 0.6,
+    "note": "Identical to phase 1 - same p, same graph_seed, same trial_seed. Only mean_fear differs."
+  },
+  "demo": {
+    "phase": 2,
+    "trace_id": "phase2_er_mu04",
+    "group": "er_pair",
+    "mean_fear": 0.4,
+    "seed_size": 2,
+    "graph_seed": 20260813,
+    "trial_seed": 20260813,
+    "layout": {
+      "kind": "spring",
+      "seed": 7
+    },
+    "headline": "Same network, fear switched on",
+    "caption": "Same graph, same two starting banks. The only change: every bank now carries fear (average 0.4), so banks can panic and fail even when their own neighbours are fine. A few do - and the cascade still dies with 8 of 300 gone. In 400 runs at this size, 0 ignited with fear off and 4 with fear on; at the poster's n = 10,000 a bounded seed never ignites, at any fear level."
+  },
+  "output": {
+    "trace_path": "poster-demo/traces/phase2_er_mu04.json"
+  }
+}

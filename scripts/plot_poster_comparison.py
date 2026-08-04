@@ -116,13 +116,7 @@ def main() -> None:
     # already ordered CM x3, ER x3, GIRG x3) yields one column per family,
     # mu_bar increasing down each column -- a 3x3 grid grouped by family.
     handles, labels = ax.get_legend_handles_labels()
-    plt.tight_layout(rect=[0, 0.065, 1, 1])
-    fig.legend(
-        handles, labels,
-        loc="lower center", bbox_to_anchor=(0.5, 0.0),
-        ncol=3, frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR,
-        fontsize=9,
-    )
+    plt.tight_layout()
     # bbox_inches="tight" (2026-08-03 clipping fix): the title and the
     # below-axes legend both extend past the drawn axes box. Without this,
     # savefig crops to the figure's nominal canvas and silently cuts off
@@ -134,8 +128,26 @@ def main() -> None:
         bbox_inches="tight", pad_inches=0.15,
         metadata={"Creation Time": None, "Software": None},
     )
+
+    # Create a separate figure for the legend
+    fig_leg = plt.figure(figsize=(7.0, 1.5), dpi=300)
+    fig_leg.set_facecolor(BG_COLOR)
+    fig_leg.legend(
+        handles, labels,
+        loc="center",
+        ncol=3, frameon=True, facecolor=BG_COLOR, edgecolor=TEXT_COLOR,
+        fontsize=9,
+    )
+    out_leg_png = os.path.join(fig_dir, "poster_comparison_legend.png")
+    fig_leg.savefig(
+        out_leg_png, dpi=300, facecolor=BG_COLOR,
+        bbox_inches="tight", pad_inches=0.15,
+        metadata={"Creation Time": None, "Software": None},
+    )
+
     plt.close(fig)
-    print(f"Plot saved to {out_png}")
+    plt.close(fig_leg)
+    print(f"Plot saved to {out_png} and legend saved to {out_leg_png}")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,15 @@ mutability: live
 
 # §8 — Current Status 🟢 *(overwrite each session)*
 
+- **✅ Third advisor meeting held 2026-08-04 (S-065 is the session record).** Notes in
+  `okf/meeting-notes/2026-08-04-dhara.md`. Advisor asked for the exact 3-family poster
+  config (answered — ER=gnp/cpp, CM=configuration_model/python, GIRG=girg/python, all
+  matched to ⟨k⟩=4.5336) and gave four poster design directives, recorded as **D-046**: add
+  a model schematic (small network, red=infected, distinct fear encoding); add an explicit
+  fear+heterogeneity+geometry motivating sentence; restructure the talk baseline-first
+  ("Our model / Goal / What are we looking for"); adopt a linear title→what-exists→what-we-
+  did arc. **P1 of the S-064 pickup checklist is now closed; P2–P6 below are unchanged and
+  still open**, with the three new D-046 items (next-actions 8–10) layered alongside them.
 - **⏸️ WRAPPED 2026-08-04 ~14:50 for the rescheduled 3:00pm advisor meeting (S-064
   is the session record).** Everything S-063 left open is CLOSED: the poster is
   **content-complete** (Fear Amplifies rebuilt on the matched-ensemble famcompare

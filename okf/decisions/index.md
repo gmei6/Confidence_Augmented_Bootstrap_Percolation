@@ -53,3 +53,4 @@ mutability: append-only
 - [d-043-floor-deterministic-only-at-mu0](d-043-floor-deterministic-only-at-mu0.md)
 - [d-044-window5-uniform-production-convention](d-044-window5-uniform-production-convention.md)
 - [d-045-girg-cpp-port-merged](d-045-girg-cpp-port-merged.md)
+- [d-046-advisor-poster-narrative-restructure](d-046-advisor-poster-narrative-restructure.md)

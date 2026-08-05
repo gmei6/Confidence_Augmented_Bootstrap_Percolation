@@ -64,3 +64,4 @@ mutability: append-only
 - [S-062 — Comparison 2 (geometry: configuration model vs GIRG) delivered — GIRG ported, calibrated, swept; Q6 answered empirically, ungated at the final step](s-062-poster-comparison-2-girg-geometry-delivered.md)
 - [S-063 — Poster complete to one figure; Q9 closed; famcompare launched; C++ GIRG G0–G5; deliberate stopping point](s-063-poster-final-sprint-and-stopping-point.md)
 - [S-064: Poster content-complete; single-seed result; famcompare rebase; C++ GIRG port gated and merged; QR demo live](s-064-poster-complete-girg-merged-demo-live.md)
+- [S-065 — Advisor meeting 2026-08-04: poster narrative/schematic directives (D-046)](s-065-advisor-meeting-2026-08-04-poster-directives.md)

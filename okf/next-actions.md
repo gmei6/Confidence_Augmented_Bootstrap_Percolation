@@ -10,8 +10,10 @@ mutability: live
 **⏸️ PICKUP CHECKLIST (2026-08-04 wrap, pre-meeting — full context in `okf/changes/s-064-*.md`;
 S-063's P1–P6 are ALL CLOSED):**
 
-P1. **Meeting follow-through:** capture the 3pm advisor meeting's notes/decisions into
-    `okf/meeting-notes/2026-08-04-dhara.md` and fold outcomes into this queue.
+P1. ✅ **DONE (S-065) — Meeting follow-through.** Captured into
+    `okf/meeting-notes/2026-08-04-dhara.md`. Outcomes: 3-family config Q&A answered; four
+    poster design directives received, recorded as **D-046** and folded into items 8–10
+    below.
 P2. **Push the merge commit.** Origin is at `8a40677`; the local `antigravity` has the
     girg-cpp-port merge (`a2b2596`) unpushed. Ask Gary, then push.
 P3. **GIRG densification arms on the C++ engine** (μ̄ ∈ {0.1, 0.2, 0.3, 0.5, 0.6} at
@@ -97,6 +99,20 @@ now be stale — items 1–3 below closed after that surface was last written).
    leg of the post-poster frontier push.
 7. **Optional — hard RGG dimension sweep.** Keep increasing dimension D and see whether the
    results change. Advisor's nice-to-add, not core. No evidence of work started.
+8. **Add a model schematic figure (D-046, S-065, 2026-08-04 meeting).** Small network
+   diagram: a few red nodes = infected/failed, a distinct visual encoding for fear, colors
+   used consistently throughout. Purpose is presenter ergonomics — something to point at
+   while narrating the model, per the advisor's framing of what a poster is for. No
+   evidence of work started.
+9. **Add an explicit fear+heterogeneity+geometry motivating sentence (D-046, S-065).**
+   State directly that studying fear's effect *across* graph models with heterogeneity and
+   geometry is a needed addition beyond studying the baseline alone — currently only
+   implicit in the figure comparisons. No evidence of work started.
+10. **Restructure the poster narrative to the D-046 baseline-first / linear arc (S-065).**
+    Talk flow: who uses the baseline and why it's the baseline → how it works, under an
+    "Our model / Goal / What are we looking for" framing; overall arc: title → what exists
+    → what we did. Likely folds into item 5 (poster draft) rather than standing alone — do
+    not treat as a separate document. No evidence of work started.
 
 **Carried over (deprioritized under the poster):**
 

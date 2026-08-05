@@ -64,17 +64,15 @@ cells are added. Per-family availability differs and is NOT symmetrized:
                            not from merge_extension_cells, since every mu_bar
                            (including the baseline) was re-sourced together
                            rather than layered onto a q4 base.
-  - girg                 : mu_bar=0.7 ONLY, from results/poster_girg_mu70_raw.json's
-                            seed_size==2 cell (the poster GIRG mu_bar=0.7 arm).
+  - girg                 : mu_bar in {0.5, 0.6, 0.7}, from results/poster_girg_mu50_raw.json,
+                            results/poster_girg_mu60_raw.json, and results/poster_girg_mu70_raw.json
+                            (seed_size==2 cells of the poster GIRG arms).
                             Pinned-param compatibility against
                             results/famcompare_girg_n10000_raw.json was checked and
                             passed (identical pinned_params incl. graph.w_min/alpha_g;
                             scaling.target_mean_degree differs only at the 6th decimal,
                             4.5336 vs 4.533623362336234 -- config-authoring rounding,
-                            not a different calibration target). mu_bar in {0.5, 0.6}
-                            do not exist for GIRG anywhere and are left ABSENT (not
-                            zero, not interpolated) -- the plot script must connect
-                            0.4 to 0.7 directly for this family.
+                            not a different calibration target).
   - erdos_renyi_matched,
     erdos_renyi_bounded  : mu_bar in {0.5, 0.6, 0.7}, from NEWLY RUN
                             results/famcompare_er_matched_n10000_ext_raw.json and
@@ -498,7 +496,19 @@ def main():
         "rebase": cm_rebase_report,
     }
 
-    extension_reports["girg"] = merge_extension_cells(
+    extension_reports["girg_mu50"] = merge_extension_cells(
+        "girg", girg_cells, girg_commits,
+        base_raw_path="results/famcompare_girg_n10000_raw.json",
+        ext_raw_path="results/poster_girg_mu50_raw.json",
+        theta=theta_by_n[EXT_N], mus=[0.5], seed_size=2,
+    )
+    extension_reports["girg_mu60"] = merge_extension_cells(
+        "girg", girg_cells, girg_commits,
+        base_raw_path="results/famcompare_girg_n10000_raw.json",
+        ext_raw_path="results/poster_girg_mu60_raw.json",
+        theta=theta_by_n[EXT_N], mus=[0.6], seed_size=2,
+    )
+    extension_reports["girg_mu70"] = merge_extension_cells(
         "girg", girg_cells, girg_commits,
         base_raw_path="results/famcompare_girg_n10000_raw.json",
         ext_raw_path="results/poster_girg_mu70_raw.json",

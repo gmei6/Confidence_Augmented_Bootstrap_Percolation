@@ -1,9 +1,9 @@
 {
   "metadata": {
     "script": "scripts/analyze_poster_fear_structure.py",
-    "git_commit": "d7950353f037d1434c133b56d5ae2f9e79492379",
+    "git_commit": "0e739a1e2d6a2b3e8a3bfc62abb356cdefb0791c",
     "source": "results/processed/poster_comparison.json",
-    "source_analysis_commit": "d7950353f037d1434c133b56d5ae2f9e79492379",
+    "source_analysis_commit": "0e739a1e2d6a2b3e8a3bfc62abb356cdefb0791c",
     "near_floor_ratio_threshold": 2.2,
     "structural_floor_r": 2,
     "note": "Percentage decrease in each family's own measured a_c(mu_bar) relative to its own mu_bar=0 anchor. Self-checked derivation of poster_comparison.json's d012_table; not independently /verify-gated on its own (the underlying comparison sweeps are)."
@@ -127,11 +127,51 @@
     ],
     "girg": [
       {
+        "mean_fear": 0.1,
+        "pct_decrease": 3.6884621246761062,
+        "pct_decrease_ci_low": -1.0091489686641752,
+        "pct_decrease_ci_high": 8.38773604195434,
+        "measured_crossing": 10.987654320987655,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.2,
+        "pct_decrease": 14.736251402918077,
+        "pct_decrease_ci_low": 8.540182710559707,
+        "pct_decrease_ci_high": 20.50600677332588,
+        "measured_crossing": 9.727272727272727,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.3,
+        "pct_decrease": 22.864197530864207,
+        "pct_decrease_ci_low": 14.341281109990822,
+        "pct_decrease_ci_high": 31.49883049112536,
+        "measured_crossing": 8.799999999999999,
+        "near_floor": false
+      },
+      {
         "mean_fear": 0.4,
         "pct_decrease": 35.7960557960558,
         "pct_decrease_ci_low": 30.819021700377668,
         "pct_decrease_ci_high": 40.729247707163275,
         "measured_crossing": 7.324675324675324,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.5,
+        "pct_decrease": 45.21604938271605,
+        "pct_decrease_ci_low": 39.262837958445694,
+        "pct_decrease_ci_high": 49.880838807374225,
+        "measured_crossing": 6.25,
+        "near_floor": false
+      },
+      {
+        "mean_fear": 0.6,
+        "pct_decrease": 54.05217045001991,
+        "pct_decrease_ci_low": 50.97714946719347,
+        "pct_decrease_ci_high": 57.140565484165904,
+        "measured_crossing": 5.241935483870968,
         "near_floor": false
       },
       {

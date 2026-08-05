@@ -39,9 +39,7 @@ availability read from FAMILY_MU_GRID rather than one shared MU_GRID list,
 because the three families are NOT extended symmetrically (see
 scripts/analyze_famcompare.py's module docstring for why):
   - erdos_renyi_matched reaches 0.7 (newly run ext arm).
-  - girg reaches 0.7 but has no measured 0.5/0.6 -- its line connects 0.4 to
-    0.7 directly (mirrors how scripts/plot_poster_fear_structure.py already
-    bridges the same GIRG gap).
+  - girg reaches 0.7 across the full 0.1-0.7 grid (extended with mu=0.5 and 0.6 arms).
   - configuration_model reaches 0.7 too, as of the 2026-08-04 REBASE in
     analyze_famcompare.py: its n=10000 source switched from the q4-sourced
     mean-degree-4.0 series to the matched mean-degree-4.5336 poster_cm arms
@@ -106,18 +104,17 @@ FAMILY_LABEL = {
 FULL_MU_GRID = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
 # Per-family availability (see analyze_famcompare.py's module docstring):
 # configuration_model now has the full 0.1-0.7 run too (2026-08-04 rebase
-# onto the matched poster_cm arms); girg still has no measured 0.5/0.6 so
-# its line jumps 0.4 -> 0.7 directly; erdos_renyi_matched has the full
+# onto the matched poster_cm arms); girg and erdos_renyi_matched both have the full
 # 0.1-0.7 run.
 FAMILY_MU_GRID = {
     "configuration_model": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-    "girg": [0.1, 0.2, 0.3, 0.4, 0.7],
+    "girg": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     "erdos_renyi_matched": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
 }
 N_REP = 10000
 
 FIGSIZE = (10, 10)
-DPI = 200
+DPI = 300
 TITLE_FS = 26
 SUBTITLE_FS = 16
 AXIS_LABEL_FS = 20

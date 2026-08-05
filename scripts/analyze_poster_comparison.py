@@ -41,7 +41,12 @@ CONFIG_SPECS = [
     {"key": "poster_cm_mu60", "family": "configuration_model", "mu": 0.6, "raw": "results/poster_cm_mu60_raw.json"},
     {"key": "poster_cm_mu70", "family": "configuration_model", "mu": 0.7, "raw": "results/poster_cm_mu70_raw.json"},
     {"key": "poster_girg_mu0", "family": "girg", "mu": 0.0, "raw": "results/poster_girg_mu0_raw.json"},
+    {"key": "poster_girg_mu10", "family": "girg", "mu": 0.1, "raw": "results/poster_girg_mu10_raw.json"},
+    {"key": "poster_girg_mu20", "family": "girg", "mu": 0.2, "raw": "results/poster_girg_mu20_raw.json"},
+    {"key": "poster_girg_mu30", "family": "girg", "mu": 0.3, "raw": "results/poster_girg_mu30_raw.json"},
     {"key": "poster_girg_mu40", "family": "girg", "mu": 0.4, "raw": "results/poster_girg_mu40_raw.json"},
+    {"key": "poster_girg_mu50", "family": "girg", "mu": 0.5, "raw": "results/poster_girg_mu50_raw.json"},
+    {"key": "poster_girg_mu60", "family": "girg", "mu": 0.6, "raw": "results/poster_girg_mu60_raw.json"},
     {"key": "poster_girg_mu70", "family": "girg", "mu": 0.7, "raw": "results/poster_girg_mu70_raw.json"},
 ]
 
@@ -81,6 +86,22 @@ def interpolate_crossing(x_arr: np.ndarray, y_arr: np.ndarray, target: float = 0
     return float("nan")
 
 
+def check_family_compatibility(family: str, member_raws: list[tuple[str, dict]]) -> None:
+    """Assert every member raw in a family agrees on pinned metadata keys."""
+    keys = ("n", "p", "r", "concentration", "theta", "window_len")
+    if not member_raws:
+        return
+    base_raw, base_md = member_raws[0]
+    base_params = tuple(base_md.get(k) for k in keys)
+    for raw_path, md in member_raws[1:]:
+        params = tuple(md.get(k) for k in keys)
+        if params != base_params:
+            raise ValueError(
+                f"Cross-mu pinned-param mismatch in family '{family}': "
+                f"{raw_path} ({params}) vs {base_raw} ({base_params})"
+            )
+
+
 def main() -> None:
     os.chdir(base_dir)
     proc_dir = os.path.join(base_dir, "results", "processed")
@@ -91,6 +112,7 @@ def main() -> None:
     commits = set()
     janson_ac_map = {}
     curves_summary = {}
+    family_member_raws = {}
 
     for spec in CONFIG_SPECS:
         raw_specs = spec["raw"] if isinstance(spec["raw"], list) else [spec["raw"]]
@@ -107,6 +129,7 @@ def main() -> None:
                 raw_data = json.load(f)
 
             md = raw_data.get("metadata", {})
+            family_member_raws.setdefault(spec["family"], []).append((raw_rel, md))
             if "git_commit" in md:
                 commits.add(md["git_commit"])
 
@@ -210,9 +233,10 @@ def main() -> None:
     family_mus = {
         "erdos_renyi": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
         "configuration_model": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-        "girg": [0.0, 0.4, 0.7],
+        "girg": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     }
     for fam in ["erdos_renyi", "configuration_model", "girg"]:
+        check_family_compatibility(fam, family_member_raws.get(fam, []))
         prefix = family_key_prefix[fam]
         anchor_key = f"poster_{prefix}_mu0"
         anchor_crossing = curves_summary[anchor_key]["a05_point"]

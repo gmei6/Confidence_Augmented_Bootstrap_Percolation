@@ -7,6 +7,28 @@ mutability: live
 
 # §8 — Current Status 🟢 *(overwrite each session)*
 
+- **✅ S-066 (2026-08-06): the item-3b/P5 pre-print verification gate is COMPLETE — AUDIT PASS.**
+  Full record: `walkthrough-s066-preprint-gate.md` (`d90493f`); session narrative
+  `okf/changes/s-066-preprint-gate-audit-pass.md`. Arc: reviewer rounds 1–3 (sign-off,
+  fixes `c7140e9`) → critic rounds 1–3 (two CRITIC FAILs — 5 MATERIALs total, all fixed
+  in `e2ae0f5`/`724068f` — then PASS) → blind auditor **AUDIT PASS** (26/26 evidence rows).
+  **Comparison 2 (Q6), the famcompare interleave (D-042), and the percentage-decrease
+  panel (D-040) are now VERIFIED results, citable on the printed poster** — the prior
+  "self-checked only / cite as strong preliminary" caveats on `2024c23` and the S-064
+  famcompare work are RESOLVED. No poster number moved at any point (every headline
+  value reproduced exactly through five independent agent passes, twice independently
+  reimplemented from the raws). Both analysis pipelines now carry fail-loud provenance
+  certification (raw↔config binding, graph-family identity, μ̄-slot + n-slot binding,
+  trials-per-cell pin rejecting pilot raws, certification recorded in
+  `metadata.provenance_certification`). The Overleaf bundle + `~/Downloads` zip were
+  found stale (superseded famcompare/fear-structure panels) and rebuilt from current
+  sources, md5-verified. Conditions carried (disclosed, none print-blocking): GIRG
+  μ̄=0.1 fear-structure point is direction-only (CI straddles zero); the poster's
+  engine-split disclosure sentence must survive future edits; ER μ̄=0.7 uses the
+  leftmost of three P=0.5 crossings (1.092 vs ~1.139, no claim flips); `runner.py`
+  metadata gap queued as its own gated `src/` change. P3 (GIRG densification arms,
+  committed `f30aef1`/`0e739a1`/`d25f9f2` on 2026-08-04) is also DONE — both poster
+  figures now run full μ̄ grids on all three families.
 - **✅ Third advisor meeting held 2026-08-04 (S-065 is the session record).** Notes in
   `okf/meeting-notes/2026-08-04-dhara.md`. Advisor asked for the exact 3-family poster
   config (answered — ER=gnp/cpp, CM=configuration_model/python, GIRG=girg/python, all
@@ -41,7 +63,7 @@ mutability: live
   - **C3a (`8956d75`): GIRG trials wired to degree-dependent (water-filling) fears**, so geometry is the only difference between the CM and GIRG arms (D-038's own requirement). `runner.py` change on isolation branch `c3-girg-fears` (verified identical). Base-vs-new bit-identical on every non-GIRG family (15/15 trials, reviewer + critic independently). **Blind reviewer→critic→auditor, AUDIT PASS.** Pre-existing defects surfaced but deliberately not fixed (queued): `girg+local` fear `UnboundLocalError` on `r_n`; fear-stats dict (incl. infeasible flag) discarded for CM/GIRG branches — not triggered at $\gamma=0$, the value the poster sweeps use.
   - **C3b-obs (`0179110`): progress instrumentation for the ~4h production sweep** (`pool.imap`, ordered, index-aligned; `imap_unordered` forbidden and gate-enforced). Isolation branch `c3b-sweep-progress` (verified identical; **this worktree is still checked out** at `/Users/garymei/Downloads/projects/tc-work` — housekeeping left open, see next-actions). **Blind reviewer→critic (combined) →auditor, AUDIT PASS.**
   - **C3b (`2024c23`): production sweep + analysis + figures + poster text — the result-bearing step, and it is UNGATED.** Three GIRG arms ($\bar\mu\in\{0,0.4,0.7\}$, n=10000, 500 trials/cell, 8/9/9 interior points), 40/96/57 min wall time. Touches only `configs/`, `scripts/`, `results/`, `okf/poster/poster.tex` — no `src/` — so per the constitution's own scope rule it did not require `/verify`, but that also means **the headline empirical claim below has not been reviewed by a blind reviewer/critic/auditor**, only checked by the delegated agent against pre-delegation snapshots after an API-error death mid-session.
-  - **RESULT (Q6 now has an empirical answer — see `okf/open-questions.md`): geometry barely moves ignition.** GIRG's zero-fear crossing (11.41) sits ~11.7% above CM's (10.22) at matched ⟨k⟩=4.53 — a real but small locality penalty, dwarfed by the ~30× gap to ER (313.6) that comes from degree heterogeneity alone. The D-012 departure tracks the **degree distribution**, not geometry: GIRG's own-anchor ratio at $\bar\mu=0.4$ is 1.783, close to CM's 1.839; $\bar\mu=0.7$ excluded on both (GIRG's predicted crossing 1.03, also below the $r=2$ floor). Poster hero figure now plots exactly **9 curves** (3 families × $\bar\mu\in\{0,0.4,0.7\}$ — confirmed by reading `scripts/plot_poster_comparison.py`'s explicit `series_config`, not inferred from the commit prose), resolving the "one-axis vs. separate figures" design question Gary decided 2026-08-02 (recorded only as an inline comment in `okf/poster/poster.tex:78-82`, not a `d-0NN` decision file — flagged in `EVIDENCE.md` for the orchestrator).
+  - **RESULT (Q6 now has an empirical answer — see `okf/open-questions.md`): geometry barely moves ignition.** GIRG's zero-fear crossing (11.41) sits ~11.7% above CM's (10.22) at matched ⟨k⟩=4.53 — a real but small locality penalty, dwarfed by the ~30× gap to ER (313.6) that comes from degree heterogeneity alone. The D-012 departure tracks the **degree distribution**, not geometry: GIRG's D-012 departure ratio at $\bar\mu=0.4$ is 1.783 (measured crossing ÷ [its own $\bar\mu=0$ anchor × $(1-\bar\mu)^2$] — NOT the D-040 own-anchor percentage metric, which is 0.642 there; terminology corrected S-066), close to CM's 1.839; $\bar\mu=0.7$ excluded on both (GIRG's predicted crossing 1.03, also below the $r=2$ floor). Poster hero figure now plots exactly **9 curves** (3 families × $\bar\mu\in\{0,0.4,0.7\}$ — confirmed by reading `scripts/plot_poster_comparison.py`'s explicit `series_config`, not inferred from the commit prose), resolving the "one-axis vs. separate figures" design question Gary decided 2026-08-02 (recorded only as an inline comment in `okf/poster/poster.tex:78-82`, not a `d-0NN` decision file — flagged in `EVIDENCE.md` for the orchestrator).
 - **⚠️ "No `okf/changes/` entry exists for any poster session" (prior caveat): RESOLVED by this catch-up.** `okf/changes/s-061-*.md` (Comparison 1 arc) and `s-062-*.md` (Comparison 2 / GIRG arc) now cover the 2026-07-27–08-02 work that was previously recorded only in commit bodies and `.agy/`.
 - **Working tree: clean relative to the poster sprint.** `git status --short` shows only `.gitignore` and `pytest.ini` modified — unrelated to the poster work (an `overnight`-skill worktree-collision fix; predates or is orthogonal to this sprint, left as found). The "17 untracked + 3 modified files" note in the pre-catch-up `next-actions.md` item 2b is **stale**: everything from the poster sprint proper is committed; the only untracked items are deliberately gitignored (`okf/poster/betterposter-template-landscape.pptx`, 39 MB; leftover `_part`/`_chunk` raw intermediates from the CM $\bar\mu=0.2$/0.3 pilot runs).
 - **Prior phase (S-051–S-059):** the task queue was emptied ahead of the meeting. Q merged (`c4ef634`); R and X `/verify`-passed (S-056/S-057); V/W/U `/verify`-cleared in `d70dbd8`; S and T closed by supersession under W's gate (**D-036**). Process note: U's and W's task files asked for a *human* at their verify gate and got a blind one — a deviation on record, not an ungated result (D-036).

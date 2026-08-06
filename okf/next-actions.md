@@ -7,29 +7,34 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
-**⏸️ PICKUP CHECKLIST (2026-08-04 wrap, pre-meeting — full context in `okf/changes/s-064-*.md`;
-S-063's P1–P6 are ALL CLOSED):**
+**⏸️ PICKUP CHECKLIST (updated S-066, 2026-08-06 — context in `okf/changes/s-066-*.md`):**
 
 P1. ✅ **DONE (S-065) — Meeting follow-through.** Captured into
     `okf/meeting-notes/2026-08-04-dhara.md`. Outcomes: 3-family config Q&A answered; four
     poster design directives received, recorded as **D-046** and folded into items 8–10
     below.
-P2. **Push the merge commit.** Origin is at `8a40677`; the local `antigravity` has the
-    girg-cpp-port merge (`a2b2596`) unpushed. Ask Gary, then push.
-P3. **GIRG densification arms on the C++ engine** (μ̄ ∈ {0.1, 0.2, 0.3, 0.5, 0.6} at
-    n=10000, matched w_min): closes the last gaps in BOTH poster figures (Fear and
-    Structure's 2-point GIRG curve; famcompare's 0.4→0.7 bridge). Minutes of compute
-    post-merge (D-045). Watch the n>65536 warning never fires (it shouldn't at 10k).
+P2. **Push (Gary-approved S-066, in progress).** Origin is at `8a40677`; local
+    `antigravity` is ahead with the girg-cpp merge (`a2b2596`), the P3 arms, and the four
+    S-066 gate commits (`c7140e9`, `e2ae0f5`, `724068f`, `d90493f`).
+P3. ✅ **DONE (2026-08-04, committed `f30aef1`/`0e739a1`/`d25f9f2`) — GIRG densification
+    arms** (μ̄ ∈ {0.1, 0.2, 0.3, 0.5, 0.6}, n=10000, cpp engine, matched w_min). Both
+    poster figures now run full μ̄ grids; wired into both pipelines (P3b). Verified inside
+    the S-066 gate (arm cells reproduced; n>65536 warning never fired).
 P4. **Finish the post-merge smoke:** `pytest tests/test_cpp_girg_validation.py` (+ the
     other four files) against the fresh main-repo build (ctest already 2/2; the run was
-    interrupted at wrap). Then remove `cpp/build.stale-cache-20260804`.
-P5. **Pre-print integrity + polish:** item 3b blind `/verify` now covering `2024c23`'s
-    analysis AND the famcompare/percentage-decrease steps (all currently self-checked);
-    regenerate poster PNGs at ≥300 DPI; one full Overleaf compile check of the zip.
+    interrupted at the S-064 wrap). Then remove `cpp/build.stale-cache-20260804`.
+P5. **Pre-print polish — gate component ✅ DONE (S-066 AUDIT PASS, see item 3b below);
+    ≥300 DPI ✅ DONE (all six figures verified 299.9994 dpi; stale poster.tex comment
+    says otherwise — hygiene).** Remaining: one full Overleaf compile check of the
+    refreshed zip (rebuilt + md5-verified S-066; compile untested).
 P6. **Queued behind:** N1–N4 + deferred-advisory hygiene (task list #10; N1/N2 are
-    pre-existing CLI defects, N3/N4 validator/provenance minors); branching-factor ER arm
-    (approved, still unstarted); worktree cleanup (`tc-girg-cpp`, `tc-work`, `tc-work2`);
-    SNAP teaser (item 6, untouched); optional presenter-sync layer for the QR demo.
+    pre-existing CLI defects, N3/N4 validator/provenance minors); **S-066 gate-advisory
+    hygiene batch** (per-cell trials check; a consumer for `reliable`; dead-code +
+    stale-comment cleanup in both analysis scripts and poster.tex; famcompare bootstrap
+    per-cell seeding; ER μ̄=0.7 crossing-estimator disclosure; `runner.py` metadata gap —
+    `src/` change, own isolation + gate); branching-factor ER arm (approved, still
+    unstarted); worktree cleanup (`tc-girg-cpp`, `tc-work`, `tc-work2`); SNAP teaser
+    (item 6, untouched); optional presenter-sync layer for the QR demo.
 
 **Poster queue (D-038, advisor meeting 2026-07-22 — items 1–7 are the deliverable).**
 Review surface for this queue: `.lavish/poster-remaining-work.html` (2026-07-29, may itself
@@ -70,14 +75,13 @@ now be stale — items 1–3 below closed after that surface was last written).
    ⚠️ **Housekeeping left open:** the isolation worktree for C3b-obs is still checked out at
    `/Users/garymei/Downloads/projects/tc-work` (branch `c3b-sweep-progress`) — clean, but
    never removed. Run `git worktree remove` (or archive it) once nothing depends on it.
-3b. **Gate C3b before print — run `/verify` on `2024c23`'s analysis step (added 2026-08-03,
-   Gary-approved).** The headline "geometry barely moves ignition" number, the 9-curve hero
-   figure, and the poster prose were self-checked only (delegated agent vs pre-delegation
-   snapshots; see `okf/changes/s-062-*.md` and its EVIDENCE trail). Run blind
-   reviewer→critic→auditor on the analysis/figure/poster-text step — or record an equivalent
-   independent re-derivation — before the physical poster is printed. Until it clears, cite
-   Comparison 2 as strong preliminary and keep Q9's load-bearing claims on the three
-   AUDIT-PASS hooks (see item 4 and D-039).
+3b. ✅ **DONE (S-066, 2026-08-06) — AUDIT PASS.** Blind reviewer (×3) → critic (×3) →
+   auditor gate run on all three poster analysis pipelines; record in
+   `walkthrough-s066-preprint-gate.md` (`d90493f`), narrative in
+   `okf/changes/s-066-*.md`. Comparison 2, the famcompare interleave (D-042), and the
+   percentage-decrease panel (D-040) are now VERIFIED — the "cite as strong preliminary"
+   restriction is lifted; Q9's fourth hook (hubs-not-distance) may now carry weight
+   alongside the original three AUDIT-PASS hooks.
 4. **Frame Q9 — the ISyE recommendation component.** Still open; independent of compute, so
    it can proceed **immediately** now that items 2 and 3 are both done rather than only one.
    Three candidate hooks, each an existing AUDIT-PASS result restated as an intervention: the

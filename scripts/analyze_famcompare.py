@@ -368,6 +368,12 @@ def build_family(name, raw_paths, theta_by_n):
         if raw is None:
             skipped[n] = f"raw file not found: {path}"
             continue
+        raw_n = raw.get("metadata", {}).get("n")
+        if raw_n != n:
+            raise ValueError(
+                f"family '{name}': {path} sits in the n={n} slot but its "
+                f"metadata says n={raw_n!r} -- raw in the wrong n slot"
+            )
         cells = cells_from_raw(raw, theta_by_n[n])
         if not validate_complete(cells):
             skipped[n] = f"incomplete cells in {path}: {cells}"
@@ -441,6 +447,9 @@ def build_cm_matched_n10000(theta):
         raws[mu] = raw
 
     base_meta = raws[0.0]["metadata"]
+    if base_meta.get("n") != CM_MATCHED_N:
+        return None, {}, {0.0: [f"anchor raw metadata n={base_meta.get('n')!r}, "
+                                 f"expected {CM_MATCHED_N}"]}
     mismatches = {}
     for mu, raw in raws.items():
         if mu == 0.0:
@@ -526,30 +535,37 @@ def main():
     for label, gtype, paths in provenance_groups:
         check_config_provenance(label, gtype, paths)
     print(f"config provenance certified for {len(provenance_groups)} curve groups")
+    provenance_certification = {
+        "checks": [
+            "raw<->config binding via basename (config exists, declares "
+            "output.raw_filepath exactly)",
+            "config pinned_params.graph.type matches the curve's family "
+            "(None for ER's graph:null configs)",
+            "curve-group-wide pinned_params.graph identity",
+            "per-family raw-n == slot-n binding (build_family)",
+            "extension merges fatal on pinned-param mismatch or missing "
+            "expected mu cells from a present ext raw",
+        ],
+        "groups": {label: {"expected_graph_type": gtype, "raws": paths}
+                   for label, gtype, paths in provenance_groups},
+    }
 
     cm_cells, cm_commits, cm_skip = build_family("configuration_model", cm_paths, theta_by_n)
 
     # --- CM rebase: n=10000 from the matched poster_cm arms ------------------
     cm_matched_cells, cm_matched_commits, cm_matched_mismatches = build_cm_matched_n10000(theta_by_n[CM_MATCHED_N])
     if cm_matched_mismatches:
-        # Fall back to the legacy q4 n=10000 source rather than silently
-        # dropping n=10000 from the main panel or splicing mismatched arms.
-        cm_skip[CM_MATCHED_N] = (
-            f"CM rebase FAILED pinned-param check against matched poster_cm arms: "
-            f"{cm_matched_mismatches}; falling back to legacy q4 source {CM_LEGACY_N10000_PATH}"
+        # FAIL LOUD (S-066 critic rounds 1-2). This used to fall back to the
+        # legacy q4 n=10000 source (mean degree 4.0) -- but post-print that
+        # silently swaps the ensemble under the "Power-law model" label, and
+        # the fatal extension-report check below made the fallback dead code
+        # anyway (while mislabelling e.g. a missing raw as a pinned-param
+        # mismatch). A rebase failure means missing/corrupt matched arms;
+        # nothing valid can be drawn.
+        raise ValueError(
+            "CM rebase against the matched poster_cm arms failed (missing/"
+            f"incomplete raw or pinned-param mismatch): {cm_matched_mismatches}"
         )
-        legacy_raw = load_raw(CM_LEGACY_N10000_PATH)
-        if legacy_raw is not None:
-            legacy_cells = cells_from_raw(legacy_raw, theta_by_n[CM_MATCHED_N])
-            if validate_complete(legacy_cells):
-                cm_cells[CM_MATCHED_N] = legacy_cells
-                cm_commits[CM_LEGACY_N10000_PATH] = raw_commit(legacy_raw)
-                del cm_skip[CM_MATCHED_N]
-        cm_rebase_report = {
-            "status": "FAILED",
-            "mismatches": cm_matched_mismatches,
-            "note": f"pinned-param check failed; fell back to legacy q4-sourced n=10000 (mean degree 4.0): {CM_LEGACY_N10000_PATH}",
-        }
     else:
         cm_cells[CM_MATCHED_N] = cm_matched_cells
         cm_commits.update(cm_matched_commits)
@@ -741,6 +757,7 @@ def main():
             ),
             "bootstrap_seed": BOOTSTRAP_SEED,
             "source_commits": all_source_commits,
+            "provenance_certification": provenance_certification,
         },
         "main_panel": {
             "configuration_model": cm_ratios,

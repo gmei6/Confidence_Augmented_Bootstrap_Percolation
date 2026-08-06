@@ -1,7 +1,7 @@
 {
   "metadata": {
     "script": "scripts/analyze_poster_comparison.py",
-    "git_commit": "c7140e95637ba715cb62998ccd87d15f69fed822",
+    "git_commit": "e2ae0f5e66d5580d5aa4add7ed95a5af93c8fbe2",
     "source_raws": [
       "results/poster_er_mu0_raw.json",
       "results/poster_er_mu10_raw.json",
@@ -64,6 +64,50 @@
       "poster_girg_mu50": 243.2672272353176,
       "poster_girg_mu60": 243.2672272353176,
       "poster_girg_mu70": 243.2672272353176
+    },
+    "provenance_certification": {
+      "checks": [
+        "family pinned-key identity (n, p, r, concentration, theta, window_len, weights, trials_per_cell)",
+        "per-raw trials_per_cell == 500",
+        "raw<->config binding via basename (config exists, declares output.raw_filepath exactly)",
+        "config sweep.mean_fear_grid == [spec mu]",
+        "family-wide pinned_params.graph identity",
+        "cell-level mean_fear == spec mu"
+      ],
+      "configs_bound": {
+        "erdos_renyi": [
+          "configs/poster_er_mu0.json",
+          "configs/poster_er_mu10.json",
+          "configs/poster_er_mu20.json",
+          "configs/poster_er_mu30.json",
+          "configs/poster_er_mu40.json",
+          "configs/poster_er_mu40_tails.json",
+          "configs/poster_er_mu50.json",
+          "configs/poster_er_mu60.json",
+          "configs/poster_er_mu70.json",
+          "configs/poster_er_mu70_tails.json"
+        ],
+        "configuration_model": [
+          "configs/poster_cm_mu0.json",
+          "configs/poster_cm_mu10.json",
+          "configs/poster_cm_mu20.json",
+          "configs/poster_cm_mu30.json",
+          "configs/poster_cm_mu40.json",
+          "configs/poster_cm_mu50.json",
+          "configs/poster_cm_mu60.json",
+          "configs/poster_cm_mu70.json"
+        ],
+        "girg": [
+          "configs/poster_girg_mu0.json",
+          "configs/poster_girg_mu10.json",
+          "configs/poster_girg_mu20.json",
+          "configs/poster_girg_mu30.json",
+          "configs/poster_girg_mu40.json",
+          "configs/poster_girg_mu50.json",
+          "configs/poster_girg_mu60.json",
+          "configs/poster_girg_mu70.json"
+        ]
+      }
     }
   },
   "curves_summary": {

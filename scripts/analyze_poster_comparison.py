@@ -53,6 +53,11 @@ CONFIG_SPECS = [
 
 THETA = 0.5  # systemic cascade threshold
 
+# Absolute pin, mirroring analyze_famcompare.EXPECTED_TRIALS: every poster
+# production raw runs 500 trials/cell; pilots run 50/100. The relative
+# family-compat check alone cannot reject a family made entirely of pilots.
+EXPECTED_TRIALS_PER_CELL = 500
+
 
 def wilson_score_interval(k: int, n: int, confidence: float = 0.95) -> tuple[float, float, float]:
     if n == 0:
@@ -87,8 +92,14 @@ def interpolate_crossing(x_arr: np.ndarray, y_arr: np.ndarray, target: float = 0
 
 
 def check_family_compatibility(family: str, member_raws: list[tuple[str, dict]]) -> None:
-    """Assert every member raw in a family agrees on pinned metadata keys."""
-    keys = ("n", "p", "r", "concentration", "theta", "window_len", "weights")
+    """Assert every member raw in a family agrees on pinned metadata keys.
+
+    trials_per_cell is in the tuple to reject pilot raws (50/100 trials)
+    substituted for their production twins (500) -- pilots share every other
+    pinned key AND their own committed config, so neither the graph-block nor
+    the mu-slot check can tell them apart (S-066 critic round 2, M-5)."""
+    keys = ("n", "p", "r", "concentration", "theta", "window_len", "weights",
+            "trials_per_cell")
     if not member_raws:
         return
     base_raw, base_md = member_raws[0]
@@ -163,6 +174,7 @@ def check_family_config_provenance(family: str, specs: list[dict]) -> None:
             f"family '{family}': member configs disagree on "
             f"pinned_params.graph: {graph_blocks}"
         )
+    return sorted(graph_blocks)
 
 
 def main() -> None:
@@ -192,6 +204,13 @@ def main() -> None:
                 raw_data = json.load(f)
 
             md = raw_data.get("metadata", {})
+            if md.get("trials_per_cell") != EXPECTED_TRIALS_PER_CELL:
+                raise ValueError(
+                    f"{spec['key']}: {raw_rel} has trials_per_cell="
+                    f"{md.get('trials_per_cell')!r}, expected "
+                    f"{EXPECTED_TRIALS_PER_CELL} -- pilot or wrong-experiment "
+                    "raw in a production slot"
+                )
             family_member_raws.setdefault(spec["family"], []).append((raw_rel, md))
             if "git_commit" in md:
                 commits.add(md["git_commit"])
@@ -315,9 +334,22 @@ def main() -> None:
         "configuration_model": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
         "girg": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     }
+    provenance_certification = {
+        "checks": [
+            "family pinned-key identity (n, p, r, concentration, theta, "
+            "window_len, weights, trials_per_cell)",
+            f"per-raw trials_per_cell == {EXPECTED_TRIALS_PER_CELL}",
+            "raw<->config binding via basename (config exists, declares "
+            "output.raw_filepath exactly)",
+            "config sweep.mean_fear_grid == [spec mu]",
+            "family-wide pinned_params.graph identity",
+            "cell-level mean_fear == spec mu",
+        ],
+        "configs_bound": {},
+    }
     for fam in ["erdos_renyi", "configuration_model", "girg"]:
         check_family_compatibility(fam, family_member_raws.get(fam, []))
-        check_family_config_provenance(
+        provenance_certification["configs_bound"][fam] = check_family_config_provenance(
             fam, [s for s in CONFIG_SPECS if s["family"] == fam]
         )
         prefix = family_key_prefix[fam]
@@ -374,6 +406,7 @@ def main() -> None:
             "git_commits_in_raws": sorted(commits),
             "systemic_threshold_theta": THETA,
             "janson_a_c_map": janson_ac_map,
+            "provenance_certification": provenance_certification,
         },
         "curves_summary": curves_summary,
         "d012_table": d012_table,

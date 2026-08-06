@@ -1,9 +1,9 @@
 {
   "metadata": {
     "script": "scripts/analyze_poster_fear_structure.py",
-    "git_commit": "0e739a1e2d6a2b3e8a3bfc62abb356cdefb0791c",
+    "git_commit": "e2ae0f5e66d5580d5aa4add7ed95a5af93c8fbe2",
     "source": "results/processed/poster_comparison.json",
-    "source_analysis_commit": "0e739a1e2d6a2b3e8a3bfc62abb356cdefb0791c",
+    "source_analysis_commit": "e2ae0f5e66d5580d5aa4add7ed95a5af93c8fbe2",
     "near_floor_ratio_threshold": 2.2,
     "structural_floor_r": 2,
     "note": "Percentage decrease in each family's own measured a_c(mu_bar) relative to its own mu_bar=0 anchor. Self-checked derivation of poster_comparison.json's d012_table; not independently /verify-gated on its own (the underlying comparison sweeps are)."

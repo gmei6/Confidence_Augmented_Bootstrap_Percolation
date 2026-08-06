@@ -13,9 +13,10 @@ P1. ✅ **DONE (S-065) — Meeting follow-through.** Captured into
     `okf/meeting-notes/2026-08-04-dhara.md`. Outcomes: 3-family config Q&A answered; four
     poster design directives received, recorded as **D-046** and folded into items 8–10
     below.
-P2. **Push (Gary-approved S-066, in progress).** Origin is at `8a40677`; local
-    `antigravity` is ahead with the girg-cpp merge (`a2b2596`), the P3 arms, and the four
-    S-066 gate commits (`c7140e9`, `e2ae0f5`, `724068f`, `d90493f`).
+P2. ✅ **DONE (S-066, Gary-approved).** Pushed `d25f9f2..6699c10` (the five S-066
+    commits). NOTE: the S-064 "origin at `8a40677`" claim was stale — origin already
+    had the girg-cpp merge and the P3 arms; only the gate commits were unpushed.
+    Local and origin in sync.
 P3. ✅ **DONE (2026-08-04, committed `f30aef1`/`0e739a1`/`d25f9f2`) — GIRG densification
     arms** (μ̄ ∈ {0.1, 0.2, 0.3, 0.5, 0.6}, n=10000, cpp engine, matched w_min). Both
     poster figures now run full μ̄ grids; wired into both pipelines (P3b). Verified inside
@@ -23,10 +24,12 @@ P3. ✅ **DONE (2026-08-04, committed `f30aef1`/`0e739a1`/`d25f9f2`) — GIRG de
 P4. **Finish the post-merge smoke:** `pytest tests/test_cpp_girg_validation.py` (+ the
     other four files) against the fresh main-repo build (ctest already 2/2; the run was
     interrupted at the S-064 wrap). Then remove `cpp/build.stale-cache-20260804`.
-P5. **Pre-print polish — gate component ✅ DONE (S-066 AUDIT PASS, see item 3b below);
-    ≥300 DPI ✅ DONE (all six figures verified 299.9994 dpi; stale poster.tex comment
-    says otherwise — hygiene).** Remaining: one full Overleaf compile check of the
-    refreshed zip (rebuilt + md5-verified S-066; compile untested).
+P5. ✅ **DONE (S-066).** Gate component AUDIT PASS (item 3b below); all figures verified
+    300 dpi; the zip's exact contents compile clean locally via tectonic (only
+    font-substitution warnings + two ~7pt overfull boxes) with every panel/QR verified
+    on-page in the rendered PDF. Residual (one-minute check, not a work item): open the
+    zip in Overleaf itself once before sending to print — Overleaf runs TeX Live, not
+    tectonic.
 P6. **Queued behind:** N1–N4 + deferred-advisory hygiene (task list #10; N1/N2 are
     pre-existing CLI defects, N3/N4 validator/provenance minors); **S-066 gate-advisory
     hygiene batch** (per-cell trials check; a consumer for `reliable`; dead-code +
@@ -103,20 +106,24 @@ now be stale — items 1–3 below closed after that surface was last written).
    leg of the post-poster frontier push.
 7. **Optional — hard RGG dimension sweep.** Keep increasing dimension D and see whether the
    results change. Advisor's nice-to-add, not core. No evidence of work started.
-8. **Add a model schematic figure (D-046, S-065, 2026-08-04 meeting).** Small network
-   diagram: a few red nodes = infected/failed, a distinct visual encoding for fear, colors
-   used consistently throughout. Purpose is presenter ergonomics — something to point at
-   while narrating the model, per the advisor's framing of what a poster is for. No
-   evidence of work started.
-9. **Add an explicit fear+heterogeneity+geometry motivating sentence (D-046, S-065).**
-   State directly that studying fear's effect *across* graph models with heterogeneity and
-   geometry is a needed addition beyond studying the baseline alone — currently only
-   implicit in the figure comparisons. No evidence of work started.
-10. **Restructure the poster narrative to the D-046 baseline-first / linear arc (S-065).**
-    Talk flow: who uses the baseline and why it's the baseline → how it works, under an
-    "Our model / Goal / What are we looking for" framing; overall arc: title → what exists
-    → what we did. Likely folds into item 5 (poster draft) rather than standing alone — do
-    not treat as a separate document. No evidence of work started.
+8. ✅ **DONE (S-066) — model schematic added (D-046).** New
+   `scripts/plot_model_schematic.py` → `results/figures/model_schematic.png`
+   (deterministic hand-placed drawing, no RNG; wide-short ~2.9:1 so it fits the left
+   column). Red = failed (advisor's directive), rust ring ∝ fear level $f_i$ (distinct
+   encoding), teal = healthy — palette identical to poster.tex's tcRust/tcTeal/tcCream.
+   Placed under "Our Model", annotating both activation routes.
+9. ✅ **DONE (S-066) — motivating sentence added (D-046).** New "Goal" section states it
+   explicitly: real networks have hubs and locality, the baseline has neither; in addition
+   to the baseline we need to model fear's effect on networks *with* heterogeneity and
+   geometry.
+10. ✅ **DONE (S-066) — baseline-first narrative restructure (D-046).** Left column now
+    runs The Baseline (who uses it, why it IS the baseline) → Our Model (+ schematic) →
+    Goal → What We Look For — the advisor's linear arc. **Layout consequence flagged for
+    Gary:** the giant QR box could not coexist with the schematic + Goal section in the
+    left column (verified by tectonic compile — it fell off the page); the QR box moved to
+    the bottom-right corner under Next Steps at 0.30 column width (~2.7 in printed, still
+    conversation-distance scannable). Restore the left-column giant QR only by cutting
+    something else. Full-bleed hero untouched.
 
 **Carried over (deprioritized under the poster):**
 

@@ -7,6 +7,27 @@ mutability: live
 
 # §10 — Next Actions 🟢 *(overwrite each session — keep it to the next few concrete steps)*
 
+**🎉 POSTER SUBMITTED 2026-08-06 (S-067). The D-038 poster deliverable is COMPLETE.**
+Items 4-10 below and the queue's poster framing are now HISTORICAL — kept for the
+record but superseded by the submitted artifact (see `okf/changes/s-067-*.md` for the
+final shape: schematic on the demo site not the poster; probability panel replaced the
+ratio panel; intervene/next-steps spoken-only; D-047 disclosure decision).
+
+**NEXT UP (post-poster):**
+
+N-A. **P4 — post-merge pytest smoke** (`tests/test_cpp_girg_validation.py` + four
+     files) against the fresh main-repo build; then remove
+     `cpp/build.stale-cache-20260804`.
+N-B. **Worktree cleanup**: `tc-girg-cpp`, `tc-work`, `tc-work2`.
+N-C. **Gate-advisory hygiene batch** (S-066 list under P6) + N1-N4.
+N-D. **Verify gate for the probability panel + ext2 analysis** if that result is ever
+     reused beyond the poster (currently self-checked; the ONE printed element that
+     never went through a blind gate).
+N-E. **`runner.py` metadata gap** — own gated `src/` session; root cause of all
+     provenance-guard complexity.
+N-F. **SNAP teaser** — now doubly motivated: poster's spoken close promises it, and
+     it is the frontier-push empirical leg (D-038).
+
 **⏸️ PICKUP CHECKLIST (updated S-066, 2026-08-06 — context in `okf/changes/s-066-*.md`):**
 
 P1. ✅ **DONE (S-065) — Meeting follow-through.** Captured into

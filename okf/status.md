@@ -7,6 +7,21 @@ mutability: live
 
 # §8 — Current Status 🟢 *(overwrite each session)*
 
+- **🎉 S-067 (2026-08-06): the SURS POSTER IS SUBMITTED.** Gary's final layout (new
+  headline; Existing Work / My contribution / How is fear defined? / What We Look For;
+  probability panel + Fear and Structure + large QR; How To Intervene and Next Steps
+  spoken-only), compiled in Overleaf, text-presence-verified in session, submitted.
+  Same-day additions: **ext2 famcompare arms** (μ̄ ∈ {0.8,0.9,1.0} at a=2 — ER-bounded
+  first ignites at μ̄=0.8, 9/500; 25.6% at 1.0; provenance-guard-extended,
+  self-checked tier) feeding the new `famcompare_probability` panel that replaced the
+  ratio panel in print; the **model schematic on the demo site's landing screen**
+  (deployed via Pages); a full **presentation script**
+  (`okf/poster/presentation-script.md`); and **D-047** (printed §5.4 engine disclosure
+  deliberately omitted for audience legibility — disclosure lives in tex comments +
+  the spoken script; papers must restore it). Record: `okf/changes/s-067-*.md`;
+  commits `0a3330d`, `e54eec5`, `2bc712c`, `eb8d174`, pushed. **Post-poster evidentiary
+  note:** the probability panel + ext2 cells are the one printed element NOT
+  blind-gated — gate them before any pre-print reuse.
 - **✅ S-066 (2026-08-06): the item-3b/P5 pre-print verification gate is COMPLETE — AUDIT PASS.**
   Full record: `walkthrough-s066-preprint-gate.md` (`d90493f`); session narrative
   `okf/changes/s-066-preprint-gate-audit-pass.md`. Arc: reviewer rounds 1–3 (sign-off,

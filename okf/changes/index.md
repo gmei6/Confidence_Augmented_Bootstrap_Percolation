@@ -66,3 +66,4 @@ mutability: append-only
 - [S-064: Poster content-complete; single-seed result; famcompare rebase; C++ GIRG port gated and merged; QR demo live](s-064-poster-complete-girg-merged-demo-live.md)
 - [S-065 — Advisor meeting 2026-08-04: poster narrative/schematic directives (D-046)](s-065-advisor-meeting-2026-08-04-poster-directives.md)
 - [S-066 — Pre-print gate: AUDIT PASS](s-066-preprint-gate-audit-pass.md)
+- [S-067 — Poster finalized and submitted](s-067-poster-finalized-and-submitted.md)

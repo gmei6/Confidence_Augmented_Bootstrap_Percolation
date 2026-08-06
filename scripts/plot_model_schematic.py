@@ -1,29 +1,40 @@
-"""Draw the poster's model schematic (D-046, S-065 advisor directive).
+"""Draw the model schematic (D-046, S-065 advisor directive; site variant S-066).
 
 A small hand-placed network illustrating the two activation routes:
   - solvency/percolation: a node with >= r = 2 failed neighbors fails next
-    round (dashed red outline);
+    round (dashed outline);
   - fear: any node can fail with probability f_i * g_t, even far from the
-    failed cluster (rust ring, thickness/darkness = fear level f_i).
+    failed cluster.
 
-NOT a simulation output -- a deliberately legible illustration for the
-presenter to point at (the advisor's framing: the poster is a prop for the
-conversation). Every coordinate is hand-set so the figure is deterministic
-with no RNG and no layout dependency (no networkx). Wide-short aspect
-(~2.7:1) so it fits the poster's left column without displacing the QR
-block (verified by tectonic compile, S-066).
+NOT a simulation output -- a deliberately legible illustration. Every
+coordinate is hand-set so the figure is deterministic with no RNG and no
+layout dependency (no networkx). The node positions and edge list are
+shared by both variants; only the palette, per-node styling, annotation
+text, and canvas/output differ, via the CONFIGS dict below.
 
-Colors match okf/poster/poster.tex's palette exactly (D-046: colors used
-consistently to distinguish node states; red = infected/failed per the
-advisor, distinct encoding for fear):
-  failed  #B3282D  (true red -- advisor's directive; NOT tcRust)
-  fear    #BD5A2E  (tcRust, the poster's warm "fear" accent, as a RING)
-  healthy #2E6E76  (tcTeal, the poster's structure accent)
-  ink     #1E2530 / #5B6672, background #F6F3EA (tcCream)
+Two variants (--variant):
+  poster (default) -- okf/poster/poster.tex's cream palette, with a
+    fear ring (thickness/darkness ~ f_i) on E1/E2/E3 and an in-figure
+    legend. Written to results/figures/model_schematic.png. This is the
+    original figure; its bytes must not change when this script is
+    invoked with no flags (verified by md5, S-066).
+      failed  #B3282D (true red -- advisor's directive; NOT tcRust)
+      fear    #BD5A2E (tcRust ring)
+      healthy #2E6E76 (tcTeal)
+  site -- the QR demo's dark palette (poster-demo/style.css), matching
+    the landing screen's legend-key vocabulary exactly: teal = still
+    standing, rust = failed structurally, plum = failed by fear. No
+    rings (the site does not encode susceptibility, only failure
+    cause), no in-figure legend (the page's own legend-key sits below
+    the image). Written to poster-demo/img/model_schematic_dark.png.
+    Phone-friendly aspect (~1.9:1); the poster's legend corner is
+    reclaimed for the fear annotation.
 
 Usage:
     arch -arm64 python3 scripts/plot_model_schematic.py
+    arch -arm64 python3 scripts/plot_model_schematic.py --variant site
 """
+import argparse
 import os
 
 import matplotlib
@@ -33,17 +44,10 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-FIG_PATH = os.path.join(REPO_ROOT, "results", "figures", "model_schematic.png")
+POSTER_FIG_PATH = os.path.join(REPO_ROOT, "results", "figures", "model_schematic.png")
+SITE_FIG_PATH = os.path.join(REPO_ROOT, "poster-demo", "img", "model_schematic_dark.png")
 
-CREAM = "#F6F3EA"
-INK = "#1E2530"
-INK_SOFT = "#5B6672"
-RULE = "#D8D2C2"
-TEAL = "#2E6E76"
-RUST = "#BD5A2E"
-RED = "#B3282D"
-
-# --- hand-placed graph (wide-short canvas) ---------------------------------
+# --- hand-placed graph (wide-short canvas), shared by both variants -------
 # id: (x, y)
 NODES = {
     "F1": (1.30, 2.20), "F2": (2.30, 3.10), "F3": (2.15, 1.30),
@@ -66,86 +70,156 @@ EDGES = [
     ("E3", "H7"), ("E1", "E3"), ("H5", "H8"),
 ]
 FAILED = {"F1", "F2", "F3"}
-PERC_NEXT = {"P"}                      # >= r failed neighbors, fails next round
-FEAR_RING = {"E1": 1.00, "E2": 0.60, "E3": 0.30}  # ring weight ~ fear level f_i
+PERC_NEXT = {"P"}  # >= r failed neighbors, fails next round
 
 R_NODE = 0.24
 
+# --- per-variant configuration ---------------------------------------------
+POSTER = dict(
+    variant="poster",
+    out_path=POSTER_FIG_PATH,
+    figsize=(10.4, 3.9),
+    dpi=300,
+    xlim=(0.15, 13.9),
+    ylim=(0.05, 4.55),
+    background="#F6F3EA",
+    edge_color="#D8D2C2",
+    ink="#1E2530",
+    ink_soft="#5B6672",
+    teal="#2E6E76",
+    rust="#BD5A2E",
+    failed_face="#B3282D",
+    perc_edge="#B3282D",
+    perc_face="#F6F3EA",
+    plum_fear=None,          # poster encodes fear via rings, not fill
+    fear_ring={"E1": 1.00, "E2": 0.60, "E3": 0.30},
+    draw_legend=True,
+    annotations=[
+        dict(node="F2", text="failed cluster --- drives\nthe global fear field $g_t$",
+             xy_off=(-0.05, 0.28), xytext=(0.45, 4.25)),
+        dict(node="P", text="solvency route: $\\geq r=2$ failed\nneighbors "
+             "$\\Rightarrow$ fails next round",
+             xy_off=(0.10, -0.26), xytext=(3.45, 0.55)),
+        dict(node="E1", text="fear route: fails w.p. $f_i\\,g_t$,\n"
+             "even far from the cluster",
+             xy_off=(0.26, 0.20), xytext=(10.25, 3.05)),
+    ],
+)
 
-def main():
-    fig, ax = plt.subplots(figsize=(10.4, 3.9))
-    fig.patch.set_facecolor(CREAM)
-    ax.set_facecolor(CREAM)
-    ax.set_xlim(0.15, 13.9)
-    ax.set_ylim(0.05, 4.55)
+SITE = dict(
+    variant="site",
+    out_path=SITE_FIG_PATH,
+    figsize=(10.4, 5.0),
+    dpi=200,
+    xlim=(0.15, 10.4),
+    ylim=(0.05, 5.30),
+    background="#0d1117",
+    edge_color="#30363d",
+    ink="#c9d1d9",
+    ink_soft="#8b949e",
+    teal="#2E6E76",
+    rust="#BD5A2E",
+    failed_face="#BD5A2E",   # failed structurally -- rust fill
+    perc_edge="#BD5A2E",     # about to fail by the neighbour rule
+    perc_face="#0d1117",
+    plum_fear={"E1"},        # failed by fear -- plum fill, no ring
+    plum="#8E4A72",
+    fear_ring=None,          # site does not encode susceptibility
+    draw_legend=False,       # the landing page's legend-key covers this
+    annotations=[
+        dict(node="F2", text="failed by neighbours ---\nthese drive the fear level $g_t$",
+             xy_off=(-0.05, 0.28), xytext=(0.30, 5.00)),
+        dict(node="P", text="$\\geq r = 2$ failed neighbours\n$\\Rightarrow$ fails next round",
+             xy_off=(0.10, -0.26), xytext=(2.55, 0.45)),
+        dict(node="E1", text="failed by FEAR: chance $f_i\\,g_t$,\nno failed neighbours at all",
+             xy_off=(0.15, 0.24), xytext=(6.35, 4.55)),
+    ],
+)
+
+
+def node_style(name, cfg):
+    """Return (face, edge, lw, ls) for one node under a variant config."""
+    if name in FAILED:
+        return cfg["failed_face"], cfg["failed_face"], 1.5, "-"
+    if name in PERC_NEXT:
+        return cfg["perc_face"], cfg["perc_edge"], 2.6, (0, (4, 2.2))
+    if cfg["plum_fear"] and name in cfg["plum_fear"]:
+        return cfg["plum"], cfg["plum"], 1.5, "-"
+    return cfg["teal"], cfg["teal"], 1.5, "-"
+
+
+def draw(cfg):
+    fig, ax = plt.subplots(figsize=cfg["figsize"])
+    fig.patch.set_facecolor(cfg["background"])
+    ax.set_facecolor(cfg["background"])
+    ax.set_xlim(*cfg["xlim"])
+    ax.set_ylim(*cfg["ylim"])
     ax.set_aspect("equal")
     ax.axis("off")
 
     for a, b in EDGES:
         (x1, y1), (x2, y2) = NODES[a], NODES[b]
-        ax.plot([x1, x2], [y1, y2], color=RULE, lw=2.2, zorder=1,
+        ax.plot([x1, x2], [y1, y2], color=cfg["edge_color"], lw=2.2, zorder=1,
                 solid_capstyle="round")
 
     for name, (x, y) in NODES.items():
-        if name in FAILED:
-            face, edge, lw, ls = RED, RED, 1.5, "-"
-        elif name in PERC_NEXT:
-            face, edge, lw, ls = CREAM, RED, 2.6, (0, (4, 2.2))
-        else:
-            face, edge, lw, ls = TEAL, TEAL, 1.5, "-"
-        if name in FEAR_RING:
-            f = FEAR_RING[name]
+        face, edge, lw, ls = node_style(name, cfg)
+        if cfg["fear_ring"] and name in cfg["fear_ring"]:
+            f = cfg["fear_ring"][name]
             ax.add_patch(Circle((x, y), R_NODE + 0.12, facecolor="none",
-                                edgecolor=RUST, lw=2.0 + 3.2 * f,
+                                edgecolor=cfg["rust"], lw=2.0 + 3.2 * f,
                                 alpha=0.45 + 0.55 * f, zorder=2))
         ax.add_patch(Circle((x, y), R_NODE, facecolor=face, edgecolor=edge,
                             lw=lw, linestyle=ls, zorder=3))
 
-    # --- right-side annotation panel (x >= 10.2 is text-only space) --------
-    ann_kw = dict(fontsize=12, color=INK, ha="left", va="center", zorder=4)
-    arrow_kw = dict(arrowstyle="-", color=INK_SOFT, lw=1.4,
+    ann_kw = dict(fontsize=12, color=cfg["ink"], ha="left", va="center", zorder=4)
+    arrow_kw = dict(arrowstyle="-", color=cfg["ink_soft"], lw=1.4,
                     shrinkA=2, shrinkB=8)
+    for ann in cfg["annotations"]:
+        nx, ny = NODES[ann["node"]]
+        dx, dy = ann["xy_off"]
+        ax.annotate(ann["text"], xy=(nx + dx, ny + dy), xytext=ann["xytext"],
+                    arrowprops=arrow_kw, **ann_kw)
 
-    fx, fy = NODES["F2"]
-    ax.annotate("failed cluster --- drives\nthe global fear field $g_t$",
-                xy=(fx - 0.05, fy + 0.28), xytext=(0.45, 4.25),
-                arrowprops=arrow_kw, **ann_kw)
-
-    px, py = NODES["P"]
-    ax.annotate("solvency route: $\\geq r=2$ failed\nneighbors "
-                "$\\Rightarrow$ fails next round",
-                xy=(px + 0.10, py - 0.26), xytext=(3.45, 0.55),
-                arrowprops=arrow_kw, **ann_kw)
-
-    ex, ey = NODES["E1"]
-    ax.annotate("fear route: fails w.p. $f_i\\,g_t$,\n"
-                "even far from the cluster",
-                xy=(ex + 0.26, ey + 0.20), xytext=(10.25, 3.05),
-                arrowprops=arrow_kw, **ann_kw)
-
-    legend_items = [
-        Line2D([], [], marker="o", ls="none", markersize=12,
-               markerfacecolor=RED, markeredgecolor=RED, label="failed"),
-        Line2D([], [], marker="o", ls="none", markersize=12,
-               markerfacecolor=TEAL, markeredgecolor=TEAL, label="healthy"),
-        Line2D([], [], marker="o", ls="none", markersize=12,
-               markerfacecolor=TEAL, markeredgecolor=RUST, markeredgewidth=2.8,
-               label="feeling fear (ring $\\propto f_i$)"),
-        Line2D([], [], marker="o", ls="none", markersize=12,
-               markerfacecolor=CREAM, markeredgecolor=RED, markeredgewidth=2.0,
-               label="fails next round ($r$-rule)"),
-    ]
-    leg = ax.legend(handles=legend_items, loc="lower right",
-                    bbox_to_anchor=(1.0, -0.02), frameon=True,
-                    fontsize=10.5, borderpad=0.55, labelspacing=0.45,
-                    handletextpad=0.45)
-    leg.get_frame().set_facecolor(CREAM)
-    leg.get_frame().set_edgecolor(RULE)
+    if cfg["draw_legend"]:
+        legend_items = [
+            Line2D([], [], marker="o", ls="none", markersize=12,
+                   markerfacecolor=cfg["failed_face"], markeredgecolor=cfg["failed_face"],
+                   label="failed"),
+            Line2D([], [], marker="o", ls="none", markersize=12,
+                   markerfacecolor=cfg["teal"], markeredgecolor=cfg["teal"],
+                   label="healthy"),
+            Line2D([], [], marker="o", ls="none", markersize=12,
+                   markerfacecolor=cfg["teal"], markeredgecolor=cfg["rust"], markeredgewidth=2.8,
+                   label="feeling fear (ring $\\propto f_i$)"),
+            Line2D([], [], marker="o", ls="none", markersize=12,
+                   markerfacecolor=cfg["background"], markeredgecolor=cfg["failed_face"],
+                   markeredgewidth=2.0, label="fails next round ($r$-rule)"),
+        ]
+        leg = ax.legend(handles=legend_items, loc="lower right",
+                        bbox_to_anchor=(1.0, -0.02), frameon=True,
+                        fontsize=10.5, borderpad=0.55, labelspacing=0.45,
+                        handletextpad=0.45)
+        leg.get_frame().set_facecolor(cfg["background"])
+        leg.get_frame().set_edgecolor(cfg["edge_color"])
 
     fig.tight_layout()
-    fig.savefig(FIG_PATH, dpi=300, bbox_inches="tight", facecolor=CREAM)
+    out_path = cfg["out_path"]
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    fig.savefig(out_path, dpi=cfg["dpi"], bbox_inches="tight",
+                facecolor=cfg["background"])
     plt.close(fig)
-    print(f"wrote {FIG_PATH}")
+    print(f"wrote {out_path}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--variant", choices=["poster", "site"], default="poster",
+                        help="poster: cream palette for okf/poster/poster.tex (default); "
+                             "site: dark palette for the poster-demo QR landing screen")
+    args = parser.parse_args()
+    cfg = POSTER if args.variant == "poster" else SITE
+    draw(cfg)
 
 
 if __name__ == "__main__":

@@ -177,6 +177,15 @@ main {
   border-radius: 50%;
   display: inline-block;
 }
+.model-fig {
+  width: 100%;
+  max-width: 540px;
+  max-height: 32vh;
+  object-fit: contain;
+  display: block;
+  margin: 14px auto 4px;
+  border-radius: 10px;
+}
 .swatch.healthy    { background: var(--teal); }
 .swatch.structural { background: var(--rust); }
 .swatch.fear       { background: var(--plum); }

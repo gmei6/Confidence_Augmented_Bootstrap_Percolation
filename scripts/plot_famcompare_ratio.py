@@ -226,9 +226,9 @@ def main():
             ys.append(c["ratio"])
             cens.append(c["ceiling_censored"])
 
-        # girg's xs_full jumps 0.4 -> 0.7 (no measured 0.5/0.6): plotting
-        # xs_full/ys directly still draws one straight segment across that
-        # gap, same bridging convention as plot_poster_fear_structure.py.
+        # All three families now carry measured cells at every FAMILY_MU_GRID
+        # point (girg's 0.5/0.6 gap closed by the 2026-08-04 densification
+        # arms), so no segment bridges an unmeasured gap.
         ax.plot(xs_full, ys, color=color, lw=4.0, zorder=4,
                 solid_capstyle="round")
 

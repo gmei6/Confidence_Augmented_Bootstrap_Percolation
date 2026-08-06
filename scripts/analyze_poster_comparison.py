@@ -88,18 +88,69 @@ def interpolate_crossing(x_arr: np.ndarray, y_arr: np.ndarray, target: float = 0
 
 def check_family_compatibility(family: str, member_raws: list[tuple[str, dict]]) -> None:
     """Assert every member raw in a family agrees on pinned metadata keys."""
-    keys = ("n", "p", "r", "concentration", "theta", "window_len")
+    keys = ("n", "p", "r", "concentration", "theta", "window_len", "weights")
     if not member_raws:
         return
     base_raw, base_md = member_raws[0]
-    base_params = tuple(base_md.get(k) for k in keys)
+    base_params = tuple(repr(base_md.get(k)) for k in keys)
     for raw_path, md in member_raws[1:]:
-        params = tuple(md.get(k) for k in keys)
+        params = tuple(repr(md.get(k)) for k in keys)
         if params != base_params:
             raise ValueError(
                 f"Cross-mu pinned-param mismatch in family '{family}': "
                 f"{raw_path} ({params}) vs {base_raw} ({base_params})"
             )
+
+
+def check_family_config_provenance(family: str, specs: list[dict]) -> None:
+    """Bind every family member to its committed config and assert the family
+    shares ONE pinned_params.graph block.
+
+    The raw files do not persist graph.type/tau/w_min/alpha_g (runner.py
+    metadata gap, hygiene-queued), so in a matched ensemble -- where
+    n/p/r/concentration/theta/window_len are identical across ER, CM, and GIRG
+    by design -- metadata-only checks cannot detect a raw assigned to the
+    wrong family slot. The committed configs are the authoritative graph
+    record. EVERY raw path in every spec (including the second element of the
+    multi-raw ER tail specs) is bound to its own config, derived from the
+    raw's basename: results/<name>_raw.json -> configs/<name>.json. Each
+    config must exist, must declare exactly that raw as its
+    output.raw_filepath, and every config in the family must share one
+    pinned_params.graph block. Runs after os.chdir(base_dir), so paths are
+    repo-relative.
+    """
+    graph_blocks = {}
+    for spec in specs:
+        raws = spec["raw"] if isinstance(spec["raw"], list) else [spec["raw"]]
+        for raw_path in raws:
+            base = os.path.basename(raw_path)
+            if not base.endswith("_raw.json"):
+                raise ValueError(
+                    f"family '{family}': raw path {raw_path!r} does not end "
+                    "in '_raw.json'; cannot derive its config name"
+                )
+            cfg_path = os.path.join("configs", base[: -len("_raw.json")] + ".json")
+            if not os.path.exists(cfg_path):
+                raise ValueError(
+                    f"family '{family}': no committed config at {cfg_path} to "
+                    f"certify graph-family provenance for raw {raw_path!r}"
+                )
+            with open(cfg_path) as f:
+                cfg = json.load(f)
+            declared = cfg.get("output", {}).get("raw_filepath")
+            if declared != raw_path:
+                raise ValueError(
+                    f"family '{family}': {cfg_path} declares "
+                    f"output.raw_filepath={declared!r}, not {raw_path!r}"
+                )
+            graph_blocks[cfg_path] = json.dumps(
+                cfg.get("pinned_params", {}).get("graph"), sort_keys=True
+            )
+    if len(set(graph_blocks.values())) > 1:
+        raise ValueError(
+            f"family '{family}': member configs disagree on "
+            f"pinned_params.graph: {graph_blocks}"
+        )
 
 
 def main() -> None:
@@ -237,6 +288,9 @@ def main() -> None:
     }
     for fam in ["erdos_renyi", "configuration_model", "girg"]:
         check_family_compatibility(fam, family_member_raws.get(fam, []))
+        check_family_config_provenance(
+            fam, [s for s in CONFIG_SPECS if s["family"] == fam]
+        )
         prefix = family_key_prefix[fam]
         anchor_key = f"poster_{prefix}_mu0"
         anchor_crossing = curves_summary[anchor_key]["a05_point"]

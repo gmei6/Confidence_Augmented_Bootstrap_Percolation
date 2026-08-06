@@ -161,7 +161,7 @@ def main():
         ha="center", fontsize=7.5, color="#666666",
     )
     fig.tight_layout()
-    fig.savefig(FIG_PATH, dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(FIG_PATH, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"wrote {FIG_PATH}")
 

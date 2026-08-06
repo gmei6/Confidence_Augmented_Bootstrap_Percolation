@@ -68,11 +68,16 @@ cells are added. Per-family availability differs and is NOT symmetrized:
                             results/poster_girg_mu60_raw.json, and results/poster_girg_mu70_raw.json
                             (seed_size==2 cells of the poster GIRG arms).
                             Pinned-param compatibility against
-                            results/famcompare_girg_n10000_raw.json was checked and
-                            passed (identical pinned_params incl. graph.w_min/alpha_g;
-                            scaling.target_mean_degree differs only at the 6th decimal,
-                            4.5336 vs 4.533623362336234 -- config-authoring rounding,
-                            not a different calibration target).
+                            results/famcompare_girg_n10000_raw.json: the metadata
+                            keys in PINNED_COMPAT_KEYS are checked at runtime by
+                            validate_pinned_compat; graph.w_min/alpha_g/tau are NOT
+                            -- raw metadata omits graph params entirely (runner.py
+                            gap, hygiene-queued) -- so those were verified MANUALLY
+                            against the committed configs (identical;
+                            scaling.target_mean_degree differs only at the 6th
+                            decimal, 4.5336 vs 4.533623362336234 --
+                            config-authoring rounding, not a different
+                            calibration target).
   - erdos_renyi_matched,
     erdos_renyi_bounded  : mu_bar in {0.5, 0.6, 0.7}, from NEWLY RUN
                             results/famcompare_er_matched_n10000_ext_raw.json and

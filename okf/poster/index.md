@@ -8,3 +8,4 @@ mutability: live
 # Poster
 
 - [Poster source (LaTeX)](poster.tex)
+- [Presentation script](presentation-script.md)

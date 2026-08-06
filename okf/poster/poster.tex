@@ -51,28 +51,26 @@
 \maincolumn{
 %%%% Main space: Headline INFORMS, figure below SHOWS the finding.
 %%
-%% "how easily", NOT "whether". The figure below shows all six curves reaching
-%% P = 1.00, i.e. structure shifts HOW MUCH SEED YOU NEED -- it does not show a
-%% family that cannot ignite at all. The genuine "whether" result is the tau=3.5
-%% total gate (0 systemic in 3000 trials), which is a different tau from the CM
-%% arm plotted here and so is not evidence for this figure's claim. Restore
-%% "whether" only if a flat-at-zero tau=3.5 curve is added to the plot.
-%% Bonus: "how easily" / "how far" is a parallel construction; "whether" / "how
-%% far" was not.
+%% Headline rewritten by Gary 2026-08-06 (was the "Who you are connected
+%% to..." construction): states the contribution (fear as a new failure
+%% route) and what the poster shows (its interaction with heterogeneity
+%% and geometry).
 %%
 %% Baselineskip was 0, which is why the two rendered lines had that large uneven
 %% gap -- TeX falls back to \lineskip when \baselineskip cannot be honoured.
 {\fontsize{80}{80}\selectfont
-\textbf{Who} you are connected to decides
-\textbf{how easily} a panic ignites.
-\textbf{Fear} decides \textbf{how far} it gets.\par}% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
+\textbf{Fear} is a new way for nodes to fail.
+\textbf{This} is how fear interacts with heterogeneity and geometry.
+\par}% <-- CLOSED FONT BRACE HERE BEFORE THE FIGURE!
 \vspace{50pt}
 
 %% [REAL FIGURE — Comparison 1, heterogeneity (ER vs CM), n=10000, 500 trials/pt]
 %%
 %% Source: results/figures/poster_comparison.png, regenerable from
-%% results/processed/poster_comparison.json (hero data 301d560, five-point
-%% departure analysis d9edf19). Legend and fear encoding are baked into the PNG.
+%% results/processed/poster_comparison.json (hero data 301d560; departure
+%% analysis now 8-point after the mu-bar 0.5/0.6 densification arms,
+%% 0e739a1/d25f9f2; pipeline blind-gated AUDIT PASS S-066). Legend and fear
+%% encoding are baked into the PNG.
 %%
 %% GIRG joined this axis 2026-08-02 (C3b production run, 500 trials/cell,
 %% calibrated w_min=0.186377): Gary accepted the 9-curve figure as the hero,
@@ -84,12 +82,17 @@
 %% ceiling, keepaspectratio -- the width constraint binds; the legend +
 %% Sec 5.4 engine-disclosure row below is pulled up into the freed
 %% whitespace with the negative vspace.
-%% ⚠ PNG is matplotlib default DPI — fine on screen, regenerate at dpi >= 300
-%% before print (poster-queue item 5 polish).
+%% DPI: all poster figures verified 300 dpi (S-066; the old "regenerate
+%% before print" warning here was stale).
 \includegraphics[width=1\linewidth, height=1\textheight, keepaspectratio]{img/poster_comparison}\\
 
-%% Legend and disclosure side by side (Gary, 2026-08-04). The disclosure
-%% sentence must stay (item 2c): the headline comparison crosses engines.
+%% ⚠ §5.4 DISCLOSURE — RESOLVED by D-047 (Gary, 2026-08-06): the printed
+%% engine-split sentence is DELIBERATELY OMITTED from the poster (audience
+%% legibility — "other people in the audience won't get it"). This
+%% overrules the S-066 audit's carried condition with a recorded decision;
+%% the disclosure survives HERE and in okf/poster/presentation-script.md
+%% (spoken if asked). The hero mixes engines: ER on C++, power-law on
+%% Python, GIRG on both (cross-engine agreement verified, §5.4).
 \vspace{-250pt}
 \begin{minipage}[c]{0.55\linewidth}
     \centering
@@ -98,28 +101,32 @@
 \begin{minipage}[c]{0.42\linewidth}
     \raggedright
     \fontsize{35}{30}\selectfont % <-- MANUAL SIZE DIAL
-    Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$,
-    500 trials per point. Erd\H{o}s--R\'enyi simulated on the validated C++
-    engine; configuration model on the Python reference implementation;
-    GIRG on both (this figure's arms on Python, the $\bar\mu$-grid
-    densification in the sections below on C++; cross-engine agreement
-    verified).
+
+
+    Measured at matched mean degree $\langle k\rangle = 4.533$, $n = 10000$.
+
+    500 trials per point.
+
 \end{minipage}
 
 }{
-%%%% Bottom space of center column left intentionally clean
+%%%% Bottom space of center column left intentionally clean.
 
 }
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% LEFT COLUMN — the argument, in reading order
+%%%%%%%% LEFT COLUMN — the argument, in reading order (Gary's 2026-08-06
+%%%%%%%% structure: existing graph families -> contribution -> fear
+%%%%%%%% definition -> what we look for; QR lives in the RIGHT column; the
+%%%%%%%% D-046 model schematic lives on the QR demo site's landing screen,
+%%%%%%%% not on the poster).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Confidence \\
 Augmented\\
 Bootstrap \\
 Percolation\vspace{-0.4em}}  % <-- Pulls your name up closer to the title!
 
-\author{Gary Mei\vspace{-0.1em}}  % <-- Pulls the institution line up!
+\author{Gary Mei\vspace{.5em}}
 
 \institution{Georgia Tech ISyE - SURS\\
 Advisor: Prof.\ Souvik Dhara}
@@ -127,66 +134,77 @@ Advisor: Prof.\ Souvik Dhara}
 %% Place \raggedright HERE, after the header block, to wrap body text cleanly!
 \raggedright
 
-%% Pulls "The Setup" section up closer to the advisor line!
+%% Pulls the first section up closer to the advisor line!
 \vspace{-2.0em}
 
-\section{The Setup}
+\section{Existing Work}
 \vspace{-0.3em}
-The existing baseline (Janson) gives a bank exactly \textbf{one way to fail}: enough of its neighbors have already activated.
-
-\vspace{0.3em}
-Janson et al.\ solved that case on the Erd\H{o}s--R\'enyi graph, as bootstrap percolation with threshold $r$. I add a \textbf{second way for nodes to activate}.
-
-\vspace{-1.5em}
-\section{The Model}
-\vspace{-0.3em}
-A node is activated if either condition is met:
-\vspace{0.2em}
-% Converted equations to inline math ($...$) to save ~2 inches of vertical space!
-\begin{enumerate}[leftmargin=*, nosep, itemsep=0.3em]
-\item \textbf{Percolation:} At least $r$ of its neighbors have failed ($|\{j \sim i : j \in A_t\}| \geq r$).
-\item \textbf{Fear:} A Bernoulli variable with probability $f_ig_t$ that a node activates ($U_i < f_i\, g_t$).
+\begin{enumerate}
+    %% \H{o}/-- macro forms, not UTF-8 literals: the bold sans font
+    %% (ec-lmssbx10) has no precomposed ő or en-dash glyph and silently
+    %% drops them (rendered "ErdsRényi" -- caught in the S-066 verify pass).
+    \item \textbf{Erd\H{o}s--R\'enyi graph:} Independent edge probability $p$ between any two nodes.
+    \item \textbf{Power law configuration graph:} A few nodes (aka hubs) hold most edges; most nodes have very few.
+    \item \textbf{GIRG (Geometric Inhomogeneous Random Graph):} Power-law plus geometry; closer nodes are likelier to connect.
 \end{enumerate}
 
 \vspace{-1.5em}
-\section{The Comparisons}
+
+\section{My contribution}
+
 \vspace{-0.3em}
-We hold network size $n$ and average degree constant across all tests to isolate three items:
+A node now activates if \textbf{either}
+condition is met:
+\vspace{0.2em}
+% Converted equations to inline math ($...$) to save ~2 inches of vertical space!
+\begin{enumerate}[leftmargin=*, nosep, itemsep=0.3em]
+
+\item \text{Percolation:}
+At least $r$ of its neighbors have failed ($|\{j \sim i : j \in A_t\}| \geq r$).
+
+\item \textbf{Fear:}
+A Bernoulli variable with probability $f_ig_t$ that a node activates ($U_i < f_i\, g_t$).
+
+\end{enumerate}
+
+\vspace{-1.2em}
+\section{How is fear defined?}
+\vspace{-0.3em}
+%% g_t wording (S-066 fix): the engine's fear field is WINDOWED -- the
+%% average failed share over the last window_len=5 generations (uniform
+%% weights), NOT last generation alone. Keep the printed definition honest.
+\begin{enumerate}
+    \item $f_i \in [0,1]$: Node $i$'s fear susceptibility (1 = highest).
+    \item $g_t$: the share of nodes that failed recently --- averaged over
+    the last 5 generations.
+\end{enumerate}
+
+
+\vspace{-1.5em}
+\section{What We Look For}
+\vspace{-0.3em}
+Holding $n$ and $\langle k\rangle$ fixed, we isolate three effects:
 \vspace{0.2em}
 \begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
-  \item \textbf{Heterogeneity:} \\
-  Homogeneous degree distribution vs.\ heavy-tailed hubs.
-  \item \textbf{Geometry:} \\
-  Pure random connections vs.\ local spatial clustering.
-  \item \textbf{Fear:} \\
-  Baseline bootstrap percolation vs.\ confidence augmentation.
+
+  \item \textbf{Heterogeneity:}
+
+  homogeneous degrees vs.\ heavy-tailed hubs.
+
+  \item \textbf{Geometry:}
+
+  pure random links vs.\ local spatial clustering.
+
+  \item \textbf{Fear:}
+
+  baseline percolation vs.\ confidence augmentation.
+
 \end{itemize}
 
 \vfill
 
-%% QR Code relocated to the bottom of the left column (Side-by-Side Layout)
-\begin{center}
-\fcolorbox{tcRule}{tcCream}{%
-  \begin{minipage}{1\linewidth}
-    \vspace{1em}
-    \begin{minipage}[c]{0.58\linewidth}      % <-- Giant QR code container
-      \centering
-      \includegraphics[width=1.0\linewidth]{img/qrcode}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[c]{0.38\linewidth}      % <-- Text container
-      \raggedright
-      \color{tcInk}%\bfseries
-      \fontsize{36}{42}\selectfont           % <-- MANUAL SIZE DIAL: Dial up or down!
-      Scan to \\
-      interact \\
-      with live \\
-      graphs                                 % <-- Hyphenated to survive massive font scale
-    \end{minipage}
-    \vspace{0.8em}
-  \end{minipage}%
-}
-\end{center}
+%% [QR box lives at the bottom of the RIGHT column (Gary's 2026-08-06
+%% layout).]
 
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,60 +212,54 @@ We hold network size $n$ and average degree constant across all tests to isolate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright
 
-\vspace{-1.5em}
+\vspace{-1.9em}
 
-\section{Fear Amplifies}
-%% ⚠ DO NOT DROP THE DIAL SENTENCE (final paragraph). Without it this reads as a
-%% flat "always 3x", which is the exact claim S-058 caught and retracted on the
-%% advisor site: the multiplier is ~3x at moderate mu-bar but only ~1.5x at
-%% mu-bar = 0.1. It is constant IN n at fixed mu-bar (gated result, power-law/CM)
-%% -- not constant ACROSS mu-bar. See okf/next-actions.md, "Multiplier claim
-%% qualified".
-%% Famcompare provenance (2026-08-04): numbers from
-%% results/processed/famcompare_analysis.json (scripts/analyze_famcompare.py);
-%% figure scripts/plot_famcompare_ratio.py. Script-level self-checked, NOT
-%% blind-/verify-gated (same evidentiary status as Fear x Structure below).
-%% famcompare_analysis.json · 500 trials/cell · n=10000 · 95% bootstrap CIs in
-%% famcompare_analysis.json · ER's open points are lower bounds
-%% PRESENTER NOTES (2026-08-04, numbers refreshed after the CM rebase to the
-%% matched 4.5336 ensemble + extension to mu-bar=0.7): the panel below
-%% carries only the distilled claims; this is the talking script.
-%% Viewer-facing notes live on the poster-demo page (QR target).
+\section{Fear is an amplifier with a dial.}
+%% PANEL SWAP (Gary, 2026-08-06): this slot now shows
+%% results/figures/famcompare_probability.png -- P(systemic | mu-bar) at the
+%% bounded seed a=2 for power-law/GIRG/ER, mu-bar 0..1.0
+%% (scripts/plot_famcompare_probability.py, ext2 arms mu-bar {0.8,0.9,1.0}
+%% run 2026-08-06, base_seeds 20260806/07/08, 500 trials/cell, provenance
+%% guards extended). The famcompare_ratio multiplier figure and its >=26x /
+%% 6.6x / 8.3x claims moved OFF the poster.
+%% ⚠ EVIDENTIARY TIER: the probability panel + ext2 cells are post-S-066-gate,
+%% script-level self-checked (guard-protected, not blind-reviewed). The
+%% S-066 AUDIT PASS covers the hero + Fear-and-Structure pipelines and the
+%% (now unprinted) ratio pipeline.
+%% PRESENTER NOTES (kept for the talking script; the multiplier framing is
+%% still true, just no longer printed):
 %%   Fear's multiplier on the heavy-tailed families climbs with the dial:
-%%   ~1.3x at mu-bar=0.1, ~3x at 0.4, ~6.6x (power-law) / 8.3x (GIRG) at
-%%   0.7 -- none censored. (Flat-in-n at fixed mu-bar is the gated S-058
-%%   result, measured on the earlier 4.0-ensemble CM series.)
-%%   Amplification depends on structure. On a matched ER baseline, fear
-%%   multiplies ignition by at least ~25x, saturating at certainty from
-%%   mu-bar=0.2 onward (open points: every trial cascaded, true multiplier
-%%   higher). With a bounded seed (a=r=2), ER never ignites at ANY mu-bar
-%%   through 0.7 (0/500 everywhere): fear amplifies cascades the structure
-%%   makes possible; it cannot start them alone.
-%%   GEOMETRY NOTE (sentence cut 2026-08-04, Gary's Option A): on the
-%%   matched ensemble GIRG and power-law INTERLEAVE (GIRG 8.3x vs power-law
-%%   6.6x at 0.7; tied 0.2-0.5; GIRG below only at 0.1) with overlapping
-%%   CIs throughout. The earlier "geometry appears to damp it" reading came
-%%   from comparing GIRG-4.533 against the old CM-4.0 ensemble -- an
-%%   artifact, now corrected. Consistent with Fear and Structure below:
-%%   geometry doesn't measurably change fear's effect in either direction.
-\textbf{Fear is an amplifier with a dial.}
-\vspace{0.2em}
+%%   ~1.3x (power-law; GIRG is 0.8x there, below the no-effect line with a
+%%   wide CI [0.35, 1.75] -- direction-only) at mu-bar=0.1, ~3x at 0.4,
+%%   ~6.6x (power-law) / 8.3x (GIRG) at 0.7 -- none censored.
+%%   Amplification depends on structure. With a bounded seed (a=r=2), ER
+%%   stays at 0/500 through mu-bar=0.7, first ignites at 0.8 (9/500), then
+%%   7.6% at 0.9 and 25.6% at 1.0: fear amplifies cascades the structure
+%%   makes possible; only near-certain panic lets it start one on ER.
+%%   GEOMETRY NOTE: on the matched ensemble GIRG and power-law INTERLEAVE
+%%   with overlapping CIs throughout -- geometry doesn't measurably change
+%%   fear's effect in either direction.
+%\textbf{Fear is an amplifier with a dial.}
+%\vspace{0.2em}
 
-Without hubs, the effect of fear is drastic. With hubs, it is subdued.
+When we set $a = 2$, the Erd\H{o}s--R\'enyi graph doesn't activate at all
+until $\bar\mu = 0.8$ --- and even then in only $\sim$2\% of trials. The
+effects of fear on the GIRG and power-law model appear relatively equal.
 
 \begin{center}
-\fcolorbox{tcRule}{tcCream}{%
-  \begin{minipage}[t]{1\linewidth} % Natural aspect, no fixed height
-    \centering
-    %% width=1.1\linewidth is deliberate (Gary, 2026-08-04): the figure bleeds
-    %% ~5% past the box frame on each side; \makebox centers the overhang so
-    %% it is symmetric instead of pushing out the right edge only.
-    \makebox[\linewidth][c]{\includegraphics[width=1.1\linewidth, height=20in, keepaspectratio]{img/famcompare_ratio}}
-  \end{minipage}%
+\makebox[\linewidth][c]{% Forces centering even when wider than margins
+  \fcolorbox{tcRule}{tcCream}{%
+    \begin{minipage}[t]{1.2\linewidth} % Increased to 120% width
+      \centering
+      %% S-066: 0.70, square figure, width=height; sized so the column tail
+      %% (bullet 3 + Next Steps + QR) fits on-page.
+      \includegraphics[width=1\linewidth, height=20in, keepaspectratio]{img/famcompare_probability}
+    \end{minipage}%
+  }%
 }
 \end{center}
 
-\vspace{-1.5em}
+\vspace{-1.9em}
 
 \section{Fear and Structure}
 %% 2026-08-03: replaces the D-012 measured/predicted-RATIO framing (see
@@ -262,52 +274,78 @@ Without hubs, the effect of fear is drastic. With hubs, it is subdued.
 %% the figure instead flags points within 2.2x of the true structural floor
 %% a=r=2, where the floor -- not fear -- may be doing some of the compressing.
 %% Numbers below: verify from results/processed/poster_fear_structure.json,
-%% don't hand-copy. Self-checked (§5.4 gate covers the underlying comparison
-%% sweeps, not this derived percentage-decrease step on its own).
+%% don't hand-copy. Pipeline blind-gated AUDIT PASS S-066.
 %% 2026-08-04 (Gary): the ER-only (1-mu_bar)^2 dashed reference is REMOVED
-%% from the figure (cross-model comparison; the theory curve was the one
-%% non-measured element) and the y-axis is inverted so a decrease reads
-%% downward (0% at top, -100% at bottom). theory_curve stays in the JSON.
+%% from the figure and the y-axis is inverted so a decrease reads downward.
 %% Condensed 2026-08-04 (Gary): all analysis above the figure, nothing below.
-%% Dropped clause for the talking points: "(CM and GIRG move together, both
-%% well short of ER)" -- geometry adds nothing beyond hubs at the threshold.
+
 The same fear that cuts ER's tipping point by 65\% cuts the heavy-tailed
-networks' by only $\sim$35\% at $\bar\mu = 0.4$ --- hubs blunt fear's
-effect, and geometry doesn't change that. Fear also sharpens the transition
-faster as the network grows: $\nu(\mu = 0) = 5.61 \pm 0.18 \to
-\nu(\mu = 0.3) = 4.82 \pm 0.15$, verified.
+networks' by only $\sim$35\% at $\bar\mu = 0.4$. Hubs blunt fear's
+effect, and geometry doesn't change that.
+
+%% nu sentence kept off the print (Gary; ER-only claim, lives in the
+%% presentation script):
+%Fear also sharpens the transition faster as the network grows: $\nu(\mu = 0) = 5.61 \pm 0.18 \to\nu(\mu = 0.3) = 4.82 \pm 0.15$, verified.
+
+\vspace{1em}
 
 \begin{center}
-\fcolorbox{tcRule}{tcCream}{%
-  \begin{minipage}[t][7in][c]{1\linewidth}
-    \centering
-    \includegraphics[width=1\linewidth, height=7in, keepaspectratio]{img/poster_fear_structure}
-  \end{minipage}%
+\makebox[\linewidth][c]{% Forces centering even when wider than the margins
+  \fcolorbox{tcRule}{tcCream}{%
+    \begin{minipage}[t][6.5in][c]{1.2\linewidth} % Increased to 120% width
+      \centering
+      \includegraphics[width=1\linewidth, keepaspectratio]{img/poster_fear_structure}
+    \end{minipage}%
+  }
 }
 \end{center}
 
-\vspace{-1.5em}
+\vspace{0em}
 
-\section{How To Intervene}
-%% Q9 panel — retitled from "Where To Intervene" 2026-08-04 (Gary); body text
-%% removed from the poster and kept below as TALKING POINTS (Gary presents
-%% this section live). Mechanism rests on the AUDIT-PASS local-vs-global
-%% dichotomy (near-front fear failures are redundant; remote pairs nucleate
-%% new fronts at r=2). The quantitative nucleation law remains an honest
-%% negative (C-Q5(i)) — keep it qualitative.
+% \section{How To Intervene}
+%% INTERVENE PANEL CUT (Gary, 2026-08-06 final revision) -- section + the
+%% three printed AUDIT-PASS anchors + the "Next:" line removed from print
+%% to make room for the large QR box below. All of it lives on as SPOKEN
+%% material in okf/poster/presentation-script.md.
 %% TALKING POINTS:
 %%   In a network, fear near an active failure is harmless, because those
 %%   nearby nodes would likely fail anyway. The real danger is fear reaching
 %%   distant nodes and starting new chain reactions --- so intervention
 %%   should prioritize regions far from the crisis, not just the active
 %%   crisis zone.
+%%   Printed-anchor claims (all AUDIT-PASS: ignition gate C-Q4(iii); tilt
+%%   monotonicity C-Q4(i)/Task X; local-vs-global dichotomy C-Q5(iii)):
+%%   cap the concentration (tau>3: 0 systemic in 16,000 trials); calm the
+%%   hubs (beats periphery at every fear level); contain the news (local
+%%   fear ~ no fear). NOTE tau = degree-distribution tail exponent, not r.
 
-\vspace{-1.5em}
+%% QR box (bottom-right, Gary's 2026-08-06 layout, stacked + large). The
+%% demo's landing screen opens on the model schematic.
 
-\section{Next Steps}
-We are applying this framework to real-world SNAP networks.
+\vspace{.5em}
 
-\vfill
+\begin{center}
+\fcolorbox{tcRule}{tcCream}{%
+  \begin{minipage}{1\linewidth}
+    \vspace{0.5em}
+    \centering % Centers both the QR code and the text
+
+    % 1. THE QR CODE
+    % Changed from taking up 23% of the box to 50% (Dial this up to 0.7 or 0.8 if you want it huge)
+    \includegraphics[width=0.7\linewidth]{img/qrcode}
+
+    \vspace{0.5em} % Adds a little breathing room between the image and text
+
+    % 2. THE TEXT
+    \color{tcInk}%\bfseries
+    \fontsize{30}{38}\selectfont % Dialed up from 30/36 to 40/48!
+    Scan to interact
+    with live graphs
+
+    \vspace{0.5em}
+  \end{minipage}%
+}
+\end{center}
 
 }
 \end{document}

@@ -25,3 +25,4 @@ mutability: live
 - [Cache](cache/index.md)
 - [Decisions](decisions/index.md)
 - [Changes](changes/index.md)
+- [Verify](verify/index.md)

@@ -191,6 +191,17 @@ CM_MATCHED_PATHS = {
 }
 CM_LEGACY_N10000_PATH = f"results/q4_ignition_tau25_mumap_n{CM_MATCHED_N}_raw.json"
 
+# Extension raw paths -- single source of truth shared by the merge calls AND
+# the config-provenance groups in main(), so the certified paths cannot drift
+# from the merged ones.
+GIRG_EXT_PATHS = {
+    0.5: "results/poster_girg_mu50_raw.json",
+    0.6: "results/poster_girg_mu60_raw.json",
+    0.7: "results/poster_girg_mu70_raw.json",
+}
+ER_MATCHED_EXT_PATH = "results/famcompare_er_matched_n10000_ext_raw.json"
+ER_BOUNDED_EXT_PATH = "results/famcompare_er_bounded_n10000_ext_raw.json"
+
 CM_REBASE_NOTE = (
     "2026-08-04 REBASE: configuration_model's n=10000 famcompare source switched "
     "from the q4-sourced results/q4_ignition_tau25_mumap_n10000_raw.json (mean "
@@ -247,6 +258,71 @@ def validate_pinned_compat(meta_a, meta_b, rel_tol_p=PINNED_COMPAT_REL_TOL_P):
         if rel > rel_tol_p:
             mismatches.append(f"p: {pa} vs {pb} (relative diff {rel:.4%})")
     return mismatches
+
+
+def check_config_provenance(group_label, expected_graph_type, raw_paths):
+    """Bind every raw feeding one curve to its committed config and certify
+    the curve's graph-family identity (famcompare port of
+    analyze_poster_comparison.check_family_config_provenance, closing the
+    same hole in this pipeline: raw metadata persists NO graph params
+    (runner.py gap, hygiene-queued), and on the matched <k>=4.5336 ensemble
+    every metadata key validate_pinned_compat can see is identical across ER,
+    CM, and GIRG by design, so metadata-only checks cannot detect a raw
+    spliced into the wrong family).
+
+    Groups are per merged CURVE, not per family, because famcompare families
+    legitimately mix ensembles across n (CM is q4-sourced mean-degree-4.0 at
+    n=4000/20000 but matched 4.5336 at n=10000; girg's w_min is calibrated
+    per n) -- only raws merged into the SAME curve must share one
+    pinned_params.graph block.
+
+    For each raw path that exists on disk (absent raws are handled and
+    recorded by the loaders' skip logic): derive its config from the basename
+    (results/<name>_raw.json -> configs/<name>.json), require the config to
+    exist, to declare exactly this raw as output.raw_filepath, and to carry
+    pinned_params.graph.type == expected_graph_type (None for ER: gnp is the
+    default family, its configs carry graph: null). Then require every config
+    in the group to share ONE pinned_params.graph block. Raises ValueError on
+    any violation -- fail loud, never splice silently.
+    """
+    graph_blocks = {}
+    for raw_path in raw_paths:
+        if not os.path.exists(os.path.join(REPO_ROOT, raw_path)):
+            continue
+        base = os.path.basename(raw_path)
+        if not base.endswith("_raw.json"):
+            raise ValueError(
+                f"provenance[{group_label}]: raw path {raw_path!r} does not "
+                "end in '_raw.json'; cannot derive its config name"
+            )
+        cfg_path = os.path.join("configs", base[: -len("_raw.json")] + ".json")
+        if not os.path.exists(os.path.join(REPO_ROOT, cfg_path)):
+            raise ValueError(
+                f"provenance[{group_label}]: no committed config at {cfg_path} "
+                f"to certify graph-family provenance for raw {raw_path!r}"
+            )
+        with open(os.path.join(REPO_ROOT, cfg_path)) as f:
+            cfg = json.load(f)
+        declared = cfg.get("output", {}).get("raw_filepath")
+        if declared != raw_path:
+            raise ValueError(
+                f"provenance[{group_label}]: {cfg_path} declares "
+                f"output.raw_filepath={declared!r}, not {raw_path!r}"
+            )
+        gblock = cfg.get("pinned_params", {}).get("graph")
+        gtype = (gblock or {}).get("type")
+        if gtype != expected_graph_type:
+            raise ValueError(
+                f"provenance[{group_label}]: {cfg_path} has "
+                f"pinned_params.graph.type={gtype!r}, expected "
+                f"{expected_graph_type!r} -- raw from the wrong graph family"
+            )
+        graph_blocks[cfg_path] = json.dumps(gblock, sort_keys=True)
+    if len(set(graph_blocks.values())) > 1:
+        raise ValueError(
+            f"provenance[{group_label}]: member configs disagree on "
+            f"pinned_params.graph: {graph_blocks}"
+        )
 
 
 def cells_from_raw(raw, theta, seed_size=None):
@@ -423,6 +499,34 @@ def main():
     er_bounded_paths = {n: f"results/famcompare_er_bounded_n{n}_raw.json" for n in N_GRID}
     er_a05_paths = {n: f"results/famcompare_er_scaled_n{n}_raw.json" for n in N_GRID}
 
+    # --- Config-provenance certification, per merged curve (fail loud) ------
+    # One group per curve that merges (or could merge) raws; single-raw curves
+    # get the raw<->config binding + graph-type check with no identity pair.
+    provenance_groups = [
+        ("configuration_model/q4_n4000", "configuration_model", [cm_paths[4000]]),
+        ("configuration_model/q4_n20000", "configuration_model", [cm_paths[20000]]),
+        ("configuration_model/matched_n10000", "configuration_model",
+         list(CM_MATCHED_PATHS.values())),
+        ("girg/n4000", "girg", [girg_paths[4000]]),
+        ("girg/n20000", "girg", [girg_paths[20000]]),
+        ("girg/n10000+ext", "girg",
+         [girg_paths[10000]] + [GIRG_EXT_PATHS[mu] for mu in sorted(GIRG_EXT_PATHS)]),
+        ("erdos_renyi_matched/n4000", None, [er_matched_paths[4000]]),
+        ("erdos_renyi_matched/n20000", None, [er_matched_paths[20000]]),
+        ("erdos_renyi_matched/n10000+ext", None,
+         [er_matched_paths[10000], ER_MATCHED_EXT_PATH]),
+        ("erdos_renyi_bounded/n4000", None, [er_bounded_paths[4000]]),
+        ("erdos_renyi_bounded/n20000", None, [er_bounded_paths[20000]]),
+        ("erdos_renyi_bounded/n10000+ext", None,
+         [er_bounded_paths[10000], ER_BOUNDED_EXT_PATH]),
+        ("erdos_renyi_a05/n4000", None, [er_a05_paths[4000]]),
+        ("erdos_renyi_a05/n10000", None, [er_a05_paths[10000]]),
+        ("erdos_renyi_a05/n20000", None, [er_a05_paths[20000]]),
+    ]
+    for label, gtype, paths in provenance_groups:
+        check_config_provenance(label, gtype, paths)
+    print(f"config provenance certified for {len(provenance_groups)} curve groups")
+
     cm_cells, cm_commits, cm_skip = build_family("configuration_model", cm_paths, theta_by_n)
 
     # --- CM rebase: n=10000 from the matched poster_cm arms ------------------
@@ -501,40 +605,42 @@ def main():
         "rebase": cm_rebase_report,
     }
 
-    extension_reports["girg_mu50"] = merge_extension_cells(
-        "girg", girg_cells, girg_commits,
-        base_raw_path="results/famcompare_girg_n10000_raw.json",
-        ext_raw_path="results/poster_girg_mu50_raw.json",
-        theta=theta_by_n[EXT_N], mus=[0.5], seed_size=2,
-    )
-    extension_reports["girg_mu60"] = merge_extension_cells(
-        "girg", girg_cells, girg_commits,
-        base_raw_path="results/famcompare_girg_n10000_raw.json",
-        ext_raw_path="results/poster_girg_mu60_raw.json",
-        theta=theta_by_n[EXT_N], mus=[0.6], seed_size=2,
-    )
-    extension_reports["girg_mu70"] = merge_extension_cells(
-        "girg", girg_cells, girg_commits,
-        base_raw_path="results/famcompare_girg_n10000_raw.json",
-        ext_raw_path="results/poster_girg_mu70_raw.json",
-        theta=theta_by_n[EXT_N], mus=[0.7], seed_size=2,
-    )
+    for mu in sorted(GIRG_EXT_PATHS):
+        extension_reports[f"girg_mu{int(round(mu * 100))}"] = merge_extension_cells(
+            "girg", girg_cells, girg_commits,
+            base_raw_path=girg_paths[EXT_N],
+            ext_raw_path=GIRG_EXT_PATHS[mu],
+            theta=theta_by_n[EXT_N], mus=[mu], seed_size=2,
+        )
     extension_reports["erdos_renyi_matched"] = merge_extension_cells(
         "erdos_renyi_matched", er_m_cells, er_m_commits,
-        base_raw_path="results/famcompare_er_matched_n10000_raw.json",
-        ext_raw_path="results/famcompare_er_matched_n10000_ext_raw.json",
+        base_raw_path=er_matched_paths[EXT_N],
+        ext_raw_path=ER_MATCHED_EXT_PATH,
         theta=theta_by_n[EXT_N], mus=EXT_MU_GRID, seed_size=279,
     )
     extension_reports["erdos_renyi_bounded"] = merge_extension_cells(
         "erdos_renyi_bounded", er_b_cells, er_b_commits,
-        base_raw_path="results/famcompare_er_bounded_n10000_raw.json",
-        ext_raw_path="results/famcompare_er_bounded_n10000_ext_raw.json",
+        base_raw_path=er_bounded_paths[EXT_N],
+        ext_raw_path=ER_BOUNDED_EXT_PATH,
         theta=theta_by_n[EXT_N], mus=EXT_MU_GRID, seed_size=2,
     )
 
     for fam, rep in extension_reports.items():
         print(f"extension[{fam}]: merged_mu={rep.get('merged_mu')} missing_mu={rep.get('missing_mu')} "
               f"mismatches={rep.get('mismatches')} note={rep.get('note')}")
+        # Fail loud on data incompatibility (S-064 splice lesson; critic
+        # finding S-066): a pinned-param mismatch, or an expected mu cell
+        # missing from an ext raw that IS present on disk, means wrong or
+        # corrupted data -- never ship a silently thinner/spliced curve.
+        # A wholly absent ext raw (note about missing base/ext) stays a
+        # tolerated, recorded skip (poster-deadline fallback, unchanged).
+        if rep.get("mismatches"):
+            raise ValueError(f"extension[{fam}]: pinned-param mismatch: {rep['mismatches']}")
+        if rep.get("missing_mu") and rep.get("note") == "merged":
+            raise ValueError(
+                f"extension[{fam}]: ext raw present but expected mu cells "
+                f"missing/incomplete: {rep['missing_mu']}"
+            )
 
     def ratio_series(cells_by_n):
         """Ratio series over whatever mu_bar cells are present in each n's dict

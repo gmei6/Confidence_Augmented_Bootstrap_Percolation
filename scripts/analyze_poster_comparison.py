@@ -103,8 +103,9 @@ def check_family_compatibility(family: str, member_raws: list[tuple[str, dict]])
 
 
 def check_family_config_provenance(family: str, specs: list[dict]) -> None:
-    """Bind every family member to its committed config and assert the family
-    shares ONE pinned_params.graph block.
+    """Bind every family member to its committed config, assert the family
+    shares ONE pinned_params.graph block, and bind each spec's mu slot to its
+    config's sweep.mean_fear_grid.
 
     The raw files do not persist graph.type/tau/w_min/alpha_g (runner.py
     metadata gap, hygiene-queued), so in a matched ensemble -- where
@@ -115,7 +116,10 @@ def check_family_config_provenance(family: str, specs: list[dict]) -> None:
     multi-raw ER tail specs) is bound to its own config, derived from the
     raw's basename: results/<name>_raw.json -> configs/<name>.json. Each
     config must exist, must declare exactly that raw as its
-    output.raw_filepath, and every config in the family must share one
+    output.raw_filepath, must sweep exactly [spec's mu] (so a raw sitting in
+    the wrong mu slot of its own family fails loudly too -- basename-derived
+    binding alone certifies raw<->config self-consistency, not slot
+    correctness), and every config in the family must share one
     pinned_params.graph block. Runs after os.chdir(base_dir), so paths are
     repo-relative.
     """
@@ -142,6 +146,14 @@ def check_family_config_provenance(family: str, specs: list[dict]) -> None:
                 raise ValueError(
                     f"family '{family}': {cfg_path} declares "
                     f"output.raw_filepath={declared!r}, not {raw_path!r}"
+                )
+            grid = cfg.get("sweep", {}).get("mean_fear_grid")
+            if grid != [spec["mu"]]:
+                raise ValueError(
+                    f"family '{family}': {cfg_path} sweeps "
+                    f"mean_fear_grid={grid!r}, but spec {spec['key']!r} sits in "
+                    f"the mu={spec['mu']!r} slot -- raw/config assigned to the "
+                    "wrong mu slot"
                 )
             graph_blocks[cfg_path] = json.dumps(
                 cfg.get("pinned_params", {}).get("graph"), sort_keys=True
@@ -203,6 +215,17 @@ def main() -> None:
                     f"{spec['key']}: engine mismatch merging {raw_rel}: "
                     f"{this_engine} vs {engine_resolved}"
                 )
+            # Cell-level mu binding: every cell in the raw must carry exactly
+            # this spec slot's mean_fear. Complements the config-level
+            # mean_fear_grid check in check_family_config_provenance -- this
+            # one catches a raw whose cells disagree with its own config.
+            for cell in raw_data["results"]:
+                if cell.get("mean_fear") != spec["mu"]:
+                    raise ValueError(
+                        f"{spec['key']}: {raw_rel} carries a cell with "
+                        f"mean_fear={cell.get('mean_fear')!r}, expected "
+                        f"{spec['mu']!r} -- raw is in the wrong mu slot"
+                    )
             all_cells.extend(raw_data["results"])
 
         ac0 = janson_a_c(n, p, r)
@@ -256,7 +279,13 @@ def main() -> None:
         a05_low = interpolate_crossing(seed_sizes, ci_upp, 0.5)
         a05_high = interpolate_crossing(seed_sizes, ci_low, 0.5)
 
-        avg_realized_mu = float(np.mean(realized_mus)) if len(realized_mus) > 0 else spec["mu"]
+        # Honest field: None (JSON null) when the raws persist no realized_fear
+        # data -- which is currently ALL of them (runner.py gap). The old
+        # fallback echoed spec["mu"] into a measurement-named field, making it
+        # structurally incapable of disagreeing with the input. Nominal mu is
+        # already published as mean_fear; the mu-slot cross-checks above are
+        # the actual guard.
+        avg_realized_mu = float(np.mean(realized_mus)) if len(realized_mus) > 0 else None
 
         curves_summary[spec["key"]] = {
             "key": spec["key"],
@@ -365,7 +394,8 @@ def main() -> None:
     print("\n--- SUMMARY TABLE ---")
     print(f"{'Key':<16} {'Engine':<8} {'mu_real':<8} {'Interior':<8} {'a_0.5 (Point)':<14} {'a_0.5 (95% CI)':<20} {'a/a_c (Point)':<14} {'a/a_c (95% CI)':<20}")
     for k, v in curves_summary.items():
-        print(f"{k:<16} {v['engine_resolved']:<8} {v['realized_mu_bar']:<8.3f} {v['interior_point_count']:<8} {v['a05_point']:<14.2f} [{v['a05_ci_lower']:.2f}, {v['a05_ci_upper']:.2f}] {'':<3} {v['a_over_ac_point']:<14.4f} [{v['a_over_ac_ci_lower']:.4f}, {v['a_over_ac_ci_upper']:.4f}]")
+        mu_real = f"{v['realized_mu_bar']:.3f}" if v["realized_mu_bar"] is not None else "n/a"
+        print(f"{k:<16} {v['engine_resolved']:<8} {mu_real:<8} {v['interior_point_count']:<8} {v['a05_point']:<14.2f} [{v['a05_ci_lower']:.2f}, {v['a05_ci_upper']:.2f}] {'':<3} {v['a_over_ac_point']:<14.4f} [{v['a_over_ac_ci_lower']:.4f}, {v['a_over_ac_ci_upper']:.4f}]")
 
     print("\n--- D-012 COMPARISON TABLE ---")
     print(f"{'Family':<22} {'mu':<5} {'Measured (CI)':<26} {'Predicted':<12} {'Ratio':<8} {'Below Floor (<r=2)?':<20}")

@@ -1,8 +1,8 @@
 {
   "metadata": {
     "script": "scripts/analyze_famcompare.py",
-    "git_commit": "0e739a1e2d6a2b3e8a3bfc62abb356cdefb0791c",
-    "timestamp": "2026-08-04T20:59:53.064076",
+    "git_commit": "c7140e95637ba715cb62998ccd87d15f69fed822",
+    "timestamp": "2026-08-06T07:37:11.478516",
     "n_grid_full": [
       4000,
       10000,

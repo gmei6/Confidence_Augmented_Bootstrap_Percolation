@@ -71,10 +71,8 @@
 %% [REAL FIGURE — Comparison 1, heterogeneity (ER vs CM), n=10000, 500 trials/pt]
 %%
 %% Source: results/figures/poster_comparison.png, regenerable from
-%% results/processed/poster_comparison.json (hero data 301d560; departure
-%% analysis now 8-point after the mu-bar 0.5/0.6 densification arms,
-%% 0e739a1/d25f9f2; pipeline blind-gated AUDIT PASS S-066). Legend and fear
-%% encoding are baked into the PNG.
+%% results/processed/poster_comparison.json (hero data 301d560, five-point
+%% departure analysis d9edf19). Legend and fear encoding are baked into the PNG.
 %%
 %% GIRG joined this axis 2026-08-02 (C3b production run, 500 trials/cell,
 %% calibrated w_min=0.186377): Gary accepted the 9-curve figure as the hero,
@@ -86,8 +84,8 @@
 %% ceiling, keepaspectratio -- the width constraint binds; the legend +
 %% Sec 5.4 engine-disclosure row below is pulled up into the freed
 %% whitespace with the negative vspace.
-%% DPI: all poster figures verified 300 dpi (S-066; the old "regenerate
-%% before print" warning here was stale).
+%% ⚠ PNG is matplotlib default DPI — fine on screen, regenerate at dpi >= 300
+%% before print (poster-queue item 5 polish).
 \includegraphics[width=1\linewidth, height=1\textheight, keepaspectratio]{img/poster_comparison}\\
 
 %% Legend and disclosure side by side (Gary, 2026-08-04). The disclosure
@@ -109,12 +107,7 @@
 \end{minipage}
 
 }{
-%%%% Bottom space of center column left intentionally clean.
-%% (The D-046 model schematic was tried here first, but the full-bleed hero
-%% -- Gary's 2026-08-04 dial, height=1\textheight cap with the -250pt legend
-%% pull-up -- already overflows into this 0.25\textheight strip, pushing any
-%% strip content off-page. The schematic lives in the left column instead,
-%% wide-short. Verified by tectonic compile, S-066.)
+%%%% Bottom space of center column left intentionally clean
 
 }
 }{
@@ -134,28 +127,20 @@ Advisor: Prof.\ Souvik Dhara}
 %% Place \raggedright HERE, after the header block, to wrap body text cleanly!
 \raggedright
 
-%% Pulls the first section up closer to the advisor line!
+%% Pulls "The Setup" section up closer to the advisor line!
 \vspace{-2.0em}
 
-%% D-046 restructure (S-065 advisor directives, applied S-066): baseline-first
-%% linear arc -- what exists (who uses the baseline and why it IS the
-%% baseline) -> our model (the added fear route + schematic to point at) ->
-%% goal (the explicit motivating sentence) -> what we are looking for.
-%% Replaces the old The Setup / The Model / The Comparisons flow; the content
-%% of those sections survives inside the new one.
-\section{The Baseline}
+\section{The Setup}
 \vspace{-0.3em}
-Cascading failures --- bank runs, blackouts, epidemics --- are standardly
-modeled as \textbf{bootstrap percolation}: a node fails once at least $r$
-neighbors have. It is \emph{the} baseline because it is exactly solvable
-(Janson et al., sharp thresholds on Erd\H{o}s--R\'enyi). One failure route:
-\textbf{who is connected to whom}.
+The existing baseline (Janson) gives a bank exactly \textbf{one way to fail}: enough of its neighbors have already activated.
+
+\vspace{0.3em}
+Janson et al.\ solved that case on the Erd\H{o}s--R\'enyi graph, as bootstrap percolation with threshold $r$. I add a \textbf{second way for nodes to activate}.
 
 \vspace{-1.5em}
-\section{Our Model}
+\section{The Model}
 \vspace{-0.3em}
-We add a second, psychological route. A node now activates if \textbf{either}
-condition is met:
+A node is activated if either condition is met:
 \vspace{0.2em}
 % Converted equations to inline math ($...$) to save ~2 inches of vertical space!
 \begin{enumerate}[leftmargin=*, nosep, itemsep=0.3em]
@@ -163,50 +148,45 @@ condition is met:
 \item \textbf{Fear:} A Bernoulli variable with probability $f_ig_t$ that a node activates ($U_i < f_i\, g_t$).
 \end{enumerate}
 
-%% [MODEL SCHEMATIC — D-046 item 8. Illustration, not a simulation output:
-%% deterministic hand-placed drawing, scripts/plot_model_schematic.py ->
-%% results/figures/model_schematic.png (300 dpi, wide-short ~2.9:1 aspect so
-%% the column keeps the comparisons + QR; verified by tectonic compile).
-%% Red = failed (advisor's directive), rust ring = fear level f_i (distinct
-%% encoding), teal = healthy; palette identical to tcRust/tcTeal/tcCream.]
-\vspace{0.3em}
-\begin{center}
-\fcolorbox{tcRule}{tcCream}{%
-  \begin{minipage}[t]{0.97\linewidth}
-    \centering
-    \includegraphics[width=1\linewidth]{img/model_schematic}
-  \end{minipage}%
-}
-\end{center}
-
-\vspace{-1.2em}
-\section{Goal}
-\vspace{-0.3em}
-%% D-046 item 9 — the motivating sentence, stated explicitly rather than left
-%% implicit in the figure comparisons (advisor's phrasing directive, S-065).
-Real networks have \textbf{hubs} (heterogeneity) and \textbf{locality}
-(geometry); the baseline has neither. In addition to the baseline, we need
-to model the effect of \textbf{fear} on networks \emph{with} heterogeneity
-and geometry --- this project.
-
 \vspace{-1.5em}
-\section{What We Look For}
+\section{The Comparisons}
 \vspace{-0.3em}
-Holding $n$ and $\langle k\rangle$ fixed, we isolate three effects:
+We hold network size $n$ and average degree constant across all tests to isolate three items:
 \vspace{0.2em}
 \begin{itemize}[leftmargin=*, nosep, itemsep=0.3em]
-  \item \textbf{Heterogeneity:} homogeneous degrees vs.\ heavy-tailed hubs.
-  \item \textbf{Geometry:} pure random links vs.\ local spatial clustering.
-  \item \textbf{Fear:} baseline percolation vs.\ confidence augmentation.
+  \item \textbf{Heterogeneity:} \\
+  Homogeneous degree distribution vs.\ heavy-tailed hubs.
+  \item \textbf{Geometry:} \\
+  Pure random connections vs.\ local spatial clustering.
+  \item \textbf{Fear:} \\
+  Baseline bootstrap percolation vs.\ confidence augmentation.
 \end{itemize}
 
 \vfill
 
-%% [QR box MOVED to the bottom of the RIGHT column (S-066): the D-046
-%% baseline-first restructure + model schematic could not fit in this column
-%% alongside the giant QR (verified by compile -- the box fell off the
-%% page). The bottom-right corner is the conventional QR slot and pairs
-%% with Next Steps. Flagged to Gary.]
+%% QR Code relocated to the bottom of the left column (Side-by-Side Layout)
+\begin{center}
+\fcolorbox{tcRule}{tcCream}{%
+  \begin{minipage}{1\linewidth}
+    \vspace{1em}
+    \begin{minipage}[c]{0.58\linewidth}      % <-- Giant QR code container
+      \centering
+      \includegraphics[width=1.0\linewidth]{img/qrcode}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[c]{0.38\linewidth}      % <-- Text container
+      \raggedright
+      \color{tcInk}%\bfseries
+      \fontsize{36}{42}\selectfont           % <-- MANUAL SIZE DIAL: Dial up or down!
+      Scan to \\
+      interact \\
+      with live \\
+      graphs                                 % <-- Hyphenated to survive massive font scale
+    \end{minipage}
+    \vspace{0.8em}
+  \end{minipage}%
+}
+\end{center}
 
 }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,9 +214,7 @@ Holding $n$ and $\langle k\rangle$ fixed, we isolate three effects:
 %% carries only the distilled claims; this is the talking script.
 %% Viewer-facing notes live on the poster-demo page (QR target).
 %%   Fear's multiplier on the heavy-tailed families climbs with the dial:
-%%   ~1.3x (power-law; GIRG is 0.8x there, below the no-effect line with a
-%%   wide CI [0.35, 1.75] -- direction-only, see the GEOMETRY NOTE) at
-%%   mu-bar=0.1, ~3x at 0.4, ~6.6x (power-law) / 8.3x (GIRG) at
+%%   ~1.3x at mu-bar=0.1, ~3x at 0.4, ~6.6x (power-law) / 8.3x (GIRG) at
 %%   0.7 -- none censored. (Flat-in-n at fixed mu-bar is the gated S-058
 %%   result, measured on the earlier 4.0-ensemble CM series.)
 %%   Amplification depends on structure. On a matched ER baseline, fear
@@ -330,30 +308,6 @@ faster as the network grows: $\nu(\mu = 0) = 5.61 \pm 0.18 \to
 We are applying this framework to real-world SNAP networks.
 
 \vfill
-
-%% QR box (moved from the left column, S-066 -- see the note there). Sized
-%% for the right column's remaining slack; scannable from conversation
-%% distance.
-\begin{center}
-\fcolorbox{tcRule}{tcCream}{%
-  \begin{minipage}{1\linewidth}
-    \vspace{0.3em}
-    \begin{minipage}[c]{0.30\linewidth}      % <-- QR code container
-      \centering
-      \includegraphics[width=1.0\linewidth]{img/qrcode}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[c]{0.64\linewidth}      % <-- Text container
-      \raggedright
-      \color{tcInk}%\bfseries
-      \fontsize{30}{36}\selectfont           % <-- MANUAL SIZE DIAL: Dial up or down!
-      Scan to interact \\
-      with live graphs
-    \end{minipage}
-    \vspace{0.3em}
-  \end{minipage}%
-}
-\end{center}
 
 }
 \end{document}

@@ -149,7 +149,16 @@ N_GRID = [4000, 10000, 20000]
 BASE_MU_GRID = [0.0, 0.1, 0.2, 0.3, 0.4]
 EXT_MU_GRID = [0.5, 0.6, 0.7]
 EXT_N = 10000  # extension cells exist at n=10000 only
-MU_GRID = BASE_MU_GRID + EXT_MU_GRID  # full grid for metadata/reference only
+# 2026-08-06 (Gary): mu_bar in {0.8,0.9,1.0}, CM/GIRG/erdos_renyi_bounded only
+# (erdos_renyi_matched NOT extended -- it's excluded from the probability
+# figure this feeds and was never requested). Own base_seed per config
+# (20260806/07/08, see scripts/run_famcompare_ext2.py), distinct from the
+# base/ext files' base_seed=42, so these cells don't share an RNG substream
+# with the mu_bar=0.0/0.5-0.7 cells (same collision class as the EXT_MU_GRID
+# RNG-STREAM NOTE below).
+EXT2_MU_GRID = [0.8, 0.9, 1.0]
+EXT2_N = 10000
+MU_GRID = BASE_MU_GRID + EXT_MU_GRID + EXT2_MU_GRID  # full grid for metadata/reference only
 EXPECTED_TRIALS = 500
 BOOTSTRAP_DRAWS = 10000
 BOOTSTRAP_SEED = 20260803
@@ -201,6 +210,12 @@ GIRG_EXT_PATHS = {
 }
 ER_MATCHED_EXT_PATH = "results/famcompare_er_matched_n10000_ext_raw.json"
 ER_BOUNDED_EXT_PATH = "results/famcompare_er_bounded_n10000_ext_raw.json"
+
+# Second-round extension (mu_bar in {0.8,0.9,1.0}, 2026-08-06) -- one
+# consolidated raw per family, unlike the first round's per-mu GIRG files.
+CM_EXT2_PATH = "results/famcompare_cm_matched_n10000_ext2_raw.json"
+GIRG_EXT2_PATH = "results/famcompare_girg_n10000_ext2_raw.json"
+ER_BOUNDED_EXT2_PATH = "results/famcompare_er_bounded_n10000_ext2_raw.json"
 
 CM_REBASE_NOTE = (
     "2026-08-04 REBASE: configuration_model's n=10000 famcompare source switched "
@@ -531,6 +546,12 @@ def main():
         ("erdos_renyi_a05/n4000", None, [er_a05_paths[4000]]),
         ("erdos_renyi_a05/n10000", None, [er_a05_paths[10000]]),
         ("erdos_renyi_a05/n20000", None, [er_a05_paths[20000]]),
+        # Second-round extension (mu_bar in {0.8,0.9,1.0}, 2026-08-06):
+        # erdos_renyi_matched deliberately NOT extended here (not requested,
+        # excluded from the probability figure this feeds).
+        ("configuration_model/matched_n10000_ext2", "configuration_model", [CM_EXT2_PATH]),
+        ("girg/n10000_ext2", "girg", [GIRG_EXT2_PATH]),
+        ("erdos_renyi_bounded/n10000_ext2", None, [ER_BOUNDED_EXT2_PATH]),
     ]
     for label, gtype, paths in provenance_groups:
         check_config_provenance(label, gtype, paths)
@@ -641,6 +662,27 @@ def main():
         theta=theta_by_n[EXT_N], mus=EXT_MU_GRID, seed_size=2,
     )
 
+    # --- Second-round extension (mu_bar in {0.8,0.9,1.0}, 2026-08-06) -------
+    # erdos_renyi_matched NOT extended here (see EXT2_MU_GRID comment above).
+    extension_reports["configuration_model_ext2"] = merge_extension_cells(
+        "configuration_model", cm_cells, cm_commits,
+        base_raw_path=CM_MATCHED_PATHS[0.0],
+        ext_raw_path=CM_EXT2_PATH,
+        theta=theta_by_n[CM_MATCHED_N], mus=EXT2_MU_GRID, seed_size=CM_MATCHED_SEED_SIZE,
+    )
+    extension_reports["girg_ext2"] = merge_extension_cells(
+        "girg", girg_cells, girg_commits,
+        base_raw_path=girg_paths[EXT_N],
+        ext_raw_path=GIRG_EXT2_PATH,
+        theta=theta_by_n[EXT_N], mus=EXT2_MU_GRID, seed_size=2,
+    )
+    extension_reports["erdos_renyi_bounded_ext2"] = merge_extension_cells(
+        "erdos_renyi_bounded", er_b_cells, er_b_commits,
+        base_raw_path=er_bounded_paths[EXT_N],
+        ext_raw_path=ER_BOUNDED_EXT2_PATH,
+        theta=theta_by_n[EXT_N], mus=EXT2_MU_GRID, seed_size=2,
+    )
+
     for fam, rep in extension_reports.items():
         print(f"extension[{fam}]: merged_mu={rep.get('merged_mu')} missing_mu={rep.get('missing_mu')} "
               f"mismatches={rep.get('mismatches')} note={rep.get('note')}")
@@ -737,6 +779,9 @@ def main():
             "mu_grid_base": BASE_MU_GRID,
             "mu_grid_extended": EXT_MU_GRID,
             "mu_grid_extended_n": EXT_N,
+            "mu_grid_extended2": EXT2_MU_GRID,
+            "mu_grid_extended2_n": EXT2_N,
+            "mu_grid_extended2_families": ["configuration_model", "girg", "erdos_renyi_bounded"],
             "extension_reports": extension_reports,
             "cm_ensemble_by_n": {
                 str(n): (

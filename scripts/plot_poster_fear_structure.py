@@ -46,6 +46,7 @@ FAMILY_STYLE = {
     "girg": {"color": "#8E4A72", "marker": "P", "label": "GIRG"},
 }
 BG_COLOR = "#F6F3EA"
+SURFACE = "#FCFBF6"
 TEXT_COLOR = "#1E2530"
 
 # Ink hierarchy + font/spine treatment, matched to plot_famcompare_ratio.py's
@@ -59,6 +60,11 @@ GRID_COLOR = (0.118, 0.145, 0.188, 0.12)
 
 FIGSIZE = (7.0, 6.0)
 DPI = 300
+# Padding applied by the tight-bbox crop in the final savefig call below --
+# this fixes the image-top-to-title gap in the saved PNG, so it's factored
+# out here to also drive the title-to-axes gap (see main()) to the same
+# physical distance.
+PAD_INCHES = 0.08
 
 # famcompare's TITLE_FS/SUBTITLE_FS/AXIS_LABEL_FS/TICK_FS constants, scaled
 # by this figure's canvas width vs. famcompare's 10in-wide canvas
@@ -99,7 +105,7 @@ def main() -> None:
     })
 
     fig, ax = plt.subplots(figsize=FIGSIZE, dpi=DPI)
-    ax.set_facecolor(BG_COLOR)
+    ax.set_facecolor(SURFACE)
 
     for fam, rows in family_curves.items():
         style = FAMILY_STYLE.get(fam, {"color": "#333333", "marker": "s", "label": fam})
@@ -110,12 +116,17 @@ def main() -> None:
 
         # Plain line + markers -- no CI errorbars (owner call, 2026-08-04):
         # the poster reads cleaner without them and the underlying comparison
-        # sweeps are already verified elsewhere.
+        # sweeps are already verified elsewhere. Weight/marker treatment
+        # matched to plot_famcompare_probability.py's style (2026-08-06):
+        # thicker round-capped strokes, markers edged in the panel SURFACE
+        # color rather than plain white, all scaled by _SCALE to match
+        # famcompare's visual weight on this smaller canvas.
         ax.plot(
             mus, pct,
             color=style["color"], marker=style["marker"], linestyle="-",
-            linewidth=2.0, markersize=8,
-            markeredgecolor="white", markeredgewidth=0.8,
+            linewidth=round(4.0 * _SCALE, 1), markersize=round(11.5 * _SCALE, 1),
+            markerfacecolor=style["color"], markeredgecolor=SURFACE,
+            markeredgewidth=round(2.0 * _SCALE, 1), solid_capstyle="round",
             label=style["label"], zorder=3,
         )
 
@@ -148,23 +159,42 @@ def main() -> None:
     ax.set_yticklabels(["0%", "-25%", "-50%", "-75%", "-100%"])
     ax.tick_params(axis="both", labelsize=TICK_FS, colors=INK_SECONDARY)
 
-    # Title/subtitle split (owner call, 2026-08-04): large bold title in
-    # primary ink via fig.suptitle, small regular-weight subtitle in faded
-    # secondary ink via ax.set_title -- same hierarchy as famcompare's
-    # place_title_block, without needing its custom wrap/layout machinery
-    # since this figure's single-axes layout + bbox_inches="tight" already
-    # auto-sizes around whatever title/subtitle height is needed.
-    fig.suptitle("Hubs Blunt Fear's Effect", fontsize=TITLE_FS,
-                 fontweight="bold", color=INK_PRIMARY, y=0.985)
-    ax.set_title(
-        "n = 10,000, each family normalized to its own μ̄ = 0 crossing",
-        fontsize=SUBTITLE_FS, fontweight="normal", color=INK_SECONDARY,
-        pad=14,
-    )
-    # No separate `alpha=` kwarg: GRID_COLOR is already an RGBA tuple with
-    # its own alpha (0.12, matching famcompare's GRID constant) -- passing
-    # `alpha=` here would override that component instead of compounding it.
-    ax.grid(True, linestyle=":", linewidth=1.0, color=GRID_COLOR)
+    # Title placement (2026-08-06 revision): the saved PNG is cropped with
+    # bbox_inches="tight", pad_inches=PAD_INCHES, which fixes the gap from
+    # the image's top edge to the title's top edge at exactly PAD_INCHES (the
+    # title is the topmost artist, and tight-crop only trims OUTER
+    # whitespace -- it never touches spacing between artists). To make the
+    # title-to-axes gap match that same physical distance, probe the title's
+    # rendered height (same technique as plot_famcompare_probability.py's
+    # dynamic gap calc) and push the axes top down by PAD_INCHES below the
+    # title's measured bottom edge.
+    TITLE_TEXT = "Hubs Blunt Fear's Effect"
+    TITLE_Y = 0.985
+    probe = fig.text(0.5, TITLE_Y, TITLE_TEXT, fontsize=TITLE_FS,
+                      fontweight="bold", ha="center", va="top")
+    fig.canvas.draw()
+    title_h = probe.get_window_extent(renderer=fig.canvas.get_renderer()).height / (
+        FIGSIZE[1] * DPI)
+    probe.remove()
+    gap_frac = PAD_INCHES / FIGSIZE[1]
+    title_bottom = TITLE_Y - title_h
+    # Bottom margin reserved for the footer caption (added below), matching
+    # famcompare's AX_BOTTOM reservation -- default subplots() spacing only
+    # leaves room for the xlabel, so without this the footer collides with it.
+    fig.subplots_adjust(top=title_bottom - gap_frac, bottom=0.16)
+
+    fig.suptitle(TITLE_TEXT, fontsize=TITLE_FS,
+                 fontweight="bold", color=INK_PRIMARY, y=TITLE_Y)
+    # Caption moved from an ax.set_title subtitle (wedged between title and
+    # axes) to a footer below the plot, matching plot_famcompare_probability.py's
+    # 2026-08-06 revision (caption under the x-axis label, not under the title).
+    fig.text(0.5, 0.025,
+              "n = 10,000, each family normalized to its own μ̄ = 0 crossing",
+              fontsize=round(16 * _SCALE, 1), ha="center", va="bottom",
+              color=INK_SECONDARY)
+    # Horizontal-only, solid gridlines -- matches famcompare's axis="y" grid
+    # (was dotted on both axes; famcompare never grids the x-axis).
+    ax.grid(True, which="major", axis="y", color=GRID_COLOR, lw=1.0, zorder=0)
     ax.set_axisbelow(True)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
@@ -179,7 +209,16 @@ def main() -> None:
     # placed it at "upper left" before: away from where the lines are).
     # Still the empty corner now that the errorbars/near-floor rings are
     # gone -- rechecked, nothing else moved into it.
-    ax.legend(loc="lower left", fontsize=9.5, frameon=True, facecolor=BG_COLOR, edgecolor=AXIS_LINE)
+    # Frameless, color-matched legend text -- matches famcompare's legend
+    # style (no box; each label colored/bolded to match its line) instead
+    # of the bordered box this figure used before.
+    legend = ax.legend(loc="lower left", frameon=False,
+                        fontsize=round(15 * _SCALE, 1),
+                        handlelength=1.6, borderaxespad=0.6)
+    label_to_color = {s["label"]: s["color"] for s in FAMILY_STYLE.values()}
+    for text in legend.get_texts():
+        text.set_color(label_to_color[text.get_text()])
+        text.set_fontweight("bold")
 
     # Footnote/provenance text block removed (owner call, 2026-08-04):
     # provenance stays recorded in the JSON metadata (results/processed/
@@ -189,7 +228,7 @@ def main() -> None:
     # carry a dead band at the bottom.
     fig.savefig(
         FIG_PATH, dpi=DPI, facecolor=BG_COLOR,
-        bbox_inches="tight", pad_inches=0.08,
+        bbox_inches="tight", pad_inches=PAD_INCHES,
         metadata={"Creation Time": None, "Software": None},
     )
     plt.close(fig)

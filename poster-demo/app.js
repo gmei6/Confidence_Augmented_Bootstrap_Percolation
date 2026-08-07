@@ -17,6 +17,7 @@ var COLORS = {
   structural: '#BD5A2E',   // rust
   fear: '#8E4A72',         // plum
   seed: '#E8834B',         // brighter rust: the initial shock
+  hub: '#E8C547',          // amber ring: the 3 most-connected nodes (structure screens only)
   // Edges have to READ as structure on a phone in daylight, so they are drawn
   // well above a hairline alpha. Three tiers, all still dimmer than the opaque
   // nodes: live links, links touching something that has already failed, and
@@ -48,6 +49,47 @@ var ST = { HEALTHY: 0, SEED: 1, STRUCTURAL: 2, FEAR: 3 };
 var PHASES = [
   { kind: 'landing' },
   {
+    kind: 'structure', badge: 'Erdős–Rényi · structure only',
+    traces: ['traces/phase1_er_mu0.json'],
+    headline: 'Erdős–Rényi: every pair connects independently.',
+    caption: function (tr) {
+      return 'Every bank has the same odds of a link to every other bank, no ' +
+        'bank is special. Node size here shows the number of connections; ' +
+        'notice how uniform they are. The yellow nodes are the 3 nodes with the ' +
+        'highest number of edges on this graph, and they are barely bigger than ' +
+        'anyone else. n = ' + tr.params.n + ', mean degree ≈ ' +
+        tr.summary.mean_degree.toFixed(1) + '.';
+    }
+  },
+  {
+    kind: 'structure', badge: 'Power-law · structure only',
+    traces: ['traces/phase3_powerlaw_mu0.json'],
+    headline: 'Power-law: a few hubs hold most edges.',
+    caption: function (tr) {
+      return 'Most banks have only a handful of links. A couple of hubs hold ' +
+        'hundreds. Node size = number of connections. The yellow nodes are the ' +
+        '3 nodes with the highest number of edges, the giants driving this shape. ' +
+        'n = ' + tr.params.n + ', mean degree ≈ ' +
+        tr.summary.mean_degree.toFixed(1) + '.';
+    }
+  },
+  {
+    kind: 'structure', badge: 'GIRG · structure only',
+    traces: ['traces/phase6_girg_mu04.json'],
+    headline: 'GIRG: hubs, plus geometry.',
+    caption: function (tr) {
+      return 'Same kind of hubs as before, but now every bank sits somewhere ' +
+        'on a map, and nearby banks are more likely to connect. That is what ' +
+        'makes the layout below meaningful, not arbitrary. Same rule as before: ' +
+        'the yellow nodes are the 3 nodes with the highest number of edges. ' +
+        'n = ' + tr.params.n + ', mean degree ≈ ' +
+        tr.summary.mean_degree.toFixed(1) + '.';
+    },
+    measured: 'All three networks you just saw are matched to about the same ' +
+      'mean degree, the difference is shape, not density. That is the same ' +
+      'matching the poster’s comparisons use at full scale.'
+  },
+  {
     kind: 'single', badge: 'Erdős–Rényi · fear 0 · two-bank shock',
     traces: ['traces/phase1_er_mu0.json']
   },
@@ -57,7 +99,7 @@ var PHASES = [
     measured: 'Measured, not asserted: over 400 graph seeds at this size, a ' +
       'two-bank shock never ignited with fear off, and ignited in 4 of 400 with ' +
       'fear on. At the poster’s n = 10,000 it ignites in 0 of 500 at every ' +
-      'fear level — fear amplifies cascades the structure allows, it cannot ' +
+      'fear level, fear amplifies cascades the structure allows, it cannot ' +
       'start them alone.'
   },
   {
@@ -72,18 +114,18 @@ var PHASES = [
     kind: 'single', badge: 'Same graph · fear 0.7',
     traces: ['traces/phase5_powerlaw_mu07.json'],
     measured: 'Phases 3–5 hold the graph and the two starting banks bit-for-bit ' +
-      'identical — same seed, same layout. Only the fear level changes. What ' +
+      'identical, same seed, same layout. Only the fear level changes. What ' +
       'they show is fear accelerating and extending a cascade the structure was ' +
       'already going to sustain, not fear starting one; that is the next screen.'
   },
   {
     kind: 'stacked', badge: 'Power-law vs GIRG · both at fear 0.4',
     traces: ['traces/phase4_powerlaw_mu04.json', 'traces/phase6_girg_mu04.json'],
-    labels: ['power-law — no geometry', 'GIRG — hubs on a map'],
+    labels: ['power-law, no geometry', 'GIRG, hubs on a map'],
     headline: 'Does geometry change the story?',
     caption: 'Top: the heavy-tailed network from the last three screens. Bottom: the ' +
       'same kind of hubs, but every bank now sits somewhere on a map and links ' +
-      'prefer near neighbours — so the bottom panel is drawn at its real ' +
+      'prefer near neighbours, so the bottom panel is drawn at its real ' +
       'coordinates. Same fear, same average number of links (4.2 vs 4.1), same ' +
       'two-bank shock.',
     measured: 'Geometry changes what the burn looks like, not whether it burns: ' +
@@ -92,21 +134,10 @@ var PHASES = [
       'sit essentially on top of each other.'
   },
   {
-    kind: 'chooser',
-    traces: ['traces/phase7_trial1.json', 'traces/phase7_trial2.json',
-             'traces/phase7_trial3.json'],
-    cards: [
-      { name: 'Run A', hint: 'scan order k = 0' },
-      { name: 'Run B', hint: 'scan order k = 2' },
-      { name: 'Run C', hint: 'scan order k = 24' }
-    ],
-    measured: 'Of 400 runs on this one network, 266 never got past the first bank, ' +
-      '85 sputtered and died, and 42 took most of the system. Every one of those ' +
-      '42 was started by fear — at fear 0 the structural rule cannot fire from ' +
-      'a single failure, so the count would be exactly 0. The project’s ' +
-      'measured population result, over freshly drawn networks at full size, is an ' +
-      'ignition rate of about 1 − e^(−fear): roughly a third at fear 0.4. ' +
-      'One small network is a single draw from that population, not the population.'
+    kind: 'explorer'
+    // No static traces[] here on purpose: the active trace depends on live UI
+    // selections (model + knob chips), resolved at runtime against
+    // traces/phase11_manifest.json. See renderExplorerScreen()/playExplorerCombo().
   }
 ];
 
@@ -124,13 +155,15 @@ function loadTrace(path) {
 }
 
 /* --------------------------------------------------------------------- player */
-function Player(card, trace, label) {
+function Player(card, trace, label, structureOnly) {
   this.card = card;
   this.trace = trace;
   this.canvas = card.querySelector('canvas');
   this.ctx = this.canvas.getContext('2d');
   this.statEl = card.querySelector('.panel-stat');
   this.label = label;
+  this.structureOnly = !!structureOnly;
+  this.hubIndices = this.structureOnly ? topHubIndices(trace, 3) : null;
   this.n = trace.params.n;
   this.maxRound = trace.rounds.length - 1;
   this.state = new Uint8Array(this.n);
@@ -158,6 +191,21 @@ function degreeScale(trace) {
     scale[i] = Math.min(DEG_MAX, Math.max(DEG_MIN, Math.pow(deg[i] / median, DEG_EXP)));
   }
   return scale;
+}
+
+/* The k node ids with the most edges, for the structure-only screens' hub ring.
+ * Ties break by node id (stable sort), which is fine for a visual highlight. */
+function topHubIndices(trace, k) {
+  var n = trace.params.n, i;
+  var deg = new Uint16Array(n);
+  for (i = 0; i < trace.edges.length; i++) {
+    deg[trace.edges[i][0]]++;
+    deg[trace.edges[i][1]]++;
+  }
+  var order = [];
+  for (i = 0; i < n; i++) { order.push(i); }
+  order.sort(function (a, b) { return deg[b] - deg[a]; });
+  return new Set(order.slice(0, k));
 }
 
 /* GIRG lives on a torus, so a link between x = 0.02 and x = 0.98 is a SHORT
@@ -195,7 +243,9 @@ Player.prototype.reset = function () {
   this.failedAt.fill(-1);
   this.round = 0;
   this.counts = { failed: 0, structural: 0, fear: 0 };
-  this.applyRound(0);
+  // structure-only screens (the meet-the-three-families intro) show the raw
+  // graph, no shock -- skip applying the round-0 seed so every node stays healthy.
+  if (!this.structureOnly) { this.applyRound(0); }
   this.roundStart = performance.now();
 };
 
@@ -277,7 +327,9 @@ Player.prototype.draw = function (now, cb) {
     var fresh = this.failedAt[i] === this.round && pop < 1;
     var rad = r * this.degScale[i] * (st === ST.HEALTHY ? 0.88 : 1.0) *
               (fresh ? 1 + 1.1 * (1 - pop) : 1);
-    var col = st === ST.HEALTHY ? COLORS.healthy
+    var isHub = this.hubIndices && this.hubIndices.has(i);
+    var col = isHub ? COLORS.hub
+            : st === ST.HEALTHY ? COLORS.healthy
             : st === ST.SEED ? COLORS.seed
             : st === ST.STRUCTURAL ? COLORS.structural : COLORS.fear;
 
@@ -321,13 +373,37 @@ Player.prototype.draw = function (now, cb) {
 };
 
 /* ---------------------------------------------------------------- controller */
+/* Element-id sets so the shared playback plumbing (sizeCards/updateProgress/
+ * updateReadout) can target either the phases-1-9 demo stage or the
+ * explorer's own stage without a second copy of that plumbing. Player,
+ * makeCard, loadTrace, frame() and startPlayback() are unchanged either way,
+ * only which DOM ids get written to changes. */
+var STAGE_DEMO = {
+  progress: 'progress', progressFill: 'progressFill',
+  generation: 'generation', readout: 'readout', canvasWrap: 'canvasWrap'
+};
+var STAGE_EXPLORER = {
+  progress: 'explorerProgress', progressFill: 'explorerProgressFill',
+  generation: 'explorerGeneration', readout: 'explorerReadout',
+  canvasWrap: 'explorerCanvasWrap'
+};
+
 var app = {
   phase: 0,
-  trial: null,
   players: [],
   playing: false,
   lastStep: 0,
-  cb: false
+  cb: false,
+  structureOnly: false,
+  stage: STAGE_DEMO,
+  explorer: {
+    model: 'gnp',
+    knobs: {
+      gnp: { mean_degree_target: 4.5 },
+      configuration_model: { tau: 2.5 },
+      girg: { tau: 2.5, alpha_g: 1.2, mean_degree_target: 4.5 }
+    }
+  }
 };
 
 function makeCard(label, withStat) {
@@ -340,7 +416,7 @@ function makeCard(label, withStat) {
 }
 
 function sizeCards(stacked) {
-  var wrap = $('canvasWrap');
+  var wrap = $(app.stage.canvasWrap);
   var w = wrap.clientWidth || 320;
   var vh = window.innerHeight;
   var cards = wrap.querySelectorAll('.canvas-card');
@@ -351,7 +427,7 @@ function sizeCards(stacked) {
 }
 
 function showScreen(id) {
-  ['screen-landing', 'screen-demo', 'screen-chooser'].forEach(function (s) {
+  ['screen-landing', 'screen-demo', 'screen-explorer'].forEach(function (s) {
     $(s).classList.toggle('active', s === id);
   });
 }
@@ -377,11 +453,9 @@ function renderDots() {
 
 function updateNav() {
   var back = $('backBtn'), next = $('nextBtn');
-  back.disabled = app.phase === 0 && app.trial === null;
+  back.disabled = app.phase === 0;
   if (app.phase === 0) {
     next.textContent = 'Begin →';
-  } else if (app.trial !== null) {
-    next.textContent = 'Pick another →';
   } else if (app.phase === PHASES.length - 1) {
     next.textContent = 'Poster notes →';
   } else {
@@ -389,8 +463,8 @@ function updateNav() {
   }
 }
 
-function showError(msg) {
-  var wrap = $('canvasWrap');
+function showError(msg, wrapId) {
+  var wrap = $(wrapId || 'canvasWrap');
   wrap.innerHTML = '<div class="error"><strong>Could not load the cascade traces.</strong><br>' +
     msg + '<br><br>If you opened this file directly from disk, the browser blocks ' +
     'reading the trace JSONs. Serve the folder instead: ' +
@@ -400,7 +474,6 @@ function showError(msg) {
 function goto(i) {
   if (i < 0 || i >= PHASES.length) { return; }
   app.phase = i;
-  app.trial = null;
   app.players = [];
   app.playing = false;
   renderDots();
@@ -408,55 +481,229 @@ function goto(i) {
   var ph = PHASES[i];
 
   if (ph.kind === 'landing') { showScreen('screen-landing'); return; }
-  if (ph.kind === 'chooser') { showScreen('screen-chooser'); renderChooser(ph); return; }
+  if (ph.kind === 'explorer') { showScreen('screen-explorer'); renderExplorerScreen(); return; }
   showScreen('screen-demo');
-  mountTraces(ph, ph.traces, ph.kind === 'stacked');
+  mountTraces(ph, ph.traces, ph.kind === 'stacked', ph.kind === 'structure');
 }
 
-var chooserReady = false;
-function renderChooser(ph) {
-  var box = $('trialCards');
-  if (chooserReady) { return; }
-  Promise.all(ph.traces.map(loadTrace)).then(function (traces) {
-    box.innerHTML = '';
-    chooserReady = true;
-    traces.forEach(function (tr, idx) {
-      var meta = ph.cards[idx];
-      var btn = document.createElement('button');
-      btn.className = 'trial-card';
-      btn.innerHTML = '<div class="t-name">' + meta.name + '</div>' +
-        '<div class="t-sub">Seed bank #' + tr.rounds[0].seed[0] +
-        ' · trial seed ' + tr.seeds.trial + '</div>' +
-        '<div class="t-hint">' + meta.hint + ' · outcome hidden until you play it</div>';
-      btn.addEventListener('click', function () { playTrial(idx); });
-      box.appendChild(btn);
+/* --------------------------------------------------------------- explorer */
+/* The explorer screen never simulates any more than any other screen does:
+ * traces/phase11_manifest.json (dumped by
+ * scripts/dump_poster_demo_explorer_traces.py) is the lookup table from
+ * (model, knob values) to a precomputed trace path. Selecting a model or a
+ * chip just resolves a new row in that table and replays it through the same
+ * Player/loadTrace/startPlayback plumbing every other screen uses. */
+
+function closeEnough(a, b) { return Math.abs(a - b) < 1e-6; }
+
+var KNOB_DEFS = {
+  gnp: [
+    { key: 'mean_degree_target', label: 'mean degree', presetKey: 'mean_degree' }
+  ],
+  configuration_model: [
+    { key: 'tau', label: 'tau (tail heaviness)', presetKey: 'tau' }
+  ],
+  girg: [
+    { key: 'tau', label: 'tau (tail heaviness)', presetKey: 'tau' },
+    { key: 'alpha_g', label: 'alpha_g (geometry strength)', presetKey: 'alpha_g' },
+    { key: 'mean_degree_target', label: 'mean degree', presetKey: 'mean_degree' }
+  ]
+};
+
+var explorerManifestPromise = null;
+function loadExplorerManifest() {
+  if (!explorerManifestPromise) {
+    explorerManifestPromise = fetch('traces/phase11_manifest.json').then(function (r) {
+      if (!r.ok) { throw new Error('phase11_manifest.json -> HTTP ' + r.status); }
+      return r.json();
     });
-  }).catch(function (e) {
-    box.innerHTML = '<div class="error">Could not load the trial traces: ' + e.message +
-      '. Serve this folder over HTTP (<code>python3 -m http.server</code>).</div>';
+  }
+  return explorerManifestPromise;
+}
+
+var explorerPickerReady = false;
+function wireModelPicker() {
+  var btns = document.querySelectorAll('#modelPicker .seg-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function (e) {
+      var m = e.currentTarget.dataset.model;
+      if (m === app.explorer.model) { return; }
+      app.explorer.model = m;
+      renderExplorerScreen();
+    });
+  }
+}
+
+function updateModelPickerActive() {
+  var btns = document.querySelectorAll('#modelPicker .seg-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', btns[i].dataset.model === app.explorer.model);
+  }
+}
+
+function modelBadge(model) {
+  if (model === 'gnp') { return 'Erdős–Rényi · graph explorer'; }
+  if (model === 'configuration_model') { return 'Power-law · graph explorer'; }
+  return 'GIRG · graph explorer';
+}
+
+function renderKnobRows(manifest) {
+  var model = app.explorer.model;
+  var presets = manifest.presets[model];
+  var current = app.explorer.knobs[model];
+  var box = $('knobRows');
+  box.innerHTML = '';
+  KNOB_DEFS[model].forEach(function (def) {
+    var values = presets[def.presetKey];
+    var row = document.createElement('div');
+    row.className = 'knob-row';
+    var label = document.createElement('div');
+    label.className = 'knob-label';
+    label.textContent = def.label;
+    row.appendChild(label);
+    var chips = document.createElement('div');
+    chips.className = 'knob-chips';
+    values.forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.className = 'chip' + (closeEnough(current[def.key], v) ? ' active' : '');
+      btn.textContent = String(v);
+      btn.addEventListener('click', function () {
+        if (closeEnough(current[def.key], v)) { return; }
+        current[def.key] = v;
+        renderExplorerScreen();
+      });
+      chips.appendChild(btn);
+    });
+    row.appendChild(chips);
+    box.appendChild(row);
   });
 }
 
-function playTrial(idx) {
-  var ph = PHASES[PHASES.length - 1];
-  app.trial = idx;
-  showScreen('screen-demo');
-  $('backToTrials').hidden = false;
-  mountTraces(ph, [ph.traces[idx]], false, ph.cards[idx].name);
-  updateNav();
+/* Resolve the live UI selection to one row of the manifest, matching every
+ * knob in app.explorer.knobs[model] against combo.knobs, not by re-deriving
+ * a trace_id string. */
+function findExplorerCombo(manifest) {
+  var model = app.explorer.model;
+  var knobs = app.explorer.knobs[model];
+  var combos = manifest.combos;
+  for (var i = 0; i < combos.length; i++) {
+    var c = combos[i];
+    if (c.model !== model) { continue; }
+    var match = true;
+    for (var key in knobs) {
+      if (!knobs.hasOwnProperty(key)) { continue; }
+      if (!closeEnough(c.knobs[key], knobs[key])) { match = false; break; }
+    }
+    if (match) { return c; }
+  }
+  return null;
+}
+
+/* Computed-not-chosen disclosure: power-law's mean degree is never a knob, so
+ * it is always surfaced; GIRG's degree IS a knob but an emergent one (w_min
+ * was bisected to hit it on an ensemble average), so it is only surfaced when
+ * a single draw's residual against the target isn't tiny. Erdos-Renyi's
+ * degree is solved exactly, nothing to disclose. */
+function renderComputedReadout(combo, trace) {
+  var box = $('computedReadout');
+  var html = '';
+  if (combo.model === 'configuration_model') {
+    html = 'Computed, not chosen: mean degree is not a knob on this path, tau = ' +
+      combo.knobs.tau + ' realised <strong>' + trace.summary.mean_degree.toFixed(2) +
+      '</strong> links per bank on average.';
+  } else if (combo.model === 'girg') {
+    var target = combo.knobs.mean_degree_target;
+    var achieved = (combo.realized_mean_degree != null) ? combo.realized_mean_degree
+      : trace.summary.mean_degree;
+    var residual = Math.abs(achieved - target);
+    if (residual > 0.1) {
+      html = 'Computed, not chosen: <span class="flag">this draw realised mean degree ' +
+        '<strong>' + achieved.toFixed(2) + '</strong>, off the target ' + target + ' by ' +
+        residual.toFixed(2) + '</span>. GIRG has no direct degree knob, w_min was bisected ' +
+        'to hit this target on an ensemble average, a single heavy-tailed draw can still ' +
+        'land off it.';
+    }
+  }
+  if (html) { box.innerHTML = html; box.hidden = false; } else { box.hidden = true; }
+}
+
+function playExplorerCombo(manifest) {
+  updateModelPickerActive();
+  var combo = findExplorerCombo(manifest);
+  $('computedReadout').hidden = true;
+  $('explorerProgressFill').style.width = '0%';
+  $('explorerProgress').classList.remove('done');
+
+  if (!combo || !combo.trace_path) {
+    app.players = [];
+    $('explorerCanvasWrap').innerHTML = '';
+    $('explorerBadge').textContent = modelBadge(app.explorer.model);
+    $('explorerHeadline').textContent = 'This combination is not available.';
+    $('explorerCaption').textContent = combo
+      ? ('This combination did not produce a usable trace during generation (' +
+         (combo.status || 'unknown reason') +
+         (combo.diagnostics ? ', ' + combo.diagnostics : '') +
+         '). Pick another combination.')
+      : 'No precomputed trace matches this selection, pick another combination.';
+    $('explorerReadout').textContent = '';
+    $('explorerGeneration').textContent = '';
+    return;
+  }
+
+  app.stage = STAGE_EXPLORER;
+  $('explorerCanvasWrap').innerHTML = '';
+  $('explorerHeadline').textContent = 'Loading…';
+
+  var mySeq = ++mountSeq;
+  loadTrace(combo.trace_path).then(function (trace) {
+    if (mySeq !== mountSeq) { return; }   // a later selection won the race
+    var fx = manifest.fixed_cascade_params;
+    $('explorerBadge').textContent = modelBadge(app.explorer.model);
+    $('explorerHeadline').textContent = trace.text.headline;
+    $('explorerCaption').textContent = trace.text.caption + ' Fixed for every combination ' +
+      'on this screen: n = ' + fx.n + ', one bank fails, fear ' + fx.mean_fear + '.';
+    $('explorerMeasured').hidden = true;
+    renderComputedReadout(combo, trace);
+
+    var card = makeCard(null, false);
+    $('explorerCanvasWrap').appendChild(card);
+    sizeCards(false);
+    app.players = [new Player(card, trace, null, false)];
+    startPlayback();
+  }).catch(function (e) {
+    if (mySeq === mountSeq) { showError(e.message, 'explorerCanvasWrap'); }
+  });
+}
+
+function renderExplorerScreen() {
+  loadExplorerManifest().then(function (manifest) {
+    if (!explorerPickerReady) {
+      wireModelPicker();
+      explorerPickerReady = true;
+    }
+    renderKnobRows(manifest);
+    playExplorerCombo(manifest);
+  }).catch(function (e) {
+    showError('Could not load traces/phase11_manifest.json: ' + e.message, 'explorerCanvasWrap');
+  });
 }
 
 var mountSeq = 0;
 
-function mountTraces(ph, paths, stacked, trialName) {
+function mountTraces(ph, paths, stacked, structureOnly) {
+  app.stage = STAGE_DEMO;
   var wrap = $('canvasWrap');
   wrap.innerHTML = '';
-  $('backToTrials').hidden = app.trial === null;
+  app.structureOnly = !!structureOnly;
   $('badge').textContent = ph.badge || 'Power-law · one failed bank · fear 0.4';
   $('headline').textContent = 'Loading…';
   $('readout').textContent = '';
   $('progressFill').style.width = '0%';       // don't leave the last phase's bar full
   $('progress').classList.remove('done');
+  $('progress').hidden = !!structureOnly;     // no cascade plays on a structure-only screen
+  $('actionRow').hidden = !!structureOnly;    // nothing to replay
+  $('generation').hidden = !!structureOnly;   // no rounds advance on a structure-only screen
+  $('generation').textContent = '';
   $('caption').textContent = '';
   $('measured').hidden = true;
 
@@ -464,8 +711,10 @@ function mountTraces(ph, paths, stacked, trialName) {
   Promise.all(paths.map(loadTrace)).then(function (traces) {
     if (mySeq !== mountSeq) { return; }   // a later navigation won the race
     var head = ph.headline || traces[0].text.headline;
-    $('headline').textContent = trialName ? trialName + ' — ' + head : head;
-    $('caption').textContent = ph.caption || traces[0].text.caption;
+    $('headline').textContent = head;
+    var captionText = typeof ph.caption === 'function' ? ph.caption(traces[0])
+      : (ph.caption || traces[0].text.caption);
+    $('caption').textContent = captionText;
     if (ph.measured) { $('measured').textContent = ph.measured; $('measured').hidden = false; }
 
     app.players = traces.map(function (tr, i) {
@@ -475,9 +724,14 @@ function mountTraces(ph, paths, stacked, trialName) {
     });
     sizeCards(stacked);
     app.players = app.players.map(function (o, i) {
-      return new Player(o.card, o.trace, stacked ? ph.labels[i] : null);
+      return new Player(o.card, o.trace, stacked ? ph.labels[i] : null, structureOnly);
     });
-    startPlayback();
+    if (structureOnly) {
+      app.players.forEach(function (p) { p.reset(); });
+      app.playing = false;
+    } else {
+      startPlayback();
+    }
   }).catch(function (e) {
     if (mySeq === mountSeq) { showError(e.message); }
   });
@@ -494,9 +748,9 @@ function startPlayback() {
  * bar; it tracks the longer of the two cascades. */
 function updateProgress(curR, maxR, allDone) {
   var pct = allDone || maxR <= 0 ? 100 : Math.round(100 * curR / maxR);
-  $('progressFill').style.width = pct + '%';
-  $('progress').setAttribute('aria-valuenow', String(pct));
-  $('progress').classList.toggle('done', pct >= 100);
+  $(app.stage.progressFill).style.width = pct + '%';
+  $(app.stage.progress).setAttribute('aria-valuenow', String(pct));
+  $(app.stage.progress).classList.toggle('done', pct >= 100);
 }
 
 function updateReadout() {
@@ -506,6 +760,7 @@ function updateReadout() {
   var maxR = Math.max.apply(null, app.players.map(function (q) { return q.maxRound; }));
   var curR = Math.max.apply(null, app.players.map(function (q) { return q.round; }));
   updateProgress(curR, maxR, allDone);
+  $(app.stage.generation).textContent = 'Generation ' + curR;
   var parts = [];
   if (app.players.length === 1) {
     parts.push('<b>' + p.counts.failed + '</b> of ' + p.n + ' down');
@@ -518,7 +773,7 @@ function updateReadout() {
     });
   }
   if (allDone) { parts.push('cascade finished'); }
-  $('readout').innerHTML = parts.join(' · ');
+  $(app.stage.readout).innerHTML = parts.join(' · ');
 }
 
 function frame(now) {
@@ -537,12 +792,10 @@ function frame(now) {
 
 /* ------------------------------------------------------------------- wiring */
 function next() {
-  if (app.trial !== null) { goto(PHASES.length - 1); return; }
   if (app.phase === PHASES.length - 1) { $('notesOverlay').classList.add('open'); return; }
   goto(app.phase + 1);
 }
 function back() {
-  if (app.trial !== null) { goto(PHASES.length - 1); return; }
   goto(app.phase - 1);
 }
 
@@ -552,7 +805,9 @@ $('beginBtn').addEventListener('click', function () { goto(1); });
 $('replayBtn').addEventListener('click', function () {
   if (app.players.length) { startPlayback(); }
 });
-$('backToTrials').addEventListener('click', function () { goto(PHASES.length - 1); });
+$('explorerReplayBtn').addEventListener('click', function () {
+  if (app.players.length) { startPlayback(); }
+});
 $('notesBtn').addEventListener('click', function () { $('notesOverlay').classList.add('open'); });
 $('closeNotes').addEventListener('click', function () { $('notesOverlay').classList.remove('open'); });
 
@@ -571,7 +826,7 @@ document.addEventListener('keydown', function (e) {
   }
   if (e.key === 'ArrowRight') { next(); }
   if (e.key === 'ArrowLeft') { back(); }
-  if (e.key === 'r' && app.players.length) { startPlayback(); }
+  if (e.key === 'r' && app.players.length && !app.structureOnly) { startPlayback(); }
 });
 
 var resizeTimer = null;

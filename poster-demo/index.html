@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="TwoCascade — an interactive walk through confidence-augmented bootstrap percolation: how fear amplifies financial cascades.">
+    <meta name="description" content="TwoCascade, an interactive walk through confidence-augmented bootstrap percolation: how fear amplifies financial cascades.">
     <meta name="color-scheme" content="dark">
-    <title>TwoCascade — interactive demo</title>
+    <title>TwoCascade, interactive demo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -25,20 +25,14 @@
     <!-- ------------------------------------------------------------ phase 0 -->
     <section class="screen active" id="screen-landing">
         <h1>TwoCascade</h1>
-        <p class="tagline">Banks fail when their neighbours fail — and when they are
+        <p class="tagline">Banks fail when their neighbours fail, and when they are
             simply afraid. Watch what each of those does on its own.</p>
         <button class="begin" id="beginBtn">Tap to begin</button>
         <div class="legend-key">
             <span><i class="swatch healthy"></i> still standing</span>
-            <span><i class="swatch structural"></i> failed — neighbours</span>
-            <span><i class="swatch fear"></i> failed — fear</span>
+            <span><i class="swatch structural"></i> failed, neighbours</span>
+            <span><i class="swatch fear"></i> failed, fear</span>
         </div>
-        <img class="model-fig" src="img/model_schematic_dark.png"
-             alt="A small network diagram: a rust cluster of banks failed through their neighbours, one dashed-outlined bank about to fail because two neighbours are down, and one distant plum bank that failed purely from fear.">
-        <p class="sub">Seven screens, about two minutes. Every cascade you are about
-            to see was computed ahead of time by the project's Python reference
-            engine — nothing here is a cartoon, and nothing is re-rolled in your
-            browser.</p>
     </section>
 
     <!-- ---------------------------------------------------- phases 1-6 stage -->
@@ -49,6 +43,7 @@
              aria-valuemax="100" aria-valuenow="0" aria-label="Cascade progress">
             <div class="progress-fill" id="progressFill"></div>
         </div>
+        <div class="generation" id="generation"></div>
         <div id="canvasWrap"></div>
         <div class="readout" id="readout"></div>
         <details class="explainer" id="explainer">
@@ -56,21 +51,42 @@
             <p id="caption"></p>
             <p class="measured" id="measured" hidden></p>
         </details>
-        <div class="row">
+        <div class="row" id="actionRow">
             <button class="ghost" id="replayBtn">↻ Replay</button>
-            <button class="ghost" id="backToTrials" hidden>← Pick another run</button>
         </div>
     </section>
 
-    <!-- ------------------------------------------------------ phase 7 chooser -->
-    <section class="screen" id="screen-chooser">
-        <div class="badge">Power-law · one failed bank · fear 0.4</div>
-        <h2 class="headline">One bank fails. Watch.</h2>
-        <p class="chooser-intro">Same network as the last four screens. One bank goes
-            down — too few to ever hand anyone the two failed neighbours the
-            structural rule needs, so anything that spreads from here was started by
-            fear. Three real runs, drawn from the same 400 that were scanned. Pick one.</p>
-        <div class="trial-cards" id="trialCards"></div>
+    <!-- ---------------------------------------------- explorer (final screen) -->
+    <section class="screen" id="screen-explorer">
+        <div class="badge" id="explorerBadge">Graph explorer</div>
+        <h2 class="headline" id="explorerHeadline">Pick a network, watch one bank fail.</h2>
+        <p class="chooser-intro">Same fixed setup every time, one bank fails, fear on
+            at 0.4. Nothing here simulates, each combination below is a precomputed
+            trace, same as every other screen.</p>
+
+        <div class="model-picker" id="modelPicker" role="tablist" aria-label="Graph model">
+            <button class="seg-btn" data-model="gnp">Erdős–Rényi</button>
+            <button class="seg-btn" data-model="configuration_model">Power-law</button>
+            <button class="seg-btn" data-model="girg">GIRG</button>
+        </div>
+        <div id="knobRows"></div>
+        <div class="computed-readout" id="computedReadout" hidden></div>
+
+        <div class="progress" id="explorerProgress" role="progressbar" aria-valuemin="0"
+             aria-valuemax="100" aria-valuenow="0" aria-label="Cascade progress">
+            <div class="progress-fill" id="explorerProgressFill"></div>
+        </div>
+        <div class="generation" id="explorerGeneration"></div>
+        <div id="explorerCanvasWrap"></div>
+        <div class="readout" id="explorerReadout"></div>
+        <details class="explainer" id="explorerExplainer">
+            <summary>what am I looking at?</summary>
+            <p id="explorerCaption"></p>
+            <p class="measured" id="explorerMeasured" hidden></p>
+        </details>
+        <div class="row" id="explorerActionRow">
+            <button class="ghost" id="explorerReplayBtn">↻ Replay</button>
+        </div>
     </section>
 </main>
 
@@ -85,31 +101,31 @@
 <div class="overlay" id="notesOverlay">
     <div class="notes-card">
         <button class="ghost close-notes" id="closeNotes">← Back to the demo</button>
-        <h2>Poster notes — <span>Fear Amplifies</span></h2>
+        <h2>Poster notes, <span>Fear Amplifies</span></h2>
         <p>The y-axis of the figure is the <strong>fear multiplier</strong>: how many
         times more likely a system-wide cascade becomes when banks carry fear level
         &mu;&#772; compared with the same network at zero fear (n = 10,000, 500
         trials per point).</p>
         <p>On the <strong>heavy-tailed families</strong> (power-law and GIRG), fear
         multiplies ignition by roughly 3&times;, and that multiplier stays flat as the
-        network grows — fear raises the <strong>level</strong> of risk, not its
+        network grows, fear raises the <strong>level</strong> of risk, not its
         <strong>scaling</strong>.</p>
         <p>On an <strong>Erd&#337;s&ndash;R&eacute;nyi network at a matched starting
         risk</strong> (a seed chosen so its zero-fear ignition rate matches the
         heavy-tailed families&rsquo; few percent), the same fear multiplies ignition
         at least <strong>25&ndash;40&times;</strong>. The open points on the figure
-        mean every one of 500 trials cascaded — the measurement hit its ceiling, so
+        mean every one of 500 trials cascaded, the measurement hit its ceiling, so
         the true multiplier is higher still.</p>
         <p>But with a small <strong>bounded seed</strong> (a = r = 2), ER never
         ignites at any fear level: fear amplifies cascades the structure makes
         possible; it cannot start them alone. And the multiplier has a
-        <strong>dial</strong> — at low fear (&mu;&#772; = 0.1) it is only about
+        <strong>dial</strong>, at low fear (&mu;&#772; = 0.1) it is only about
         1.5&times;.</p>
 
         <h3>About the animations</h3>
         <p>Every screen plays a <strong>precomputed trace</strong>. Each cascade was
-        run once through <code>src/twocascade/reference.py</code> — the project's
-        source-of-truth engine — at n = 300 with a logged seed, and dumped to JSON by
+        run once through <code>src/twocascade/reference.py</code>, the project's
+        source-of-truth engine, at n = 300 with a logged seed, and dumped to JSON by
         <code>scripts/dump_poster_demo_traces.py</code>. The page only plays those
         files back; it never simulates anything, so what you see is deterministic and
         reproducible from a committed config and seed, exactly like the figures on the
@@ -117,7 +133,7 @@
         <p>Each failure is labelled <strong>structural</strong> or <strong>fear</strong>
         after the fact, from the graph alone: a bank that already had r = 2 failed
         neighbours when it fell is structural, otherwise it panicked. At zero fear
-        every single failure classifies structural — that is the check that keeps the
+        every single failure classifies structural, that is the check that keeps the
         labelling honest.</p>
         <p>The three network families are drawn at a <strong>matched average degree</strong>
         (about 4.0 links per bank at n = 300), so the differences you see come from

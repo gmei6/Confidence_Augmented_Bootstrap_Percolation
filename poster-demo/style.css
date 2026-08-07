@@ -143,13 +143,6 @@ main {
   max-width: 30rem;
   margin: 0 auto 1.6rem;
 }
-#screen-landing .sub {
-  font-size: 0.86rem;
-  color: #6e7681;
-  max-width: 30rem;
-  margin: 1.6rem auto 0;
-  line-height: 1.6;
-}
 .begin {
   font: inherit;
   font-size: 1.05rem;
@@ -176,15 +169,6 @@ main {
   width: 11px; height: 11px;
   border-radius: 50%;
   display: inline-block;
-}
-.model-fig {
-  width: 100%;
-  max-width: 540px;
-  max-height: 32vh;
-  object-fit: contain;
-  display: block;
-  margin: 14px auto 4px;
-  border-radius: 10px;
 }
 .swatch.healthy    { background: var(--teal); }
 .swatch.structural { background: var(--rust); }
@@ -230,6 +214,15 @@ body.cb .swatch.fear {
   transition: width 0.28s linear;
 }
 .progress.done .progress-fill { box-shadow: 0 0 10px rgba(189, 90, 46, 0.55); }
+
+.generation {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 0.5rem;
+}
 
 .canvas-card {
   position: relative;
@@ -306,6 +299,7 @@ details.explainer p.measured {
 }
 
 .row { display: flex; gap: 0.5rem; align-items: center; }
+.row[hidden] { display: none; }   /* [hidden] alone loses to the author rule above */
 .ghost {
   font: inherit;
   font-size: 0.82rem;
@@ -318,38 +312,81 @@ details.explainer p.measured {
 }
 .ghost:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
 
-/* ------------------------------------------------------------- trial chooser */
+/* --------------------------------------------------------------- screen intro */
 .chooser-intro {
   font-size: 0.95rem;
   line-height: 1.6;
   color: var(--ink-dim);
   margin: 0.4rem 0 1rem;
 }
-.trial-cards { display: grid; gap: 0.7rem; }
-.trial-card {
-  text-align: left;
+
+/* ------------------------------------------------------------------- explorer */
+.model-picker {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.85rem;
+}
+.seg-btn {
+  flex: 1 1 0;
   font: inherit;
-  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink-dim);
   background: var(--panel);
   border: 1px solid var(--panel-line);
-  border-radius: 16px;
-  padding: 1rem 1.1rem;
+  border-radius: 999px;
+  padding: 0.5rem 0.4rem;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
-.trial-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(189, 90, 46, 0.5);
-  box-shadow: 0 10px 30px rgba(142, 74, 114, 0.18);
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.active {
+  color: #fff;
+  border-color: transparent;
+  background: var(--grad);
+  box-shadow: 0 6px 18px rgba(142, 74, 114, 0.28);
 }
-.trial-card .t-name { font-weight: 600; font-size: 1rem; }
-.trial-card .t-sub { font-size: 0.82rem; color: var(--ink-dim); margin-top: 0.3rem; line-height: 1.5; }
-.trial-card .t-hint {
+
+.knob-row { margin-bottom: 0.75rem; }
+.knob-row .knob-label {
   font-size: 0.72rem;
-  color: #6e7681;
-  margin-top: 0.5rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.35rem;
 }
+.knob-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.chip {
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--ink-dim);
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.chip:hover { color: var(--ink); }
+.chip.active {
+  color: #fff;
+  border-color: transparent;
+  background: var(--rust);
+}
+
+.computed-readout {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-dim);
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 12px;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.85rem;
+}
+.computed-readout[hidden] { display: none; }
+.computed-readout strong { color: var(--ink); font-weight: 600; }
+.computed-readout .flag { color: var(--rust); }
 
 /* ------------------------------------------------------------------ bottom nav */
 .navbar {
@@ -458,7 +495,6 @@ details.explainer p.measured {
 
 @media (min-width: 620px) {
   .headline { font-size: 1.45rem; }
-  .trial-cards { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
